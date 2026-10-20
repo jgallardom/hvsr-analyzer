@@ -673,8 +673,16 @@
           "title": "Adjacent Block Corr Max",
           "type": "number"
         },
+        "dependence_test_alpha": {
+          "default": 0.05,
+          "description": "Doubling also requires the lag-1 correlation to exceed the one-sided Bonferroni bound z(1-alpha/p)/sqrt(pairs) over p features.",
+          "exclusiveMaximum": 1,
+          "exclusiveMinimum": 0,
+          "title": "Dependence Test Alpha",
+          "type": "number"
+        },
         "irregular_block_lw_factor": {
-          "default": 5.0,
+          "default": 2.0,
           "description": "Irregular sequences: original-time block length = factor * Lw (before dependence doubling).",
           "exclusiveMinimum": 0,
           "title": "Irregular Block Lw Factor",
@@ -700,6 +708,13 @@
           "maximum": 20000,
           "minimum": 100,
           "title": "N Bootstrap",
+          "type": "integer"
+        },
+        "pw_min_windows": {
+          "default": 75,
+          "description": "Regular sequences use the Politis-White block length only with at least this many windows; shorter ones use original-time blocks.",
+          "minimum": 10,
+          "title": "Pw Min Windows",
           "type": "integer"
         },
         "regular_spacing_max_ratio": {

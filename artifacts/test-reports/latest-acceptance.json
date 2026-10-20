@@ -635,7 +635,123 @@
     "tests.stage_03.test_matching::test_ties_and_grid_boundary_flagged",
     "passed"
    ]
+  ],
+  "AC-S4-01": [
+   [
+    "tests.stage_04.test_uncertainty::test_geometric_mean_is_exp_mean_ln_of_original_window_spectra",
+    "passed"
+   ]
+  ],
+  "AC-S4-02": [
+   [
+    "tests.stage_04.test_uncertainty::test_bootstrap_is_deterministic_for_recorded_seed",
+    "passed"
+   ]
+  ],
+  "AC-S4-03": [
+   [
+    "tests.stage_04.test_uncertainty::test_resampling_draws_whole_spectral_vectors",
+    "passed"
+   ]
+  ],
+  "AC-S4-04": [
+   [
+    "tests.stage_04.test_block_rules::test_strong_dependence_is_detected_and_lengthens_blocks",
+    "passed"
+   ],
+   [
+    "tests.stage_04.test_uncertainty::test_correlated_regular_sequence_gets_blocks_and_wider_band_than_iid",
+    "passed"
+   ],
+   [
+    "tests.stage_04.test_uncertainty::test_clustered_bursts_do_not_acquire_iid_count",
+    "passed"
+   ]
+  ],
+  "AC-S4-05": [
+   [
+    "tests.stage_04.test_uncertainty::test_blocks_are_defined_in_original_time_and_gaps_are_preserved",
+    "passed"
+   ],
+   [
+    "tests.stage_04.test_uncertainty::test_recording_with_gap_uses_original_time_blocks_end_to_end",
+    "passed"
+   ]
+  ],
+  "AC-S4-06": [
+   [
+    "tests.stage_04.test_uncertainty::test_too_few_blocks_returns_not_estimable",
+    "passed"
+   ],
+   [
+    "tests.stage_04.test_uncertainty::test_zero_width_interval_is_never_reported",
+    "passed"
+   ],
+   [
+    "tests.stage_04.test_uncertainty::test_no_zero_width_on_pipeline_cases[flat]",
+    "passed"
+   ],
+   [
+    "tests.stage_04.test_uncertainty::test_no_zero_width_on_pipeline_cases[sdof2]",
+    "passed"
+   ],
+   [
+    "tests.stage_04.test_uncertainty::test_no_zero_width_on_pipeline_cases[broad3]",
+    "passed"
+   ],
+   [
+    "tests.stage_04.test_uncertainty::test_no_zero_width_on_pipeline_cases[two_peaks]",
+    "passed"
+   ],
+   [
+    "tests.stage_04.test_uncertainty::test_no_zero_width_on_pipeline_cases[weak_low]",
+    "passed"
+   ]
+  ],
+  "AC-S4-07": [
+   [
+    "tests.stage_04.test_uncertainty::test_peak_bootstrap_tracks_no_peak_and_alternate_family_replicates",
+    "passed"
+   ],
+   [
+    "tests.stage_04.test_uncertainty::test_pipeline_peak_estimate_reports_outcome_fractions",
+    "passed"
+   ]
+  ],
+  "AC-S4-08": [
+   [
+    "tests.stage_04.test_uncertainty::test_adding_rejected_data_outside_accepted_windows_does_not_change_ci",
+    "passed"
+   ]
+  ],
+  "AC-S4-09": [
+   [
+    "tests.stage_04.test_uncertainty::test_block_sensitivity_is_reported_and_base_band_is_kept",
+    "passed"
+   ]
+  ],
+  "AC-S4-10": [
+   [
+    "tests.stage_04.test_uncertainty::test_conditional_mean_ci_is_distinct_from_window_dispersion_and_one_band_exported",
+    "passed"
+   ],
+   [
+    "tests.stage_04.test_uncertainty::test_uncertainty_object_validates_against_analysis_schema",
+    "passed"
+   ]
+  ],
+  "AC-S4-11": [
+   [
+    "tests.stage_04.test_uncertainty::test_multimodal_peak_replicates_are_ambiguous",
+    "passed"
+   ]
+  ],
+  "AC-S4-12": [
+   [
+    "tests.stage_04.test_uncertainty::test_bootstrap_uses_cached_spectra_without_fft",
+    "passed"
+   ]
   ]
  },
- "updated_utc": "2026-10-20T23:48:18Z"
+ "updated_utc": "2026-10-20T23:55:46Z"
 }

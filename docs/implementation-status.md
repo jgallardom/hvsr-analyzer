@@ -101,3 +101,33 @@ administrator upload/activation of banks (Stage 7).
 
 Command: `uv run python scripts/gate.py --stage 3` -> exit 0, 131 tests (stages 0-3 + regression),
 68 PASS, 1 BLOCKED (AC-S2-05).
+
+## Stage 4 - Geometric mean and dependence-aware uncertainty
+
+Goal: observed geometric mean, temporal block resampling of whole window spectra, peak-replicate
+outcomes, interval status, one-band export contract.
+
+IDs: AC-S4-01 ... AC-S4-12 (all PASS).
+
+Delivered: `hvsr_core.uncertainty` (block planning, replicate counts, ratio-estimator replicate
+means, percentile band with zero-width guard, block-length sensitivity, peak replicates with
+multimodality detection, `selection_uncertainty`, `export_curve`); tests in `tests/stage_04/`.
+
+Findings recorded (D-050 revisions 1 and 2, made before any validation run):
+- With fixed 5 x Lw original-time blocks, a 20-30 min record has only 5-7 blocks, so the CI would be
+  unestimable for nearly every SDOF selection. The base length is now 2 x Lw. The reason is block
+  count (estimability), not band width.
+- Politis-White on <= 50 windows, maximised over features, is dominated by estimator noise. In iid
+  simulations it made the CI unestimable in 83 % of cases at n = 24 and 24 % at n = 50. It is now
+  used only for regular sequences with >= 75 windows.
+- The raw rule "lag-1 r > 0.3" doubled falsely in 31 % of iid cases with 11 block pairs. Doubling now
+  also requires the one-sided Bonferroni bound; the measured null rate is <= 2.3 % (tested), and
+  power for strong dependence (AR phi = 0.95) is >= 80 % (tested). Weak dependence can go undetected
+  with few blocks; a low-power note is emitted and Stage 5 will measure the consequence.
+- The band is labelled nominal and uncalibrated (`coverage_calibrated = false`) until Stage 5.
+
+Not yet done (later stages): assembling these objects into `analysis.json` (Stage 6), plotting
+(Stage 8), and coverage evaluation (Stage 5).
+
+Command: `uv run python scripts/gate.py --stage 4` -> exit 0, 160 tests (stages 0-4 + regression),
+80 PASS, 1 BLOCKED (AC-S2-05).

@@ -160,6 +160,55 @@ variable counts). If lag-1 correlation of block-mean features exceeds 0.3, block
 3 times). Fewer than 10 informative blocks -> `ci_not_estimable`. Sensitivity at 0.5x and 2x block
 length is reported; a width ratio > 1.5 marks `ci_limited`. The band is nominal and uncalibrated.
 
+*Revision (Stage 4, before any validation or coverage run).* Irregular-sequence base block length
+changed from `5 x Lw` to `2 x Lw`. Reason: with Lw = 50 s, a 20-30 min recording (the SESAME-typical
+duration) contains only 5-7 blocks of 250 s, so the 10-block guard would make the CI unestimable for
+essentially every SDOF selection. This is an estimability argument, not a band-width argument; the
+dependence safeguard is the data-driven doubling rule, which only ever lengthens blocks. Further
+details fixed at implementation:
+- Block membership, adjacency tests and features use ONLY accepted windows; rejected periods and
+  rejection counts never enter, so adding rejected data outside accepted windows cannot change the band.
+- Irregular dependence test: lag-1 correlation between means of blocks that are adjacent in original
+  time (block indices k and k+1, both non-empty). Fewer than 4 such pairs -> dependence not assessable
+  -> `ci_limited` (the band is still reported, with the reason).
+- The regular path uses the circular moving-block bootstrap (Politis & Romano 1992), matching the
+  circular Politis-White estimate. Blocks never contain partial windows.
+- Replicate mean = sum c_w ln HV_w / sum c_w over windows valid at each bin (ratio estimator), with
+  replicate counts c drawn once per replicate for all frequencies jointly.
+- Any bin with zero bootstrap width (<= 1e-12 in ln) is reported as null and the status becomes
+  `ci_limited`; zero width is never exported.
+- Sensitivity replicates reuse the seed. The reported band is always the base-length band, never the
+  narrowest one. A sensitivity length with fewer than 10 blocks is reported as `not_estimable` with a
+  note; the status becomes `ci_limited` only if no alternative length could be evaluated or the
+  evaluated widths differ by more than 1.5x.
+
+*Revision 2 (Stage 4, still before any validation run): small-sample behavior of the dependence rules.*
+A null simulation (iid Gaussian features, 300-4000 replicates; script reproduced in
+`tests/stage_04/test_block_rules.py`) showed the following:
+- Politis-White, taking the maximum over 4 features, has a median of 4.1 windows and a 90th percentile
+  at the cap of 8 when n = 24. That makes the CI unestimable in 83 % of iid cases at n = 24, 24 % at
+  n = 50, 7 % at n = 75 and 4 % at n = 100. This is noise from the estimator, not detected dependence.
+- The raw rule "lag-1 r > 0.3" fires falsely in 31 % of iid cases with 11 block pairs and in 40 % with 5.
+
+Changes:
+1. Politis-White is used only for regular sequences with at least `pw_min_windows = 75` windows. Shorter
+   regular sequences use the original-time block rule, i.e. 2 x Lw blocks.
+2. Blocks are doubled only when the maximum lag-1 correlation over the p features exceeds both the
+   materiality threshold 0.3 and the one-sided Bonferroni bound z(1 - 0.05/p)/sqrt(pairs). The measured
+   false-doubling rate is <= 2.3 % for 5-40 pairs.
+3. When the critical r exceeds 0.5, a low-power note states which correlations are detectable.
+   Undetected weak dependence remains a known limitation, to be evaluated in the Stage 5 coverage study.
+
 **D-051.** Predeclared dependence features: ln(H/V) at the selection's mean-curve peak (or, without a
 family, at the global maximum of the search band), the mean ln(H/V) over [fp/2, fp/sqrt2] and
-[sqrt2 fp, 2 fp], and ln(window fp) when defined.
+[sqrt2 fp, 2 fp], and ln(window fp) when defined. Features with any undefined value in the selection
+are dropped from the dependence assessment (recorded); with no usable feature the CI is
+`ci_not_estimable`.
+
+Peak replicates (peak-replicate-v1): each replicate mean curve is searched for a strict local maximum
+inside the family band, with no realignment. The fractions with a peak in the family, with no peak, and
+with the search-band global maximum in another listed family are all reported. The 2.5-97.5 %
+interval of replicate peak frequencies is explicitly conditional on a peak existing in the family.
+With at least 20 such replicates, a Gaussian KDE in ln f (Silverman bandwidth, at least one grid step)
+is computed; two or more modes each holding >= 10 % of the mass mark the peak `ambiguous_multimodal`
+and all major modes are reported.

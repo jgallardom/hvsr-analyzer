@@ -84,10 +84,12 @@ Defaults are initial, editable settings, not universally suitable values. Fields
 | `config.uncertainty.seed` | `int` | `20261020` | Deterministic bootstrap seed (recorded). |
 | `config.uncertainty.min_informative_blocks` | `int` | `10` | Experimental guard: fewer informative blocks returns ci_not_estimable. |
 | `config.uncertainty.regular_spacing_max_ratio` | `float` | `1.5` | Retained sequence is 'regular' if max/min spacing between consecutive windows <= this. |
-| `config.uncertainty.irregular_block_lw_factor` | `float` | `5.0` | Irregular sequences: original-time block length = factor * Lw (before dependence doubling). |
+| `config.uncertainty.irregular_block_lw_factor` | `float` | `2.0` | Irregular sequences: original-time block length = factor * Lw (before dependence doubling). |
 | `config.uncertainty.sensitivity_factors` | `tuple` | `(0.5, 2.0)` | Predeclared block-length multipliers reported as sensitivity (never chosen by width). |
 | `config.uncertainty.adjacent_block_corr_max` | `float` | `0.3` | If lag-1 correlation of block-mean features exceeds this, block length is doubled. |
 | `config.uncertainty.max_block_doublings` | `int` | `3` | Maximum dependence-driven block doublings. |
+| `config.uncertainty.dependence_test_alpha` | `float` | `0.05` | Doubling also requires the lag-1 correlation to exceed the one-sided Bonferroni bound z(1-alpha/p)/sqrt(pairs) over p features. |
+| `config.uncertainty.pw_min_windows` | `int` | `75` | Regular sequences use the Politis-White block length only with at least this many windows; shorter ones use original-time blocks. |
 | `config.uncertainty.sensitivity_width_ratio_limit` | `float` | `1.5` | Band width ratio across sensitivity lengths above this marks ci_limited. |
 | `report` | `ReportOptions` | `(see nested fields)` | Reporting options. |
 | `report.evaluate_sesame` | `bool` | `True` | Evaluate SESAME criteria (reporting only; never changes scientific results). |

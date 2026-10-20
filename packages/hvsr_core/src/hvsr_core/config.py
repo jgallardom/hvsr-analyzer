@@ -48,7 +48,8 @@ class Preprocessing(_Model):
         0.1, ge=0.0, le=1.0, description="Tukey taper fraction (total tapered fraction of the window)."
     )
     bandpass: BandpassFilter | None = Field(
-        None, description="Optional record-level Butterworth filter. Off by default; recorded as a derived operation."
+        None,
+        description="Optional record-level Butterworth filter. Off by default; recorded as a derived operation.",
     )
     response_correction: Literal["none", "scalar_sensitivity"] = Field(
         "none",
@@ -76,7 +77,9 @@ class TimeRange(_Model):
 
 class Windowing(_Model):
     window_length_s: float = Field(
-        50.0, gt=0, description="Window length Lw in seconds; rounded to an integer sample count (actual value recorded)."
+        50.0,
+        gt=0,
+        description="Window length Lw in seconds; rounded to an integer sample count (actual value recorded).",
     )
     step_s: float = Field(
         5.0, gt=0, description="Candidate window step dt in seconds; rounded to an integer sample count."
@@ -104,16 +107,25 @@ class Spectral(_Model):
         200, ge=20, le=2000, description="Anchored log grid f_i = 10**(i/P); P points per decade."
     )
     grid_fmin_hz: float | None = Field(
-        None, gt=0, description="Lowest grid frequency (None = peak_search.fmin_hz / 4, for SESAME [f0/4, 4 f0] checks)."
+        None,
+        gt=0,
+        description="Lowest grid frequency (None = peak_search.fmin_hz / 4, for SESAME [f0/4, 4 f0] checks).",
     )
     grid_fmax_hz: float | None = Field(
-        None, gt=0, description="Highest grid frequency (None = peak_search.fmax_hz * 4, capped by the anti-alias limit)."
+        None,
+        gt=0,
+        description="Highest grid frequency (None = peak_search.fmax_hz * 4, capped by the anti-alias limit).",
     )
     anti_alias_fraction: float = Field(
-        0.8, gt=0, le=1.0, description="Frequencies above this fraction of Nyquist are invalid (anti-alias roll-off)."
+        0.8,
+        gt=0,
+        le=1.0,
+        description="Frequencies above this fraction of Nyquist are invalid (anti-alias roll-off).",
     )
     min_smoothing_bins: int = Field(
-        3, ge=1, description="Minimum nonzero-frequency FFT bins inside the smoothing support for a valid grid point."
+        3,
+        ge=1,
+        description="Minimum nonzero-frequency FFT bins inside the smoothing support for a valid grid point.",
     )
     vertical_floor_rel: float = Field(
         1e-9,
@@ -139,7 +151,10 @@ class PeakSearch(_Model):
 class BasicQC(_Model):
     clip_detection: bool = Field(True, description="Reject windows containing clipped samples.")
     clip_fraction_of_full_scale: float = Field(
-        0.995, gt=0, le=1, description="|x| >= this fraction of a declared full-scale value counts as clipped."
+        0.995,
+        gt=0,
+        le=1,
+        description="|x| >= this fraction of a declared full-scale value counts as clipped.",
     )
     flat_top_run_samples: int = Field(
         5, ge=2, description="Runs of >= this many identical samples at the record extreme count as clipped."
@@ -147,8 +162,12 @@ class BasicQC(_Model):
     sta_lta_enabled: bool = Field(True, description="Anti-trigger transient screening with STA/LTA on |x|.")
     sta_s: float = Field(1.0, gt=0, description="Short-term average length (s).")
     lta_s: float = Field(30.0, gt=0, description="Long-term average length (s).")
-    sta_lta_min: float = Field(0.2, ge=0, description="Window rejected if STA/LTA falls below this anywhere inside it.")
-    sta_lta_max: float = Field(2.5, gt=0, description="Window rejected if STA/LTA exceeds this anywhere inside it.")
+    sta_lta_min: float = Field(
+        0.2, ge=0, description="Window rejected if STA/LTA falls below this anywhere inside it."
+    )
+    sta_lta_max: float = Field(
+        2.5, gt=0, description="Window rejected if STA/LTA exceeds this anywhere inside it."
+    )
 
 
 class StandardSelection(_Model):
@@ -156,7 +175,9 @@ class StandardSelection(_Model):
         "none",
         description="Optional frequency-domain window rejection after basic QC (can alter the peak distribution).",
     )
-    fdwra_n_std: float = Field(2.0, gt=0, description="FDWRA rejection half-width in lognormal standard deviations.")
+    fdwra_n_std: float = Field(
+        2.0, gt=0, description="FDWRA rejection half-width in lognormal standard deviations."
+    )
     fdwra_max_iterations: int = Field(50, ge=1, description="FDWRA iteration cap.")
 
 
@@ -165,7 +186,9 @@ class PeakDiscovery(_Model):
         1.25, gt=1, description="Per-window local peak minimum topographic prominence (amplitude ratio)."
     )
     kde_bandwidth_decades: float = Field(
-        0.03, gt=0, description="Gaussian KDE bandwidth (log10 decades) for clustering window peaks into families."
+        0.03,
+        gt=0,
+        description="Gaussian KDE bandwidth (log10 decades) for clustering window peaks into families.",
     )
     family_max_halfwidth_decades: float = Field(
         0.12, gt=0, description="Maximum family half-width around its KDE mode (log10 decades)."
@@ -180,24 +203,37 @@ class PeakDiscovery(_Model):
         0.3, gt=0, le=1, description="Minimum fraction of discovery windows with a peak inside the family."
     )
     family_listing_min_recurrence: float = Field(
-        0.1, ge=0, le=1, description="Families below this recurrence are not listed at all (clutter control only)."
+        0.1,
+        ge=0,
+        le=1,
+        description="Families below this recurrence are not listed at all (clutter control only).",
     )
     mean_min_prominence_ratio: float = Field(
-        1.5, gt=1, description="Discovery mean-curve local peak minimum prominence (amplitude ratio) for plausibility."
+        1.5,
+        gt=1,
+        description="Discovery mean-curve local peak minimum prominence (amplitude ratio) for plausibility.",
     )
-    min_discovery_windows: int = Field(5, ge=2, description="Minimum non-overlapping QC windows for discovery.")
+    min_discovery_windows: int = Field(
+        5, ge=2, description="Minimum non-overlapping QC windows for discovery."
+    )
     lower_edge_min_hv: float = Field(
-        1.5, gt=0, description="Rising curve at the lowest usable frequency with H/V >= this flags lower_band_unresolved."
+        1.5,
+        gt=0,
+        description="Rising curve at the lowest usable frequency with H/V >= this flags lower_band_unresolved.",
     )
     narrow_line_min_contrast_ratio: float = Field(
-        3.0, gt=1, description="Raw-spectrum line contrast vs. its neighbourhood that counts as a narrow line."
+        3.0,
+        gt=1,
+        description="Raw-spectrum line contrast vs. its neighbourhood that counts as a narrow line.",
     )
     narrow_line_max_width_bins: int = Field(3, ge=1, description="Maximum width (FFT bins) of a narrow line.")
     narrow_line_min_persistence: float = Field(
         0.8, gt=0, le=1, description="Fraction of windows in which the line must recur to be persistent."
     )
     smoothing_sensitivity_bandwidth: float = Field(
-        80.0, gt=0, description="Alternate (narrower) Konno-Ohmachi b used for the smoothing-sensitivity diagnostic."
+        80.0,
+        gt=0,
+        description="Alternate (narrower) Konno-Ohmachi b used for the smoothing-sensitivity diagnostic.",
     )
 
 
@@ -207,7 +243,8 @@ class SDOFMatching(_Model):
         description="SDOF bank ID; 'auto' selects the shipped bank conditioned for this run's Konno-Ohmachi b if available.",
     )
     extra_banks: tuple[str, ...] = Field(
-        (), description="Optional additional template families (e.g. 2DOF/3DOF bank IDs), reported separately."
+        (),
+        description="Optional additional template families (e.g. 2DOF/3DOF bank IDs), reported separately.",
     )
     peak_interpolation: Literal["parabolic_log", "none"] = Field(
         "parabolic_log",
@@ -221,13 +258,15 @@ class SDOFMatching(_Model):
         1e-6, gt=0, description="Weighted variance of y below this makes R-squared undefined (unrankable)."
     )
     r2_min: float = Field(
-        0.0, description="Eligibility requires R2_log strictly greater than this (0 = better than a constant)."
+        0.0,
+        description="Eligibility requires R2_log strictly greater than this (0 = better than a constant).",
     )
     calibration_profile: str | None = Field(
         None, description="Optional offline calibration profile ID supplying stronger eligibility thresholds."
     )
     selection_mode: Literal["automatic", "manual_top_n"] = Field(
-        "automatic", description="automatic: all greedy survivors; manual_top_n: first n (selection-conditional)."
+        "automatic",
+        description="automatic: all greedy survivors; manual_top_n: first n (selection-conditional).",
     )
     manual_n: int | None = Field(None, ge=1, description="Requested count for manual_top_n.")
 
@@ -247,18 +286,37 @@ class Uncertainty(_Model):
         10, ge=2, description="Experimental guard: fewer informative blocks returns ci_not_estimable."
     )
     regular_spacing_max_ratio: float = Field(
-        1.5, ge=1, description="Retained sequence is 'regular' if max/min spacing between consecutive windows <= this."
+        1.5,
+        ge=1,
+        description="Retained sequence is 'regular' if max/min spacing between consecutive windows <= this.",
     )
     irregular_block_lw_factor: float = Field(
-        5.0, gt=0, description="Irregular sequences: original-time block length = factor * Lw (before dependence doubling)."
+        2.0,
+        gt=0,
+        description="Irregular sequences: original-time block length = factor * Lw (before dependence doubling).",
     )
     sensitivity_factors: tuple[float, ...] = Field(
-        (0.5, 2.0), description="Predeclared block-length multipliers reported as sensitivity (never chosen by width)."
+        (0.5, 2.0),
+        description="Predeclared block-length multipliers reported as sensitivity (never chosen by width).",
     )
     adjacent_block_corr_max: float = Field(
-        0.3, gt=0, lt=1, description="If lag-1 correlation of block-mean features exceeds this, block length is doubled."
+        0.3,
+        gt=0,
+        lt=1,
+        description="If lag-1 correlation of block-mean features exceeds this, block length is doubled.",
     )
     max_block_doublings: int = Field(3, ge=0, description="Maximum dependence-driven block doublings.")
+    dependence_test_alpha: float = Field(
+        0.05,
+        gt=0,
+        lt=1,
+        description="Doubling also requires the lag-1 correlation to exceed the one-sided Bonferroni bound z(1-alpha/p)/sqrt(pairs) over p features.",
+    )
+    pw_min_windows: int = Field(
+        75,
+        ge=10,
+        description="Regular sequences use the Politis-White block length only with at least this many windows; shorter ones use original-time blocks.",
+    )
     sensitivity_width_ratio_limit: float = Field(
         1.5, gt=1, description="Band width ratio across sensitivity lengths above this marks ci_limited."
     )
@@ -267,18 +325,28 @@ class Uncertainty(_Model):
 class AnalysisConfig(_Model):
     """All scientific parameters. Its hash identifies a scientific computation."""
 
-    config_schema_version: Literal["2.0.0"] = Field(SCHEMA_VERSIONS["config"], description="Configuration schema version.")
+    config_schema_version: Literal["2.0.0"] = Field(
+        SCHEMA_VERSIONS["config"], description="Configuration schema version."
+    )
     preprocessing: Preprocessing = Field(default_factory=Preprocessing, description="Preprocessing settings.")
     windowing: Windowing = Field(default_factory=Windowing, description="Window length, step, and time span.")
     spectral: Spectral = Field(default_factory=Spectral, description="Spectral estimation and grid settings.")
     peak_search: PeakSearch = Field(default_factory=PeakSearch, description="Peak search band.")
-    basic_qc: BasicQC = Field(default_factory=BasicQC, description="Basic invalid-data checks shared by all methods.")
+    basic_qc: BasicQC = Field(
+        default_factory=BasicQC, description="Basic invalid-data checks shared by all methods."
+    )
     standard_selection: StandardSelection = Field(
         default_factory=StandardSelection, description="Standard reference selection options."
     )
-    peak_discovery: PeakDiscovery = Field(default_factory=PeakDiscovery, description="Shape-neutral peak-family discovery.")
-    sdof: SDOFMatching = Field(default_factory=SDOFMatching, description="Peak-aligned template matching and selection.")
-    uncertainty: Uncertainty = Field(default_factory=Uncertainty, description="Dependence-aware bootstrap settings.")
+    peak_discovery: PeakDiscovery = Field(
+        default_factory=PeakDiscovery, description="Shape-neutral peak-family discovery."
+    )
+    sdof: SDOFMatching = Field(
+        default_factory=SDOFMatching, description="Peak-aligned template matching and selection."
+    )
+    uncertainty: Uncertainty = Field(
+        default_factory=Uncertainty, description="Dependence-aware bootstrap settings."
+    )
 
     def scientific_hash(self) -> str:
         return canonical_hash({"config": self.model_dump(mode="json")})
@@ -305,7 +373,9 @@ class AnalysisRequest(_Model):
     robustness_check: bool = Field(
         True, description="Plan run B (1.5 x Lw, other settings unchanged) before results are examined."
     )
-    robustness_lw_factor: Literal[1.5] = Field(1.5, description="Run B window-length multiplier (fixed in v1).")
+    robustness_lw_factor: Literal[1.5] = Field(
+        1.5, description="Run B window-length multiplier (fixed in v1)."
+    )
 
 
 def robustness_config(config: AnalysisConfig, fs_hz: float) -> AnalysisConfig:
