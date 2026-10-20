@@ -135,6 +135,17 @@ normalized AFTER smoothing. Smoothing a theoretical ratio is not the same as smo
 spectra before division; the discrepancy is benchmarked in `tests/stage_03` and reported in
 `docs/template-banks.md`.
 
+**D-044 (bank composition).** Shipped banks and their measured behavior are listed in
+`docs/template-banks.md`: SDOF raw + continuous-limit Konno-Ohmachi conditioned (b = 20 ... 100);
+2DOF/3DOF uniform-ratio shear chains with equal modal damping, raw + b = 40. The conditioning
+benchmark showed that raw templates against smoothed data bias the damping label upward (24 / 54
+correct vs 54 / 54 for conditioned), which supports `auto` = conditioned.
+
+**D-045 (fit-band bracket).** To interpolate y at exactly fp/2 and 2 fp, the grid point immediately
+outside each end (at most 0.5 % in frequency) is used and must be valid. No other data outside
+[fp/2, 2 fp] enters the score. The peak estimator itself uses the family band (it defines the
+candidate peak and is not part of the comparison).
+
 **D-043.** R-squared undefined when the weighted variance of y is below 1e-6. Template ties (exactly
 equal R2) choose the first template in bank order (lowest damping) and set `tie` flag. A best template
 at the first or last damping value sets `grid_boundary_best`.

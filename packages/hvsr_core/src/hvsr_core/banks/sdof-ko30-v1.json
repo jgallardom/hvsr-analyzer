@@ -1,0 +1,54 @@
+{
+  "anchor": {
+    "mode": 1,
+    "rule": "global_maximum_after_conditioning"
+  },
+  "bank_id": "sdof-ko30-v1",
+  "bank_version": "1.0.0",
+  "conditioning": {
+    "kind": "konno_ohmachi_continuous",
+    "ko_bandwidth": 30.0,
+    "ko_support_rad": 3.0
+  },
+  "created_utc": "2026-10-20T00:00:00Z",
+  "damping_convention": "viscous_ratio",
+  "data_file": "sdof-ko30-v1.npz",
+  "data_sha256": "75268d540f05a2d56a4ac237d1a4bbcfd32d9a475b25342a68ca44c4ca46ff32",
+  "excitation": "harmonic_base_displacement",
+  "family": "sdof",
+  "generator": {
+    "name": "hvsr_core.templates",
+    "version": "bankgen-v1"
+  },
+  "grid": {
+    "kind": "uniform_ln_q",
+    "n_points": 129,
+    "x_max": 0.6931471805599453,
+    "x_min": -0.6931471805599453
+  },
+  "license": "CC0-1.0 (generated numerical templates; no third-party data)",
+  "n_templates": 9,
+  "notes": "Phenomenological SDOF base-excitation templates. Damping is a shape label, not a site damping estimate.",
+  "output": "absolute_top_mass_displacement",
+  "parameters": {
+    "anchor_ratio_meaning": "template peak frequency / undamped natural frequency (r_peak)",
+    "damping_ratio": [
+      0.01,
+      0.02,
+      0.03,
+      0.05,
+      0.075,
+      0.1,
+      0.15,
+      0.2,
+      0.3
+    ],
+    "names": [
+      "damping_ratio"
+    ]
+  },
+  "schema_id": "hvsr-analyzer/template-bank",
+  "schema_version": "1.0.0",
+  "signature": null,
+  "transfer_quantity": "abs_top_displacement_over_base_displacement"
+}

@@ -1,0 +1,66 @@
+{
+  "anchor": {
+    "mode": 1,
+    "rule": "first_mode_local_peak_after_conditioning"
+  },
+  "bank_id": "mdof2-raw-v1",
+  "bank_version": "1.0.0",
+  "conditioning": {
+    "kind": "raw",
+    "ko_bandwidth": null,
+    "ko_support_rad": null
+  },
+  "created_utc": "2026-10-20T00:00:00Z",
+  "damping_convention": "modal_equal_ratio",
+  "data_file": "mdof2-raw-v1.npz",
+  "data_sha256": "ee08c080206da066df67212c6665732ef98efcb03d98264aa97e19e83c199c6b",
+  "excitation": "harmonic_base_displacement",
+  "family": "mdof2",
+  "generator": {
+    "name": "hvsr_core.templates",
+    "version": "bankgen-v1"
+  },
+  "grid": {
+    "kind": "uniform_ln_q",
+    "n_points": 129,
+    "x_max": 0.6931471805599453,
+    "x_min": -0.6931471805599453
+  },
+  "license": "CC0-1.0 (generated numerical templates; no third-party data)",
+  "n_templates": 64,
+  "notes": "Shear-chain top-mass absolute displacement over base displacement. Shapes only, not structural identification.",
+  "output": "absolute_top_mass_displacement",
+  "parameters": {
+    "anchor_ratio_meaning": "anchor (first-mode peak) frequency / first undamped natural frequency",
+    "chain": "uniform ratios: m_i/m_1 = mass_ratio, k_i/k_1 = stiffness_ratio for i >= 2",
+    "damping_ratio": [
+      0.02,
+      0.05,
+      0.1,
+      0.2
+    ],
+    "excluded": [],
+    "frequency_normalization": "first undamped natural frequency = 1",
+    "mass_ratio": [
+      0.25,
+      0.5,
+      1.0,
+      2.0
+    ],
+    "names": [
+      "mass_ratio",
+      "stiffness_ratio",
+      "damping_ratio"
+    ],
+    "stiffness_ratio": [
+      0.25,
+      0.5,
+      1.0,
+      2.0
+    ]
+  },
+  "schema_id": "hvsr-analyzer/template-bank",
+  "schema_version": "1.0.0",
+  "signature": null,
+  "transfer_quantity": "abs_top_displacement_over_base_displacement"
+}

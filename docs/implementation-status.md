@@ -75,3 +75,29 @@ Blocked:
 
 Command: `uv run python scripts/gate.py --stage 2` -> exit 0, 75 tests passed (stages 0-2 +
 regression), 48 PASS, 1 BLOCKED (AC-S2-05).
+
+## Stage 3 - Offline template generation and R-squared selector
+
+Goal: SDOF bank (raw + Konno-Ohmachi conditioned), 129-point q grid, actual-peak normalization,
+R2_log matching, eligibility statuses, greedy non-overlapping selection, bank manifests and safe
+import, 2DOF/3DOF generator, critical no-alignment test.
+
+IDs: AC-S3-01 ... AC-S3-20 (all PASS).
+
+Delivered: `hvsr_core.templates`, `hvsr_core.mdof`, `hvsr_core.matching`, 12 shipped banks in
+`packages/hvsr_core/src/hvsr_core/banks/`, `scripts/build_banks.py`, `docs/template-banks.md`,
+benchmark `artifacts/benchmarks/template_conditioning.json`.
+
+Findings recorded:
+- Known-template interpolation tolerance derived from a sub-grid phase sweep (worst 1 - R2 = 5.6e-3
+  for raw 1 % damping, <= 1.4e-4 otherwise); declared 1e-2 / 5e-4. An earlier 8-draw estimate
+  (5e-3) was too optimistic and was replaced by the sweep before declaring.
+- Raw templates against smoothed data bias damping labels upward (24/54 correct); conditioned b = 40
+  bank 54/54 (D-044).
+- Mutation tests confirm the CRITICAL test fails for peak-aligned or amplitude-normalized final curves.
+
+Not yet done (later stages): CLI wrapper for bank build/validate (`hvsr banks ...`, Stage 9),
+administrator upload/activation of banks (Stage 7).
+
+Command: `uv run python scripts/gate.py --stage 3` -> exit 0, 131 tests (stages 0-3 + regression),
+68 PASS, 1 BLOCKED (AC-S2-05).

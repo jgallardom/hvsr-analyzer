@@ -379,7 +379,263 @@
     "tests.stage_02.test_spectral_core::test_time_range_maps_to_integer_sample_bounds_and_raw_bounds_are_preserved",
     "passed"
    ]
+  ],
+  "AC-S3-01": [
+   [
+    "tests.stage_03.test_template_banks::test_shipped_template_peaks_align_at_q1_with_amplitude_1[sdof-raw-v1]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_shipped_template_peaks_align_at_q1_with_amplitude_1[sdof-ko20-v1]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_shipped_template_peaks_align_at_q1_with_amplitude_1[sdof-ko30-v1]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_shipped_template_peaks_align_at_q1_with_amplitude_1[sdof-ko40-v1]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_shipped_template_peaks_align_at_q1_with_amplitude_1[sdof-ko50-v1]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_shipped_template_peaks_align_at_q1_with_amplitude_1[sdof-ko60-v1]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_shipped_template_peaks_align_at_q1_with_amplitude_1[sdof-ko80-v1]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_shipped_template_peaks_align_at_q1_with_amplitude_1[sdof-ko100-v1]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_shipped_template_peaks_align_at_q1_with_amplitude_1[mdof2-raw-v1]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_shipped_template_peaks_align_at_q1_with_amplitude_1[mdof2-ko40-v1]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_shipped_template_peaks_align_at_q1_with_amplitude_1[mdof3-raw-v1]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_shipped_template_peaks_align_at_q1_with_amplitude_1[mdof3-ko40-v1]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_conditioned_peak_located_after_smoothing[0.01]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_conditioned_peak_located_after_smoothing[0.05]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_conditioned_peak_located_after_smoothing[0.2]",
+    "passed"
+   ]
+  ],
+  "AC-S3-02": [
+   [
+    "tests.stage_03.test_template_banks::test_dense_direct_sdof_agrees_with_bank_lookup",
+    "passed"
+   ]
+  ],
+  "AC-S3-03": [
+   [
+    "tests.stage_03.test_matching::test_known_templates_score_near_one_and_are_selected[sdof-raw-v1]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_matching::test_known_templates_score_near_one_and_are_selected[sdof-ko40-v1]",
+    "passed"
+   ]
+  ],
+  "AC-S3-04": [
+   [
+    "tests.stage_03.test_matching::test_detected_peak_is_damped_peak_and_equivalent_fn_is_reported_as_template_ratio",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_damped_peak_is_not_the_undamped_natural_frequency[0.01]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_damped_peak_is_not_the_undamped_natural_frequency[0.02]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_damped_peak_is_not_the_undamped_natural_frequency[0.03]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_damped_peak_is_not_the_undamped_natural_frequency[0.05]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_damped_peak_is_not_the_undamped_natural_frequency[0.075]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_damped_peak_is_not_the_undamped_natural_frequency[0.1]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_damped_peak_is_not_the_undamped_natural_frequency[0.15]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_damped_peak_is_not_the_undamped_natural_frequency[0.2]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_damped_peak_is_not_the_undamped_natural_frequency[0.3]",
+    "passed"
+   ]
+  ],
+  "AC-S3-05": [
+   [
+    "tests.stage_03.test_template_banks::test_q_grid_is_129_uniform_symmetric_with_q1",
+    "passed"
+   ]
+  ],
+  "AC-S3-06": [
+   [
+    "tests.stage_03.test_matching::test_incomplete_fit_bands_are_rejected",
+    "passed"
+   ]
+  ],
+  "AC-S3-07": [
+   [
+    "tests.stage_03.test_matching::test_scores_ignore_data_outside_fit_band",
+    "passed"
+   ]
+  ],
+  "AC-S3-08": [
+   [
+    "tests.stage_03.test_matching::test_negative_r2_retained_unclamped",
+    "passed"
+   ]
+  ],
+  "AC-S3-09": [
+   [
+    "tests.stage_03.test_matching::test_flat_denominator_is_undefined_not_one",
+    "passed"
+   ]
+  ],
+  "AC-S3-10": [
+   [
+    "tests.stage_03.test_matching::test_manual_top_n_never_fills_with_invalid_matches",
+    "passed"
+   ]
+  ],
+  "AC-S3-11": [
+   [
+    "tests.stage_03.test_matching::test_greedy_removes_shared_samples_and_breaks_ties_deterministically",
+    "passed"
+   ]
+  ],
+  "AC-S3-12": [
+   [
+    "tests.stage_03.test_matching::test_switching_bank_changes_match_provenance",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_shipped_banks_are_reproducible_byte_for_byte",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_bank_versions_change_provenance",
+    "passed"
+   ]
+  ],
+  "AC-S3-13": [
+   [
+    "tests.stage_03.test_template_banks::test_mdof_top_response_matches_independent_modal_solution[masses0-stiff0-damping0]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_mdof_top_response_matches_independent_modal_solution[masses1-stiff1-damping1]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_mdof_top_response_matches_independent_modal_solution[masses2-stiff2-damping2]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_mdof_top_response_matches_independent_modal_solution[masses3-stiff3-damping3]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_one_dof_and_rigid_two_dof_reduce_to_sdof",
+    "passed"
+   ]
+  ],
+  "AC-S3-14": [
+   [
+    "tests.stage_03.test_critical_mutation::test_critical_test_kills_alignment_mutants[_aligned]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_critical_mutation::test_critical_test_kills_alignment_mutants[_normalized]",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_matching::test_CRITICAL_final_mean_uses_original_unaligned_spectra",
+    "passed"
+   ]
+  ],
+  "AC-S3-15": [
+   [
+    "tests.stage_03.test_template_banks::test_valid_bank_roundtrip_and_signature",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_rejects_pickle_object_arrays_and_unsafe_archives",
+    "passed"
+   ],
+   [
+    "tests.stage_03.test_template_banks::test_rejects_schema_hash_and_domain_violations",
+    "passed"
+   ]
+  ],
+  "AC-S3-16": [
+   [
+    "tests.stage_03.test_matching::test_peak_estimates_frozen_and_bank_independent",
+    "passed"
+   ]
+  ],
+  "AC-S3-17": [
+   [
+    "tests.stage_03.test_matching::test_batched_sse_matches_direct",
+    "passed"
+   ]
+  ],
+  "AC-S3-18": [
+   [
+    "tests.stage_03.test_matching::test_insufficient_fft_resolution_is_unrankable",
+    "passed"
+   ]
+  ],
+  "AC-S3-19": [
+   [
+    "tests.stage_03.test_matching::test_multiple_families_ranked_and_selected_separately",
+    "passed"
+   ]
+  ],
+  "AC-S3-20": [
+   [
+    "tests.stage_03.test_matching::test_ties_and_grid_boundary_flagged",
+    "passed"
+   ]
   ]
  },
- "updated_utc": "2026-10-20T23:33:58Z"
+ "updated_utc": "2026-10-20T23:48:18Z"
 }
