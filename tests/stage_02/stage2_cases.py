@@ -14,11 +14,21 @@ CASES = {
     "broad3": TFSpec("lognormal_peak", {"fc": 3.0, "amplitude": 3.0, "width_decades": 0.2}),
     "two_peaks": TFSpec(
         "multi_peak",
-        {"peaks": [{"fc": 1.5, "amplitude": 4.0, "width_decades": 0.06}, {"fc": 6.0, "amplitude": 4.0, "width_decades": 0.06}]},
+        {
+            "peaks": [
+                {"fc": 1.5, "amplitude": 4.0, "width_decades": 0.06},
+                {"fc": 6.0, "amplitude": 4.0, "width_decades": 0.06},
+            ]
+        },
     ),
     "weak_low": TFSpec(
         "multi_peak",
-        {"peaks": [{"fc": 1.0, "amplitude": 2.2, "width_decades": 0.06}, {"fc": 6.0, "amplitude": 6.0, "width_decades": 0.06}]},
+        {
+            "peaks": [
+                {"fc": 1.0, "amplitude": 2.2, "width_decades": 0.06},
+                {"fc": 6.0, "amplitude": 6.0, "width_decades": 0.06},
+            ]
+        },
     ),
     "low_edge": TFSpec("lognormal_peak", {"fc": 0.12, "amplitude": 4.0, "width_decades": 0.15}),
 }

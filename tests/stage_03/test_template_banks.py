@@ -34,13 +34,22 @@ from hvsr_core.templates import (
     sign_manifest,
 )
 
-SHIPPED = ["sdof-raw-v1", *[f"sdof-ko{b}-v1" for b in (20, 30, 40, 50, 60, 80, 100)], "mdof2-raw-v1", "mdof2-ko40-v1", "mdof3-raw-v1", "mdof3-ko40-v1"]
+SHIPPED = [
+    "sdof-raw-v1",
+    *[f"sdof-ko{b}-v1" for b in (20, 30, 40, 50, 60, 80, 100)],
+    "mdof2-raw-v1",
+    "mdof2-ko40-v1",
+    "mdof3-raw-v1",
+    "mdof3-ko40-v1",
+]
 
 
 @pytest.mark.acceptance("AC-S3-05")
 def test_q_grid_is_129_uniform_symmetric_with_q1():
     assert X_GRID.size == 129 and Q_HALF == 64
-    assert X_GRID[0] == pytest.approx(-math.log(2), abs=1e-15) and X_GRID[-1] == pytest.approx(math.log(2), abs=1e-15)
+    assert X_GRID[0] == pytest.approx(-math.log(2), abs=1e-15) and X_GRID[-1] == pytest.approx(
+        math.log(2), abs=1e-15
+    )
     assert X_GRID[Q_HALF] == 0.0 and Q_GRID[Q_HALF] == 1.0
     np.testing.assert_array_equal(X_GRID, -X_GRID[::-1])  # exact symmetry
     np.testing.assert_allclose(np.diff(X_GRID), math.log(2) / 64, rtol=1e-12)
@@ -67,7 +76,12 @@ def test_conditioned_peak_located_after_smoothing(zeta):
     k = list(DEFAULT_SDOF_DAMPING).index(zeta)
     rp = bank.anchor_ratio[k]
     h = lambda r: ko_continuous(lambda s: sdof_m(s, zeta), r, 40.0, 3.0)  # noqa: E731
-    res = optimize.minimize_scalar(lambda t: -h(np.array([math.exp(t)]))[0], bounds=(math.log(rp) - 0.05, math.log(rp) + 0.05), method="bounded", options={"xatol": 1e-12})
+    res = optimize.minimize_scalar(
+        lambda t: -h(np.array([math.exp(t)]))[0],
+        bounds=(math.log(rp) - 0.05, math.log(rp) + 0.05),
+        method="bounded",
+        options={"xatol": 1e-12},
+    )
     assert math.exp(res.x) == pytest.approx(rp, rel=1e-6)
     # smoothing moves the peak: conditioned anchor differs from the raw r_peak
     assert abs(rp / sdof_r_peak(zeta) - 1) > 1e-5
@@ -94,7 +108,12 @@ def test_dense_direct_sdof_agrees_with_bank_lookup():
 @pytest.mark.parametrize("zeta", DEFAULT_SDOF_DAMPING)
 def test_damped_peak_is_not_the_undamped_natural_frequency(zeta):
     rp = sdof_r_peak(zeta)
-    res = optimize.minimize_scalar(lambda r: -sdof_m(np.array([r]), zeta)[0], bounds=(0.3, 1.5), method="bounded", options={"xatol": 1e-13})
+    res = optimize.minimize_scalar(
+        lambda r: -sdof_m(np.array([r]), zeta)[0],
+        bounds=(0.3, 1.5),
+        method="bounded",
+        options={"xatol": 1e-13},
+    )
     assert res.x == pytest.approx(rp, rel=1e-8)
     assert rp < 1.0  # peak below fn for every positive damping
     raw = get_bank("sdof-raw-v1")
@@ -122,7 +141,9 @@ def test_mdof_top_response_matches_independent_modal_solution(masses, stiff, dam
     if damping["kind"] == "rayleigh":
         w = ch.omega
         alpha_beta = np.linalg.solve([[1 / (2 * w[0]), w[0] / 2], [1 / (2 * w[1]), w[1] / 2]], [0.05, 0.08])
-        np.testing.assert_allclose(ch.modal_damping, alpha_beta[0] / (2 * w) + alpha_beta[1] * w / 2, rtol=1e-10)
+        np.testing.assert_allclose(
+            ch.modal_damping, alpha_beta[0] / (2 * w) + alpha_beta[1] * w / 2, rtol=1e-10
+        )
     anc = first_mode_anchor(lambda x: top_response_direct(ch, x), ch.omega)
     assert anc.status == "ok" and 0.6 < anc.r < 1.0
 
@@ -143,11 +164,17 @@ def test_shipped_banks_are_reproducible_byte_for_byte():
     from hvsr_core.mdof import generate_mdof_bank
     from hvsr_core.templates import SHIPPED_DIR, SHIPPED_KO_BANDWIDTHS
 
-    regenerated = [generate_sdof_bank(RAW)] + [generate_sdof_bank(ko_conditioning(b)) for b in SHIPPED_KO_BANDWIDTHS]
+    regenerated = [generate_sdof_bank(RAW)] + [
+        generate_sdof_bank(ko_conditioning(b)) for b in SHIPPED_KO_BANDWIDTHS
+    ]
     regenerated.append(
-        generate_mdof_bank(2, RAW, (0.25, 0.5, 1.0, 2.0), (0.25, 0.5, 1.0, 2.0), (0.02, 0.05, 0.1, 0.2), "mdof2-raw-v1")
+        generate_mdof_bank(
+            2, RAW, (0.25, 0.5, 1.0, 2.0), (0.25, 0.5, 1.0, 2.0), (0.02, 0.05, 0.1, 0.2), "mdof2-raw-v1"
+        )
     )
-    regenerated.append(generate_mdof_bank(3, RAW, (0.5, 1.0, 2.0), (0.5, 1.0, 2.0), (0.02, 0.05, 0.1, 0.2), "mdof3-raw-v1"))
+    regenerated.append(
+        generate_mdof_bank(3, RAW, (0.5, 1.0, 2.0), (0.5, 1.0, 2.0), (0.02, 0.05, 0.1, 0.2), "mdof3-raw-v1")
+    )
     for manifest, data in regenerated:
         shipped = json.loads((SHIPPED_DIR / f"{manifest['bank_id']}.json").read_text())
         assert shipped == manifest
@@ -165,7 +192,9 @@ def test_mdof_rejects_inadmissible_systems():
 
 
 def _good():
-    return generate_sdof_bank(RAW, damping=(0.05, 0.1, 0.2), bank_id="test-sdof", created_utc="2026-10-20T00:00:00Z")
+    return generate_sdof_bank(
+        RAW, damping=(0.05, 0.1, 0.2), bank_id="test-sdof", created_utc="2026-10-20T00:00:00Z"
+    )
 
 
 def _rehash(manifest, data):
@@ -208,7 +237,12 @@ def test_rejects_pickle_object_arrays_and_unsafe_archives(tmp_path):
     m, d = _good()
     good = dict(np.load(io.BytesIO(d), allow_pickle=False))
     # object array (pickle) inside the NPZ
-    evil = _zip({**{f"{k}.npy": _npy(v) for k, v in good.items() if k != "param_values"}, "param_values.npy": _npy(np.array([{"a": 1}] * 3, dtype=object), allow_pickle=True)})
+    evil = _zip(
+        {
+            **{f"{k}.npy": _npy(v) for k, v in good.items() if k != "param_values"},
+            "param_values.npy": _npy(np.array([{"a": 1}] * 3, dtype=object), allow_pickle=True),
+        }
+    )
     with pytest.raises(BankError, match="rejected|non-numeric"):
         load_bank_bytes(_rehash(m, evil), evil)
     # path traversal / unexpected entries
@@ -231,7 +265,12 @@ def test_rejects_schema_hash_and_domain_violations():
     m, d = _good()
     with pytest.raises(BankError, match="SHA-256"):
         load_bank_bytes(m, d + b"\x00")
-    for bad in (dict(m, family="sdof7"), dict(m, grid=dict(m["grid"], n_points=128)), {k: v for k, v in m.items() if k != "license"}, dict(m, extra=1)):
+    for bad in (
+        dict(m, family="sdof7"),
+        dict(m, grid=dict(m["grid"], n_points=128)),
+        {k: v for k, v in m.items() if k != "license"},
+        dict(m, extra=1),
+    ):
         with pytest.raises(BankError, match="manifest invalid"):
             load_bank_bytes(bad, d)
     arrays = dict(np.load(io.BytesIO(d), allow_pickle=False))

@@ -221,7 +221,14 @@ def _source_diagnostic(
         harmonics[str(m)] = float(np.exp(peak - np.median(gm_h[nb])))
     # smoothing sensitivity: family peak amplitude of the discovery mean with b_alt vs configured b
     sp = config.spectral
-    op_alt, _, _ = ko_operator(sd.n_fft, sd.fs, sd.grid.index, sp.grid_points_per_decade, cfg.smoothing_sensitivity_bandwidth, sp.ko_support_rad)
+    op_alt, _, _ = ko_operator(
+        sd.n_fft,
+        sd.fs,
+        sd.grid.index,
+        sp.grid_points_per_decade,
+        cfg.smoothing_sensitivity_bandwidth,
+        sp.ko_support_rad,
+    )
     h_raw = combine_horizontal(amps[0], amps[1], sp.horizontal_combination)
     with np.errstate(divide="ignore", invalid="ignore"):
         ln_alt = np.log((h_raw @ op_alt.T.tocsr()) / (amps[2] @ op_alt.T.tocsr())).mean(axis=0)
@@ -266,7 +273,9 @@ def discover(
             if rows.size < cfg.min_discovery_windows
             else "no valid grid frequency inside the search band"
         )
-        return Discovery(rows, mean, [], "not_computable", [], [reason], None, None, gmax_f, gmax_a, [], lower)
+        return Discovery(
+            rows, mean, [], "not_computable", [], [reason], None, None, gmax_f, gmax_a, [], lower
+        )
 
     ln_hv = sd.ln_hv
     min_prom = math.log(cfg.window_min_prominence_ratio)
@@ -300,7 +309,9 @@ def discover(
         if fam.mean_prominence_ratio is None:
             reasons.append("no local maximum of the discovery mean curve inside the family")
         elif fam.mean_prominence_ratio < cfg.mean_min_prominence_ratio:
-            reasons.append(f"mean-curve prominence ratio {fam.mean_prominence_ratio:.2f} < {cfg.mean_min_prominence_ratio}")
+            reasons.append(
+                f"mean-curve prominence ratio {fam.mean_prominence_ratio:.2f} < {cfg.mean_min_prominence_ratio}"
+            )
         fam.plausible = not reasons
         fam.evidence["not_plausible_reasons"] = reasons
         fams.append(fam)
@@ -327,7 +338,11 @@ def discover(
         sub = usable[f[usable] <= 2.0 * f_low]
         arg = int(sub[np.argmax(mean.ln_mean[sub])])
         unresolved = arg == i0 and mean.hv[i0] >= cfg.lower_edge_min_hv
-        lower = {"lowest_usable_frequency_hz": f_low, "hv_at_lowest": float(mean.hv[i0]), "unresolved": bool(unresolved)}
+        lower = {
+            "lowest_usable_frequency_hz": f_low,
+            "hv_at_lowest": float(mean.hv[i0]),
+            "unresolved": bool(unresolved),
+        }
 
     flags: list[str] = []
     evidence: list[str] = []
@@ -354,12 +369,15 @@ def discover(
     for fm in plaus:
         evidence.append(
             f"{fm.family_id}: mean-curve peak {fm.mean_peak_hz:.4g} Hz, prominence ratio {fm.mean_prominence_ratio:.2f}, "
-            f"recurrence {fm.recurrence:.2f}" + (" (possible source line)" if "possible_source_peak" in fm.flags else "")
+            f"recurrence {fm.recurrence:.2f}"
+            + (" (possible source line)" if "possible_source_peak" in fm.flags else "")
         )
     fund_id = fund_hz = None
     if non_source and not lower["unresolved"]:
         if context in NON_FREE_FIELD_CONTEXTS:
-            evidence.append(f"measurement context {context!r}: no free-field site-frequency candidate is reported")
+            evidence.append(
+                f"measurement context {context!r}: no free-field site-frequency candidate is reported"
+            )
             flags.append("non_free_field_context")
         else:
             low = non_source[0]
@@ -367,4 +385,6 @@ def discover(
             evidence.append(f"fundamental candidate: lowest plausible non-source family {low.family_id}")
     if not plaus:
         evidence.append("no peak family meets the predeclared recurrence and mean-curve prominence rules")
-    return Discovery(rows, mean, fams, status, flags, evidence, fund_id, fund_hz, gmax_f, gmax_a, window_peaks, lower)
+    return Discovery(
+        rows, mean, fams, status, flags, evidence, fund_id, fund_hz, gmax_f, gmax_a, window_peaks, lower
+    )

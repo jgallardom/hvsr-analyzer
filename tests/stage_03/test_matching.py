@@ -60,7 +60,9 @@ def _sdof_rows(bank, k, fps, aps, conditioned=False):
 def _match(L, V=None, lo_hi=(0.9, 5.6), bank=None, cfg=CFG, df=0.02):
     V = np.ones_like(L, dtype=bool) if V is None else V
     lo, hi = _band(*lo_hi)
-    return match_family(L, V, LN_F, df, np.arange(L.shape[0]), "F1", lo, hi, bank or get_bank("sdof-raw-v1"), cfg)
+    return match_family(
+        L, V, LN_F, df, np.arange(L.shape[0]), "F1", lo, hi, bank or get_bank("sdof-raw-v1"), cfg
+    )
 
 
 @pytest.mark.acceptance("AC-S3-03")
@@ -116,7 +118,9 @@ def test_scores_ignore_data_outside_fit_band():
     bank = get_bank("sdof-ko40-v1")
     rng = np.random.default_rng(2)
     L = _sdof_rows(bank, 5, [2.0], [3.0], conditioned=True) + 0.05 * rng.standard_normal(F.size)
-    L[0, np.searchsorted(F, 2.0) - 3 : np.searchsorted(F, 2.0) + 4] = np.log(3.0) - 0.001 * (np.arange(7) - 3) ** 2
+    L[0, np.searchsorted(F, 2.0) - 3 : np.searchsorted(F, 2.0) + 4] = (
+        np.log(3.0) - 0.001 * (np.arange(7) - 3) ** 2
+    )
     fam = (1.8, 2.2)  # peak-estimator domain lies inside the fit band
     base = _match(L.copy(), lo_hi=fam, bank=bank)
     assert base.status == ["eligible"]
@@ -160,9 +164,22 @@ def test_manual_top_n_never_fills_with_invalid_matches():
     rec, _ = generate_3c(duration_s=1200, fs=50, tf=TFSpec("sdof", {"fn": 2.0, "zeta": 0.2}), seed=21)
     run = run_core(rec, CFG)
     fam = run.discovery.plausible_families()[0]
-    cfg = AnalysisConfig.model_validate({"sdof": {"selection_mode": "manual_top_n", "manual_n": 500, "r2_min": 0.9}})
+    cfg = AnalysisConfig.model_validate(
+        {"sdof": {"selection_mode": "manual_top_n", "manual_n": 500, "r2_min": 0.9}}
+    )
     bank = get_bank("sdof-ko40-v1")
-    t = match_family(run.spectra.ln_hv, run.spectra.valid, np.log(run.grid.freq), run.spectra.df_hz, np.flatnonzero(run.qc.passed), fam.family_id, fam.lo_index, fam.hi_index, bank, cfg)
+    t = match_family(
+        run.spectra.ln_hv,
+        run.spectra.valid,
+        np.log(run.grid.freq),
+        run.spectra.df_hz,
+        np.flatnonzero(run.qc.passed),
+        fam.family_id,
+        fam.lo_index,
+        fam.hi_index,
+        bank,
+        cfg,
+    )
     sel = select_family(t, run.window, run.spectra, cfg)
     assert sel.status == "insufficient_matches" and sel.requested_n == 500
     status = dict(zip(t.rows.tolist(), t.status, strict=True))
@@ -188,7 +205,11 @@ def test_greedy_removes_shared_samples_and_breaks_ties_deterministically():
     gs2 = np.array([200, 100, 0, 100])
     ids2 = ["w3", "w2b", "w1", "w2a"]
     s2 = np.array([0.8, 0.8, 0.8, 0.8])
-    assert greedy_select(gs2, ids2, 100, s2, np.ones(4, dtype=bool)) == [2, 3, 0]  # starts 0, 100 (id w2a < w2b), 200
+    assert greedy_select(gs2, ids2, 100, s2, np.ones(4, dtype=bool)) == [
+        2,
+        3,
+        0,
+    ]  # starts 0, 100 (id w2a < w2b), 200
     assert greedy_select(gs2, ids2, 101, s2, np.ones(4, dtype=bool)) == [2, 0]  # 0..101 overlaps 100
     assert greedy_select(gs2, ids2, 100, s2, np.array([False, True, True, False])) == [2, 1]
 
@@ -240,7 +261,15 @@ def test_multiple_families_ranked_and_selected_separately():
     rec, _ = generate_3c(
         duration_s=1200,
         fs=50,
-        tf=TFSpec("multi_peak", {"peaks": [{"fc": 1.5, "amplitude": 4.0, "width_decades": 0.06}, {"fc": 6.0, "amplitude": 4.0, "width_decades": 0.06}]}),
+        tf=TFSpec(
+            "multi_peak",
+            {
+                "peaks": [
+                    {"fc": 1.5, "amplitude": 4.0, "width_decades": 0.06},
+                    {"fc": 6.0, "amplitude": 4.0, "width_decades": 0.06},
+                ]
+            },
+        ),
         seed=22,
     )
     run = run_core(rec, CFG)
@@ -293,7 +322,8 @@ def test_CRITICAL_final_mean_uses_original_unaligned_spectra():
         tf=TFSpec("sdof", {"fn": 1.7, "zeta": 0.1}),
         seed=32,
         regimes=[
-            {"start_s": s, "end_s": s + 300.0, "tf": TFSpec("sdof", {"fn": 2.0, "zeta": 0.1})} for s in (300.0, 900.0, 1500.0, 2100.0)
+            {"start_s": s, "end_s": s + 300.0, "tf": TFSpec("sdof", {"fn": 2.0, "zeta": 0.1})}
+            for s in (300.0, 900.0, 1500.0, 2100.0)
         ],
     )
     cfg = AnalysisConfig()

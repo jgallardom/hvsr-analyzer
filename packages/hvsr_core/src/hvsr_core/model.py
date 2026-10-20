@@ -53,7 +53,9 @@ def iso_to_ns(text: str) -> int:
         tail = s[tpos:]
         sign_pos = max(tail.rfind("+"), tail.rfind("-"))
         if sign_pos <= 0:
-            raise ValueError(f"timestamp {text!r} has no explicit UTC offset; declare the time zone explicitly")
+            raise ValueError(
+                f"timestamp {text!r} has no explicit UTC offset; declare the time zone explicitly"
+            )
         off = tail[sign_pos:]
         body = s[: tpos + sign_pos]
         sign = 1 if off[0] == "+" else -1

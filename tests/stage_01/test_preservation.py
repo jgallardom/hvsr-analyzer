@@ -85,7 +85,10 @@ def test_float64_canonical_roundtrip_bitwise():
     rec, info = read_csv(data, CSVOptions(layout="elapsed_time"))
     art = build_canonical(rec, preserve_original("x.csv", data), info, data)
     assert art.encoding == "FLOAT64" and art.verification["ok"]
-    back = read_miniseed([("c.mseed", art.mseed_bytes)], mapping={c["component"]: c["miniseed_id"] for c in art.sidecar["channels"]})
+    back = read_miniseed(
+        [("c.mseed", art.mseed_bytes)],
+        mapping={c["component"]: c["miniseed_id"] for c in art.sidecar["channels"]},
+    )
     assert np.array_equal(back.segments[0].data.view(np.uint64), rec.segments[0].data.view(np.uint64))
     assert np.signbit(back.segments[0].data[0, 3]), "-0.0 must survive bit-for-bit"
 
@@ -103,7 +106,9 @@ def test_integer_steim2_and_no_float_rounding(fixture_dir):
     rows_f = "time_s,N,E,Z\n" + "".join(f"{i / 10},{i * 3}.0,{-i}.0,{i % 5}.0\n" for i in range(200))
     rec, info = read_csv(rows_f.encode(), CSVOptions(layout="elapsed_time"))
     assert rec.sample_dtype == "float64"
-    assert build_canonical(rec, None, info, rows_f.encode()).encoding == "FLOAT64", "floats are never converted to integers"
+    assert build_canonical(rec, None, info, rows_f.encode()).encoding == "FLOAT64", (
+        "floats are never converted to integers"
+    )
 
 
 @pytest.mark.acceptance("AC-S1-11")
@@ -133,7 +138,9 @@ def test_canonical_only_labels_truthful():
     store.d["staging/x.csv"] = data
     out = finalize_canonical_only(store, "staging/x.csv", art, "m/2", consent=True)
     assert out["original_bytes_retained"] is False
-    recon = reconstructed_csv(store.get(out["keys"]["mseed"]), art.sidecar, store.get(out["keys"]["residual"]))
+    recon = reconstructed_csv(
+        store.get(out["keys"]["mseed"]), art.sidecar, store.get(out["keys"]["residual"])
+    )
     first = recon.decode().splitlines()[0]
     assert "Reconstructed CSV" in first and "Original CSV" not in recon.decode()
     assert recon != data, "reconstruction is not claimed to be byte-identical"
@@ -154,11 +161,15 @@ def test_decompression_bomb_rejected():
 
 @pytest.mark.acceptance("AC-S1-14")
 def test_nonrepresentable_timestamps():
-    jitter = "time_s,N,E,Z\n" + "".join(f"{i * 0.01 + (0.004 if i % 3 == 0 else 0):.4f},{i}.5,{i}.25,{i}.0\n" for i in range(300))
+    jitter = "time_s,N,E,Z\n" + "".join(
+        f"{i * 0.01 + (0.004 if i % 3 == 0 else 0):.4f},{i}.5,{i}.25,{i}.0\n" for i in range(300)
+    )
     rec, info = read_csv(jitter.encode(), CSVOptions(layout="elapsed_time", sampling_rate_hz=100.0))
     ok, reasons = canonical_only_eligibility(rec, info, None)
     assert not ok and any("irregular timing" in r for r in reasons)
-    sub_us = "time_utc,N,E,Z\n" + "".join(f"2026-10-20T00:00:{i // 100:02d}.{i % 100:02d}0000123Z,{i}.5,1.5,2.5\n" for i in range(300))
+    sub_us = "time_utc,N,E,Z\n" + "".join(
+        f"2026-10-20T00:00:{i // 100:02d}.{i % 100:02d}0000123Z,{i}.5,1.5,2.5\n" for i in range(300)
+    )
     rec, info = read_csv(sub_us.encode(), CSVOptions(layout="utc_timestamps"))
     art = build_canonical(rec, preserve_original("t.csv", sub_us.encode()), info, sub_us.encode())
     assert art.sidecar["start_time"]["miniseed_start_exact"] is False

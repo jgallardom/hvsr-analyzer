@@ -43,17 +43,26 @@ def test_conditioned_bank_benchmark(repo_root):
             for k, z in enumerate(DEFAULT_SDOF_DAMPING):
                 ln, ok = _processed_ratio(fn, z, alpha)
                 fp_guess = fn * raw.anchor_ratio[k]
-                lo, hi = int(np.searchsorted(GRID, fp_guess / 1.15)), int(np.searchsorted(GRID, fp_guess * 1.15))
+                lo, hi = (
+                    int(np.searchsorted(GRID, fp_guess / 1.15)),
+                    int(np.searchsorted(GRID, fp_guess * 1.15)),
+                )
                 row = {"base_alpha": alpha, "fn_hz": fn, "zeta": z}
                 for name, bank in (("raw", raw), ("ko40", ko)):
-                    t = match_family(ln[None, :], ok[None, :], np.log(GRID), FS / N, np.arange(1), "F1", lo, hi, bank, cfg)
+                    t = match_family(
+                        ln[None, :], ok[None, :], np.log(GRID), FS / N, np.arange(1), "F1", lo, hi, bank, cfg
+                    )
                     row[f"{name}_status"] = t.status[0]
                     row[f"{name}_best_r2"] = None if np.isnan(t.best_r2[0]) else float(t.best_r2[0])
-                    row[f"{name}_best_zeta"] = None if t.best_k[0] < 0 else float(bank.param_values[t.best_k[0], 0])
+                    row[f"{name}_best_zeta"] = (
+                        None if t.best_k[0] < 0 else float(bank.param_values[t.best_k[0], 0])
+                    )
                 results.append(row)
     out = repo_root / "artifacts" / "benchmarks"
     out.mkdir(parents=True, exist_ok=True)
-    (out / "template_conditioning.json").write_text(json.dumps({"description": __doc__.strip(), "results": results}, indent=1))
+    (out / "template_conditioning.json").write_text(
+        json.dumps({"description": __doc__.strip(), "results": results}, indent=1)
+    )
     rated = [r for r in results if r["raw_best_r2"] is not None and r["ko40_best_r2"] is not None]
     assert len(rated) >= 0.8 * len(results)
     flat = [r for r in rated if r["base_alpha"] == 0.0]

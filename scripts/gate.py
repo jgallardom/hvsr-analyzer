@@ -51,7 +51,9 @@ def load_requirements() -> list[dict]:
 def git_info() -> dict:
     def run(*args: str) -> str:
         try:
-            return subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True, check=False).stdout.strip()
+            return subprocess.run(
+                ["git", *args], cwd=ROOT, capture_output=True, text=True, check=False
+            ).stdout.strip()
         except OSError:
             return ""
 
@@ -141,7 +143,12 @@ def render_matrix(reqs: list[dict], results: dict) -> None:
     for row in rows:
         by_stage[row["stage"]].append(row)
     for stage in sorted(by_stage):
-        lines += [f"## Stage {stage}", "", "| ID | State | Spec | Requirement | Tests |", "| --- | --- | --- | --- | --- |"]
+        lines += [
+            f"## Stage {stage}",
+            "",
+            "| ID | State | Spec | Requirement | Tests |",
+            "| --- | --- | --- | --- | --- |",
+        ]
         for row in by_stage[stage]:
             tests = len(row["tests"])
             note = row["text"]
@@ -221,7 +228,11 @@ def main() -> int:
     render_matrix(reqs, merged)
 
     print("\n=== gate summary ===")
-    print(json.dumps({k: record[k] for k in ("stage", "pytest_exit_status", "elapsed_s", "state_counts")}, indent=1))
+    print(
+        json.dumps(
+            {k: record[k] for k in ("stage", "pytest_exit_status", "elapsed_s", "state_counts")}, indent=1
+        )
+    )
     for row in rows:
         if row["state"] in ("BLOCKED", "UNVALIDATED"):
             print(f"  {row['state']:<11} {row['id']}: {row.get('reason', '')}")

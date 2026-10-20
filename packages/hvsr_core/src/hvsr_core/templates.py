@@ -66,7 +66,9 @@ def sdof_r_peak(zeta: float) -> float:
 # --------------------------------------------------------------------------- conditioning
 
 
-def ko_continuous(h: Callable[[np.ndarray], np.ndarray], r: np.ndarray, b: float, support: float, n_quad: int = 4001) -> np.ndarray:
+def ko_continuous(
+    h: Callable[[np.ndarray], np.ndarray], r: np.ndarray, b: float, support: float, n_quad: int = 4001
+) -> np.ndarray:
     """Continuous limit of Konno-Ohmachi smoothing on a LINEAR frequency axis.
 
     The discrete operator averages FFT bins uniformly spaced in f. With u = ln(f/fc) that is
@@ -98,7 +100,12 @@ def local_peak(h: Callable[[np.ndarray], np.ndarray], lo: float, hi: float, n: i
     i = int(np.argmax(v))
     if i == 0 or i == n - 1:
         return None
-    res = optimize.minimize_scalar(lambda t: -float(h(np.array([math.exp(t)]))[0]), bounds=(math.log(r[i - 1]), math.log(r[i + 1])), method="bounded", options={"xatol": 1e-12})
+    res = optimize.minimize_scalar(
+        lambda t: -float(h(np.array([math.exp(t)]))[0]),
+        bounds=(math.log(r[i - 1]), math.log(r[i + 1])),
+        method="bounded",
+        options={"xatol": 1e-12},
+    )
     return float(math.exp(res.x))
 
 
@@ -110,7 +117,9 @@ def normalized_log_template(h: Callable[[np.ndarray], np.ndarray], r_anchor: flo
     return out
 
 
-def conditioned(h: Callable[[np.ndarray], np.ndarray], conditioning: dict) -> Callable[[np.ndarray], np.ndarray]:
+def conditioned(
+    h: Callable[[np.ndarray], np.ndarray], conditioning: dict
+) -> Callable[[np.ndarray], np.ndarray]:
     if conditioning["kind"] == "raw":
         return h
     if conditioning["kind"] == "konno_ohmachi_continuous":
@@ -240,7 +249,12 @@ def build_manifest(
         "output": "absolute_top_mass_displacement",
         "transfer_quantity": "abs_top_displacement_over_base_displacement",
         "anchor": anchor,
-        "grid": {"kind": "uniform_ln_q", "n_points": Q_POINTS, "x_min": float(X_GRID[0]), "x_max": float(X_GRID[-1])},
+        "grid": {
+            "kind": "uniform_ln_q",
+            "n_points": Q_POINTS,
+            "x_min": float(X_GRID[0]),
+            "x_max": float(X_GRID[-1]),
+        },
         "conditioning": conditioning,
         "parameters": parameters,
         "damping_convention": damping_convention,
@@ -291,7 +305,9 @@ def generate_sdof_bank(
     }
     data = _npz_bytes(arrays)
     if bank_id is None:
-        bank_id = "sdof-raw-v1" if conditioning["kind"] == "raw" else f"sdof-ko{conditioning['ko_bandwidth']:g}-v1"
+        bank_id = (
+            "sdof-raw-v1" if conditioning["kind"] == "raw" else f"sdof-ko{conditioning['ko_bandwidth']:g}-v1"
+        )
     manifest = build_manifest(
         bank_id=bank_id,
         bank_version=bank_version,
@@ -353,7 +369,9 @@ def _check_zip(data: bytes) -> dict[str, np.ndarray]:
     return arrays
 
 
-def load_bank_bytes(manifest: dict, data: bytes, *, hmac_key: bytes | None = None, require_signature: bool = False) -> TemplateBank:
+def load_bank_bytes(
+    manifest: dict, data: bytes, *, hmac_key: bytes | None = None, require_signature: bool = False
+) -> TemplateBank:
     errs = validation_errors(manifest, "template_bank")
     if errs:
         raise BankError("manifest invalid: " + "; ".join(errs[:5]))

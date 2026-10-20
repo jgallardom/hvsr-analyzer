@@ -74,7 +74,9 @@ def fdwra(sd: SpectralData, rows: np.ndarray, config: AnalysisConfig) -> FDWRARe
             break
         mu, sd_ = float(lf.mean()), float(lf.std(ddof=1))
         with np.errstate(invalid="ignore"):
-            new = np.isfinite(fpk) & (np.abs(np.log(np.where(np.isfinite(fpk), fpk, 1.0)) - mu) <= sel.fdwra_n_std * sd_)
+            new = np.isfinite(fpk) & (
+                np.abs(np.log(np.where(np.isfinite(fpk), fpk, 1.0)) - mu) <= sel.fdwra_n_std * sd_
+            )
         history.append({"iteration": it, "mean_ln_f0": mu, "std_ln_f0": sd_, "kept": int(new.sum())})
         if np.array_equal(new, keep):
             converged = True

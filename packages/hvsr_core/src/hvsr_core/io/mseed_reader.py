@@ -33,7 +33,11 @@ def detect_miniseed_version(data: bytes) -> int:
         return 3
     if len(data) >= 8:
         seq = data[:6]
-        if all(ch in b"0123456789 \x00" for ch in seq) and data[6:7] in (b"D", b"R", b"Q", b"M") and data[7:8] in (b" ", b"\x00"):
+        if (
+            all(ch in b"0123456789 \x00" for ch in seq)
+            and data[6:7] in (b"D", b"R", b"Q", b"M")
+            and data[7:8] in (b" ", b"\x00")
+        ):
             return 2
     return 0
 
@@ -43,26 +47,39 @@ def _read_stream(data: bytes, name: str, limits: InputLimits):
 
     version = detect_miniseed_version(data)
     if version == 3:
-        raise InputError("unsupported_miniseed_version", f"{name}: MiniSEED 3 is not supported by the pinned reader (ObsPy 1.5.1)")
+        raise InputError(
+            "unsupported_miniseed_version",
+            f"{name}: MiniSEED 3 is not supported by the pinned reader (ObsPy 1.5.1)",
+        )
     if version != 2:
         raise InputError("not_miniseed", f"{name}: not a recognisable MiniSEED 2 file")
     try:
         head = read(io.BytesIO(data), format="MSEED", headonly=True)
     except Exception as exc:  # noqa: BLE001 - ObsPy raises many types for corrupt input
-        raise InputError("miniseed_corrupt", f"{name}: unreadable MiniSEED ({type(exc).__name__}: {exc})") from exc
+        raise InputError(
+            "miniseed_corrupt", f"{name}: unreadable MiniSEED ({type(exc).__name__}: {exc})"
+        ) from exc
     for tr in head:
         if tr.stats.npts > limits.max_samples_per_channel:
-            raise InputError("sample_limit", f"{name}: trace {tr.id} has more than {limits.max_samples_per_channel} samples")
+            raise InputError(
+                "sample_limit",
+                f"{name}: trace {tr.id} has more than {limits.max_samples_per_channel} samples",
+            )
         enc = tr.stats.mseed.encoding
         if enc not in SUPPORTED_ENCODINGS:
-            raise InputError("unsupported_encoding", f"{name}: encoding {enc} of {tr.id} is not in the tested-supported list {SUPPORTED_ENCODINGS}")
+            raise InputError(
+                "unsupported_encoding",
+                f"{name}: encoding {enc} of {tr.id} is not in the tested-supported list {SUPPORTED_ENCODINGS}",
+            )
     total = sum(tr.stats.npts for tr in head)
     if total * 8 > limits.max_decoded_bytes:
         raise InputError("decoded_size_limit", f"{name}: decoded samples exceed the configured limit")
     try:
         st = read(io.BytesIO(data), format="MSEED")
     except Exception as exc:  # noqa: BLE001
-        raise InputError("miniseed_corrupt", f"{name}: unreadable MiniSEED ({type(exc).__name__}: {exc})") from exc
+        raise InputError(
+            "miniseed_corrupt", f"{name}: unreadable MiniSEED ({type(exc).__name__}: {exc})"
+        ) from exc
     return st
 
 
@@ -117,7 +134,10 @@ def read_miniseed(
             segs.append(ChannelSegment(int(tr.stats.starttime.ns), fs, np.asarray(tr.data)))
         per_comp[comp] = _merge_contiguous(segs, comp, diag)
     if len(fs_set) != 1:
-        raise InputError("sampling_rate_mismatch", f"components have different sampling rates {sorted(fs_set)}; channels are never resampled")
+        raise InputError(
+            "sampling_rate_mismatch",
+            f"components have different sampling rates {sorted(fs_set)}; channels are never resampled",
+        )
     fs = fs_set.pop()
     rec = _intersect(per_comp, fs, alignment_tolerance_fraction, diag)
     enc_all = set().union(*(encodings[chosen[c]] for c in ("N", "E", "Z")))
@@ -134,7 +154,9 @@ def read_miniseed(
         "encodings": {c: sorted(encodings[chosen[c]]) for c in ("N", "E", "Z")},
     }
     if any(k == "12Z_mapped" for k in kinds.values()):
-        diag.warnings.append("horizontal channels 1/2 were mapped manually to N/E; RMS combination is rotation-invariant, geometric is not")
+        diag.warnings.append(
+            "horizontal channels 1/2 were mapped manually to N/E; RMS combination is rotation-invariant, geometric is not"
+        )
     if rec.duration_s > limits.max_duration_s:
         raise InputError("duration_limit", f"recording longer than {limits.max_duration_s} s")
     return rec
@@ -142,19 +164,29 @@ def read_miniseed(
 
 def _auto_map(ids: list[str]) -> tuple[dict[str, str], dict[str, str]]:
     if len(ids) != 3:
-        raise InputError("channel_mapping_required", f"found {len(ids)} channels {ids}; provide an explicit N/E/Z mapping")
+        raise InputError(
+            "channel_mapping_required", f"found {len(ids)} channels {ids}; provide an explicit N/E/Z mapping"
+        )
     prefixes = {i.rsplit(".", 1)[0] + "." + i.rsplit(".", 1)[1][:2] for i in ids}
     if len(prefixes) != 1:
-        raise InputError("channel_mapping_required", f"channels {ids} do not share network/station/location/band; provide a mapping")
+        raise InputError(
+            "channel_mapping_required",
+            f"channels {ids} do not share network/station/location/band; provide a mapping",
+        )
     last = {i.rsplit(".", 1)[1][-1:]: i for i in ids}
     if set(last) == {"N", "E", "Z"}:
         return {c: last[c] for c in ("N", "E", "Z")}, {c: "NEZ" for c in ("N", "E", "Z")}
     if set(last) == {"1", "2", "Z"}:
-        raise InputError("components_require_mapping", f"channels {ids} use 1/2 horizontals; provide an explicit mapping with orientation")
+        raise InputError(
+            "components_require_mapping",
+            f"channels {ids} use 1/2 horizontals; provide an explicit mapping with orientation",
+        )
     raise InputError("channel_mapping_required", f"cannot identify N/E/Z among {ids}; provide a mapping")
 
 
-def _merge_contiguous(segs: list[ChannelSegment], comp: str, diag: RecordingDiagnostics) -> list[ChannelSegment]:
+def _merge_contiguous(
+    segs: list[ChannelSegment], comp: str, diag: RecordingDiagnostics
+) -> list[ChannelSegment]:
     out: list[ChannelSegment] = []
     for seg in segs:
         if not out:
@@ -165,7 +197,10 @@ def _merge_contiguous(segs: list[ChannelSegment], comp: str, diag: RecordingDiag
         expected = prev.start_ns + prev.data.size * dt_ns
         delta = seg.start_ns - expected
         if delta < -0.5 * dt_ns:
-            raise InputError("overlapping_data", f"component {comp}: overlapping or duplicated records ({-delta / 1e9:.6f} s overlap)")
+            raise InputError(
+                "overlapping_data",
+                f"component {comp}: overlapping or duplicated records ({-delta / 1e9:.6f} s overlap)",
+            )
         if abs(delta) <= 0.5 * dt_ns and seg.fs == prev.fs:
             out[-1] = ChannelSegment(prev.start_ns, prev.fs, np.concatenate([prev.data, seg.data]))
         else:
@@ -173,7 +208,9 @@ def _merge_contiguous(segs: list[ChannelSegment], comp: str, diag: RecordingDiag
     return out
 
 
-def _intersect(per_comp: dict[str, list[ChannelSegment]], fs: float, tol_frac: float, diag: RecordingDiagnostics) -> Recording:
+def _intersect(
+    per_comp: dict[str, list[ChannelSegment]], fs: float, tol_frac: float, diag: RecordingDiagnostics
+) -> Recording:
     dt_ns = 1e9 / fs
     ref0 = min(s.start_ns for segs in per_comp.values() for s in segs)
     # Express each channel segment as [start_idx, stop_idx) on the reference grid; check alignment.
@@ -192,6 +229,7 @@ def _intersect(per_comp: dict[str, list[ChannelSegment]], fs: float, tol_frac: f
             diag.channel_start_offsets_s[comp] = max(diag.channel_start_offsets_s.get(comp, 0.0), frac / fs)
             lst.append((i0, i0 + s.data.size, s))
         idx_segs[comp] = lst
+
     # Intersection of the three interval sets.
     def intervals(comp: str) -> list[tuple[int, int]]:
         return [(a, b) for a, b, _ in idx_segs[comp]]
@@ -220,7 +258,9 @@ def _intersect(per_comp: dict[str, list[ChannelSegment]], fs: float, tol_frac: f
     for prev, nxt in zip(segments[:-1], segments[1:], strict=True):
         diag.gaps.append(Gap(after_index=prev.stop_index - 1, gap_s=(nxt.start_index - prev.stop_index) / fs))
     if diag.gaps:
-        diag.warnings.append(f"{len(diag.gaps)} gap(s) detected; windows never span gaps and gaps are not interpolated")
+        diag.warnings.append(
+            f"{len(diag.gaps)} gap(s) detected; windows never span gaps and gaps are not interpolated"
+        )
     t0 = ref0 + int(round(first * dt_ns))
     if not math.isfinite(fs) or fs <= 0:
         raise InputError("sampling_rate", "invalid sampling rate")

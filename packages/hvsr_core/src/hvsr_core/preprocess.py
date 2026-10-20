@@ -56,7 +56,9 @@ def prepare(rec: Recording, config: AnalysisConfig, instrument: dict) -> Prepare
     warnings: list[str] = []
     scale = np.array([instrument["scale"][c] for c in ("N", "E", "Z")], dtype=float)[:, None]
     if instrument.get("correction") == "scalar_sensitivity":
-        ops.append({"operation": "scalar_sensitivity_correction", "parameters": {"multipliers": instrument["scale"]}})
+        ops.append(
+            {"operation": "scalar_sensitivity_correction", "parameters": {"multipliers": instrument["scale"]}}
+        )
     sos = None
     bp = config.preprocessing.bandpass
     if bp is not None:
@@ -70,7 +72,13 @@ def prepare(rec: Recording, config: AnalysisConfig, instrument: dict) -> Prepare
             sos = signal.butter(bp.order, lo, btype="highpass", fs=fs, output="sos")
         else:
             sos = signal.butter(bp.order, hi, btype="lowpass", fs=fs, output="sos")
-        ops.append({"operation": "butterworth_filter", "parameters": bp.model_dump(mode="json") | {"implementation": "scipy.signal.sosfiltfilt" if bp.zero_phase else "scipy.signal.sosfilt"}})
+        ops.append(
+            {
+                "operation": "butterworth_filter",
+                "parameters": bp.model_dump(mode="json")
+                | {"implementation": "scipy.signal.sosfiltfilt" if bp.zero_phase else "scipy.signal.sosfilt"},
+            }
+        )
     segs: list[PreparedSegment] = []
     for si, seg in enumerate(rec.segments):
         a, b = max(seg.start_index, start), min(seg.stop_index, stop)
@@ -80,7 +88,9 @@ def prepare(rec: Recording, config: AnalysisConfig, instrument: dict) -> Prepare
         if instrument.get("correction") == "scalar_sensitivity":
             data = data * scale
         if sos is not None:
-            data = signal.sosfiltfilt(sos, data, axis=1) if bp.zero_phase else signal.sosfilt(sos, data, axis=1)
+            data = (
+                signal.sosfiltfilt(sos, data, axis=1) if bp.zero_phase else signal.sosfilt(sos, data, axis=1)
+            )
         segs.append(PreparedSegment(si, a, np.ascontiguousarray(data)))
     lw = config.windowing.window_length_s
     if config.peak_search.fmin_hz <= 10.0 / lw:

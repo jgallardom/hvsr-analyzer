@@ -102,7 +102,9 @@ def preserve_original(filename: str, data: bytes, limits: InputLimits | None = N
     )
 
 
-def reconstruct_original(stored_bytes: bytes, stored_encoding: str, expected_sha256: str | None = None) -> bytes:
+def reconstruct_original(
+    stored_bytes: bytes, stored_encoding: str, expected_sha256: str | None = None
+) -> bytes:
     out = gzip.decompress(stored_bytes) if stored_encoding == "gzip" else stored_bytes
     if expected_sha256 is not None and sha256_bytes(out) != expected_sha256:
         raise RuntimeError("reconstructed original does not match its recorded SHA-256")
@@ -154,7 +156,12 @@ def _channel_codes(rec: Recording) -> dict[str, tuple[str, str, str, str]]:
     return codes
 
 
-def build_canonical(rec: Recording, original: PreservedOriginal | None = None, csv_info: CSVParseInfo | None = None, csv_bytes: bytes | None = None) -> CanonicalArtifact:
+def build_canonical(
+    rec: Recording,
+    original: PreservedOriginal | None = None,
+    csv_info: CSVParseInfo | None = None,
+    csv_bytes: bytes | None = None,
+) -> CanonicalArtifact:
     """Write canonical MiniSEED (STEIM2 for int32 data, FLOAT64 otherwise) and verify it by reading
     it back with the production reader. Raises InputError when verification fails."""
     from obspy import Stream, Trace, UTCDateTime
@@ -199,7 +206,10 @@ def build_canonical(rec: Recording, original: PreservedOriginal | None = None, c
             break
         last_err = RuntimeError(f"verification failed with {enc}: {verification}")
     else:
-        raise InputError("canonical_conversion_failed", f"canonical MiniSEED could not be written and verified ({last_err})")
+        raise InputError(
+            "canonical_conversion_failed",
+            f"canonical MiniSEED could not be written and verified ({last_err})",
+        )
 
     residual_gz, residual_cols = (None, [])
     if csv_info is not None and csv_bytes is not None:
@@ -225,10 +235,14 @@ def build_canonical(rec: Recording, original: PreservedOriginal | None = None, c
             "iso": ns_to_iso(exact_t0),
             "source": rec.t0_source,
             "miniseed_start_exact": mseed_t0_exact,
-            "note": None if mseed_t0_exact else "MiniSEED stores microseconds; the exact start is this sidecar value",
+            "note": None
+            if mseed_t0_exact
+            else "MiniSEED stores microseconds; the exact start is this sidecar value",
             "placeholder_epoch_used": rec.t0_utc_ns is None,
         },
-        "segments": [{"start_index": s.start_index, "start_offset_s": s.start_offset_s, "n": s.n} for s in rec.segments],
+        "segments": [
+            {"start_index": s.start_index, "start_offset_s": s.start_offset_s, "n": s.n} for s in rec.segments
+        ],
         "channels": [dict(ch.as_dict(), miniseed_id=".".join(codes[ch.component])) for ch in rec.channels],
         "sample_dtype": rec.sample_dtype,
         "parsing_contract": PARSING_CONTRACT,
@@ -275,19 +289,47 @@ def verify_canonical(mseed: bytes, rec: Recording, codes: dict[str, tuple[str, s
     except InputError as exc:
         return {"ok": False, "checks": [{"name": "readback", "ok": False, "detail": exc.message}]}
     checks.append({"name": "readback", "ok": True, "detail": "read with the production MiniSEED reader"})
-    checks.append({"name": "sampling_rate_exact", "ok": back.sampling_rate_hz == rec.sampling_rate_hz, "detail": f"{back.sampling_rate_hz!r} vs {rec.sampling_rate_hz!r}"})
-    same_layout = len(back.segments) == len(rec.segments) and all(
-        a.start_index == b.start_index and a.n == b.n for a, b in zip(back.segments, rec.segments, strict=False)
+    checks.append(
+        {
+            "name": "sampling_rate_exact",
+            "ok": back.sampling_rate_hz == rec.sampling_rate_hz,
+            "detail": f"{back.sampling_rate_hz!r} vs {rec.sampling_rate_hz!r}",
+        }
     )
-    checks.append({"name": "segments", "ok": same_layout, "detail": f"{len(back.segments)} vs {len(rec.segments)} segments"})
-    bitwise = same_layout and all(
-        np.array_equal(np.ascontiguousarray(a.data, dtype=np.float64).view(np.uint64), np.ascontiguousarray(b.data, dtype=np.float64).view(np.uint64))
+    same_layout = len(back.segments) == len(rec.segments) and all(
+        a.start_index == b.start_index and a.n == b.n
         for a, b in zip(back.segments, rec.segments, strict=False)
     )
-    checks.append({"name": "samples_bitwise_binary64", "ok": bitwise, "detail": "sample arrays compared bit-for-bit as binary64"})
+    checks.append(
+        {
+            "name": "segments",
+            "ok": same_layout,
+            "detail": f"{len(back.segments)} vs {len(rec.segments)} segments",
+        }
+    )
+    bitwise = same_layout and all(
+        np.array_equal(
+            np.ascontiguousarray(a.data, dtype=np.float64).view(np.uint64),
+            np.ascontiguousarray(b.data, dtype=np.float64).view(np.uint64),
+        )
+        for a, b in zip(back.segments, rec.segments, strict=False)
+    )
+    checks.append(
+        {
+            "name": "samples_bitwise_binary64",
+            "ok": bitwise,
+            "detail": "sample arrays compared bit-for-bit as binary64",
+        }
+    )
     if rec.t0_utc_ns is not None:
         expected_us = round(rec.t0_utc_ns / 1000) * 1000
-        checks.append({"name": "start_time_microseconds", "ok": back.t0_utc_ns == expected_us, "detail": f"{back.t0_utc_ns} vs {expected_us}"})
+        checks.append(
+            {
+                "name": "start_time_microseconds",
+                "ok": back.t0_utc_ns == expected_us,
+                "detail": f"{back.t0_utc_ns} vs {expected_us}",
+            }
+        )
     return {"ok": all(c["ok"] for c in checks), "checks": checks}
 
 
@@ -316,7 +358,9 @@ def extract_residual_columns(csv_bytes: bytes, info: CSVParseInfo) -> tuple[byte
     return gzip.compress(out.getvalue().encode("utf-8"), compresslevel=9, mtime=0), cols
 
 
-def canonical_only_eligibility(rec: Recording, info: CSVParseInfo | None, artifact: CanonicalArtifact | None) -> tuple[bool, list[str]]:
+def canonical_only_eligibility(
+    rec: Recording, info: CSVParseInfo | None, artifact: CanonicalArtifact | None
+) -> tuple[bool, list[str]]:
     reasons = []
     if info is None:
         reasons.append("canonical-only applies to CSV sources only; MiniSEED originals are kept verbatim")
@@ -328,7 +372,11 @@ def canonical_only_eligibility(rec: Recording, info: CSVParseInfo | None, artifa
         reasons.append("component values carry more significant digits than binary64 preserves")
     if artifact is None or not artifact.verification.get("ok"):
         reasons.append("canonical verification did not pass")
-    if info is not None and artifact is not None and (info.time_column or info.extra_columns or info.comment_lines):
+    if (
+        info is not None
+        and artifact is not None
+        and (info.time_column or info.extra_columns or info.comment_lines)
+    ):
         if artifact.residual_gz is None:
             reasons.append("time/extra columns or comments could not be retained")
     return (not reasons), reasons
@@ -341,7 +389,9 @@ class ObjectStore(Protocol):
     def delete(self, key: str) -> None: ...
 
 
-def finalize_canonical_only(store: ObjectStore, staged_original_key: str, artifact: CanonicalArtifact, prefix: str, consent: bool) -> dict:
+def finalize_canonical_only(
+    store: ObjectStore, staged_original_key: str, artifact: CanonicalArtifact, prefix: str, consent: bool
+) -> dict:
     """Persist canonical artifacts, verify them FROM THE STORE, and only then delete the staged CSV.
 
     Any failure leaves the staged original untouched and returns ok=False.
@@ -363,7 +413,12 @@ def finalize_canonical_only(store: ObjectStore, staged_original_key: str, artifa
         if store.get(keys["sidecar"]) != artifact.sidecar_bytes:
             raise RuntimeError("stored sidecar mismatch")
     except Exception as exc:  # noqa: BLE001
-        return {"ok": False, "original_deleted": False, "reason": f"canonical persistence failed: {exc}", "keys": keys}
+        return {
+            "ok": False,
+            "original_deleted": False,
+            "reason": f"canonical persistence failed: {exc}",
+            "keys": keys,
+        }
     store.delete(staged_original_key)
     return {"ok": True, "original_deleted": True, "keys": keys, "original_bytes_retained": False}
 
@@ -393,7 +448,9 @@ def reconstructed_csv(mseed: bytes, sidecar: dict, residual_gz: bytes | None) ->
     data = np.concatenate([s.data for s in rec.segments], axis=1)
     is_int = sidecar.get("sample_dtype") == "int32"
     out = io.StringIO()
-    out.write("# Reconstructed CSV generated from the canonical recording; original CSV bytes were not retained.\n")
+    out.write(
+        "# Reconstructed CSV generated from the canonical recording; original CSV bytes were not retained.\n"
+    )
     for c in comments:
         out.write(c + "\n")
     delim = csv_meta.get("delimiter", ",")

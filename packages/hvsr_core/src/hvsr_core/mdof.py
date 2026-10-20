@@ -169,11 +169,20 @@ def generate_mdof_bank(
         h = conditioned(lambda r, ch=ch: top_response_direct(ch, r), conditioning)
         anc = first_mode_anchor(h, ch.omega)
         if anc.r is None:
-            excluded.append({"mass_ratio": mu, "stiffness_ratio": ka, "damping_ratio": z, "reason": anc.reason})
+            excluded.append(
+                {"mass_ratio": mu, "stiffness_ratio": ka, "damping_ratio": z, "reason": anc.reason}
+            )
             continue
         lt = normalized_log_template(h, anc.r)
         if lt[Q_HALF - 1] >= 0 or lt[Q_HALF + 1] >= 0:
-            excluded.append({"mass_ratio": mu, "stiffness_ratio": ka, "damping_ratio": z, "reason": "anchor not a strict grid maximum"})
+            excluded.append(
+                {
+                    "mass_ratio": mu,
+                    "stiffness_ratio": ka,
+                    "damping_ratio": z,
+                    "reason": "anchor not a strict grid maximum",
+                }
+            )
             continue
         logs.append(lt)
         params.append([mu, ka, z])

@@ -66,7 +66,11 @@ def _check(decoded: int, consumed: int, limits: InputLimits) -> None:
             "decoded_size_limit",
             f"decompressed size exceeds the configured limit of {limits.max_decoded_bytes} bytes",
         )
-    if decoded >= limits.ratio_check_min_output_bytes and consumed > 0 and decoded / consumed > limits.max_decompression_ratio:
+    if (
+        decoded >= limits.ratio_check_min_output_bytes
+        and consumed > 0
+        and decoded / consumed > limits.max_decompression_ratio
+    ):
         raise InputError(
             "decompression_ratio_limit",
             f"decompression ratio exceeds {limits.max_decompression_ratio:g}:1 (possible decompression bomb)",

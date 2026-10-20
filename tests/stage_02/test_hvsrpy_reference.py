@@ -55,7 +55,9 @@ def _hvsrpy_curves(run, method, cols):
         records.append(rec3)
     settings = HvsrTraditionalProcessingSettings(
         window_type_and_width=("tukey", 0.1),
-        smoothing=dict(operator="konno_and_ohmachi", bandwidth=40, center_frequencies_in_hz=run.grid.freq[cols].tolist()),
+        smoothing=dict(
+            operator="konno_and_ohmachi", bandwidth=40, center_frequencies_in_hz=run.grid.freq[cols].tolist()
+        ),
         method_to_combine_horizontals=method,
         fft_settings=dict(n=None),
     )
@@ -93,4 +95,7 @@ def test_matches_hvsrpy(fixture_dir, fixture, ours, theirs):
     np.testing.assert_allclose(mean.hv[cols][m], ref_mean[m], rtol=RTOL)
     # every point we mark invalid lacks smoothing support or is above our anti-alias limit
     bad = ~run.grid.valid
-    assert set(np.array(run.grid.invalid_reason, dtype=object)[bad]) <= {"insufficient_smoothing_bins", "above_anti_alias_limit"}
+    assert set(np.array(run.grid.invalid_reason, dtype=object)[bad]) <= {
+        "insufficient_smoothing_bins",
+        "above_anti_alias_limit",
+    }

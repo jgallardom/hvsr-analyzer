@@ -41,7 +41,9 @@ def _two_segment_recording(fs=20.0, n1=4000, gap=1000, n2=3000, seed=0) -> Recor
         Segment(n1 + gap, (n1 + gap) / fs, rng.standard_normal((3, n2))),
     ]
     chans = tuple(ChannelMeta(c, c, quantity="counts", units="counts") for c in "NEZ")
-    return Recording(fs, 0, "declared", chans, segs, "declared", "float64", RecordingDiagnostics(), {"format": "test"})
+    return Recording(
+        fs, 0, "declared", chans, segs, "declared", "float64", RecordingDiagnostics(), {"format": "test"}
+    )
 
 
 def _prepared(rec, cfg):
@@ -178,7 +180,9 @@ def test_zero_and_invalid_vertical_bins_are_masked_not_zero():
     assert np.all(np.isnan(hv[0, 1:5]))  # not zero, not inf, not a substituted floor
     assert counts["vertical_below_floor"] == 4
     # H <= 0 also invalid
-    hv2, valid2, _ = guarded_ratio(np.array([[0.0, 1.0]]), np.array([[1.0, 1.0]]), np.ones(2, dtype=bool), 1e-9)
+    hv2, valid2, _ = guarded_ratio(
+        np.array([[0.0, 1.0]]), np.array([[1.0, 1.0]]), np.ones(2, dtype=bool), 1e-9
+    )
     assert valid2.tolist() == [[False, True]] and math.isnan(hv2[0, 0])
     # integration: a window whose vertical is all zeros is invalid everywhere
     rec, _ = generate_3c(duration_s=400, fs=50, tf=TFSpec("flat"), seed=8)
@@ -218,8 +222,12 @@ def test_rms_horizontal_default_and_geometric_explicit():
     amps = window_amplitudes(r_rms.prep, r_rms.window, k, r_rms.config)
     op, _, _ = ko_operator(2500, 50.0, r_rms.grid.index, 200, 40.0, 3.0)
     ok = r_rms.grid.valid
-    np.testing.assert_allclose(r_rms.spectra.H[2, ok], (op @ np.sqrt((amps[0, 0] ** 2 + amps[1, 0] ** 2) / 2))[ok], rtol=1e-12)
-    np.testing.assert_allclose(r_geo.spectra.H[2, ok], (op @ np.sqrt(amps[0, 0] * amps[1, 0]))[ok], rtol=1e-12)
+    np.testing.assert_allclose(
+        r_rms.spectra.H[2, ok], (op @ np.sqrt((amps[0, 0] ** 2 + amps[1, 0] ** 2) / 2))[ok], rtol=1e-12
+    )
+    np.testing.assert_allclose(
+        r_geo.spectra.H[2, ok], (op @ np.sqrt(amps[0, 0] * amps[1, 0]))[ok], rtol=1e-12
+    )
     np.testing.assert_array_equal(r_rms.spectra.V, r_geo.spectra.V)
     # RMS >= geometric (power-mean inequality) and they differ under gain mismatch
     assert np.all(r_rms.spectra.H[:, ok] >= r_geo.spectra.H[:, ok])
@@ -248,7 +256,10 @@ def test_preprocessing_order_fixed_filter_off_and_operations_recorded():
     prep_f, _ = _prepared(rec, cfg_f)
     ops = prep_f.derived_operations
     assert ops[0]["operation"] == "butterworth_filter"
-    assert ops[0]["parameters"]["low_hz"] == 0.1 and ops[0]["parameters"]["implementation"] == "scipy.signal.sosfiltfilt"
+    assert (
+        ops[0]["parameters"]["low_hz"] == 0.1
+        and ops[0]["parameters"]["implementation"] == "scipy.signal.sosfiltfilt"
+    )
     assert not np.array_equal(prep_f.segments[0].data, rec.segments[0].data)
     # scalar sensitivity correction recorded as an operation
     inst2 = dict(inst, correction="scalar_sensitivity", scale={"N": 0.5, "E": 0.5, "Z": 0.5})
@@ -263,9 +274,20 @@ def test_clipped_windows_detected_and_excluded():
     d = rec.segments[0].data
     fs_val = float(np.abs(d).max() * 1.5)
     chans = tuple(
-        ChannelMeta(c.component, c.source_label, quantity="counts", units="counts", full_scale=fs_val) for c in rec.channels
+        ChannelMeta(c.component, c.source_label, quantity="counts", units="counts", full_scale=fs_val)
+        for c in rec.channels
     )
-    rec = Recording(rec.sampling_rate_hz, rec.t0_utc_ns, rec.t0_source, chans, rec.segments, "declared", "float64", RecordingDiagnostics(), rec.source)
+    rec = Recording(
+        rec.sampling_rate_hz,
+        rec.t0_utc_ns,
+        rec.t0_source,
+        chans,
+        rec.segments,
+        "declared",
+        "float64",
+        RecordingDiagnostics(),
+        rec.source,
+    )
     d[0, 10000:10003] = fs_val  # declared full scale reached at 200 s
     d[1, 20000:20010] = d[1].max()  # flat-topped run at 400 s (no full scale needed)
     run = run_core(rec, AnalysisConfig())
@@ -304,7 +326,10 @@ def test_standard_reference_is_deterministic_earliest_first_and_fdwra_separate()
     for k in range(a.window.count):
         if a.qc.passed[k] and k not in chosen:
             prior = [r for r in rows if a.window.global_start[r] <= a.window.global_start[k]]
-            assert any(overlaps(int(a.window.global_start[r]), int(a.window.global_start[k]), a.window.n_samples) for r in prior)
+            assert any(
+                overlaps(int(a.window.global_start[r]), int(a.window.global_start[k]), a.window.n_samples)
+                for r in prior
+            )
     assert a.standard.fdwra is None and np.array_equal(a.standard.basic_rows, rows)
     # transient window rejected by STA/LTA
     t = a.window.global_start / 50.0

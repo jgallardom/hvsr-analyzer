@@ -90,7 +90,9 @@ def _detect_delimiter(header_line: str, declared: str | None) -> str:
     counts = {d: header_line.count(d) for d in (",", ";", "\t")}
     best = max(counts, key=lambda d: counts[d])
     if counts[best] == 0:
-        raise InputError("csv_delimiter", "could not detect a delimiter (comma, semicolon, or tab) in the header row")
+        raise InputError(
+            "csv_delimiter", "could not detect a delimiter (comma, semicolon, or tab) in the header row"
+        )
     if sorted(counts.values())[-2] == counts[best]:
         raise InputError("csv_delimiter", "ambiguous delimiter in header row; declare it explicitly")
     return best
@@ -103,7 +105,9 @@ def _sig_digits(text: str) -> int:
     return len(mant.rstrip("0")) if "." not in t else len(mant)
 
 
-def map_components(header: list[str], options: CSVOptions, time_col: str | None) -> tuple[dict[str, str], dict[str, str]]:
+def map_components(
+    header: list[str], options: CSVOptions, time_col: str | None
+) -> tuple[dict[str, str], dict[str, str]]:
     """Return ({"N": col, "E": col, "Z": col}, {"N": "NEZ"|"12Z_mapped"})."""
     if options.column_map:
         cm = dict(options.column_map)
@@ -134,13 +138,19 @@ def map_components(header: list[str], options: CSVOptions, time_col: str | None)
         )
     for comp in ("N", "E", "Z"):
         if len(found[comp]) == 0:
-            raise InputError("missing_component", f"no column recognised as component {comp}; provide column_map")
+            raise InputError(
+                "missing_component", f"no column recognised as component {comp}; provide column_map"
+            )
         if len(found[comp]) > 1:
-            raise InputError("ambiguous_component", f"several columns could be component {comp}: {found[comp]}")
+            raise InputError(
+                "ambiguous_component", f"several columns could be component {comp}: {found[comp]}"
+            )
     return {c: found[c][0] for c in ("N", "E", "Z")}, {c: "NEZ" for c in ("N", "E", "Z")}
 
 
-def read_csv(data: bytes, options: CSVOptions, limits: InputLimits | None = None, filename: str = "upload.csv") -> tuple[Recording, CSVParseInfo]:
+def read_csv(
+    data: bytes, options: CSVOptions, limits: InputLimits | None = None, filename: str = "upload.csv"
+) -> tuple[Recording, CSVParseInfo]:
     limits = limits or InputLimits()
     if len(data) > limits.max_request_bytes:
         raise InputError("request_size_limit", "file exceeds the per-request byte limit")
@@ -151,7 +161,9 @@ def read_csv(data: bytes, options: CSVOptions, limits: InputLimits | None = None
     try:
         text = raw.decode("utf-8-sig")
     except UnicodeDecodeError as exc:
-        raise InputError("csv_encoding", f"CSV must be UTF-8 text ({exc.reason} at byte {exc.start})") from exc
+        raise InputError(
+            "csv_encoding", f"CSV must be UTF-8 text ({exc.reason} at byte {exc.start})"
+        ) from exc
 
     lines = text.splitlines()
     comments: list[str] = []
@@ -177,10 +189,15 @@ def read_csv(data: bytes, options: CSVOptions, limits: InputLimits | None = None
             names = _ELAPSED if options.layout == "elapsed_time" else _UTC
             cands = [h for h in header if _norm(h)[0] in names]
             if len(cands) != 1:
-                raise InputError("time_column", f"cannot identify a unique time column (candidates {cands}); declare time_column")
+                raise InputError(
+                    "time_column",
+                    f"cannot identify a unique time column (candidates {cands}); declare time_column",
+                )
             time_col = cands[0]
     elif options.sampling_rate_hz is None:
-        raise InputError("sampling_rate_required", "layout samples_with_rate requires an explicitly declared sampling rate")
+        raise InputError(
+            "sampling_rate_required", "layout samples_with_rate requires an explicitly declared sampling rate"
+        )
 
     comp_cols, kinds = map_components(header, options, time_col)
     col_index = {h: i for i, h in enumerate(header)}
@@ -211,17 +228,23 @@ def read_csv(data: bytes, options: CSVOptions, limits: InputLimits | None = None
             raise InputError("csv_row_length", f"line {lineno}: expected {ncol} fields, found {len(row)}")
         rows += 1
         if rows > limits.max_samples_per_channel:
-            raise InputError("sample_limit", f"more than {limits.max_samples_per_channel} samples per channel")
+            raise InputError(
+                "sample_limit", f"more than {limits.max_samples_per_channel} samples per channel"
+            )
         for comp in ("N", "E", "Z"):
             s = row[ci[comp]].strip()
             if not s:
-                raise InputError("missing_value", f"line {lineno}: empty value for component {comp}; gaps are never filled")
+                raise InputError(
+                    "missing_value", f"line {lineno}: empty value for component {comp}; gaps are never filled"
+                )
             if "," in s:
                 raise InputError("decimal_comma", f"line {lineno}: decimal commas are not supported")
             try:
                 v = float(s)
             except ValueError as exc:
-                raise InputError("non_numeric", f"line {lineno}: non-numeric value {s!r} for component {comp}") from exc
+                raise InputError(
+                    "non_numeric", f"line {lineno}: non-numeric value {s!r} for component {comp}"
+                ) from exc
             if not math.isfinite(v):
                 raise InputError("non_finite", f"line {lineno}: non-finite value {s!r} for component {comp}")
             if integer and ("." in s or "e" in s or "E" in s or abs(v) > 2**31 - 1):
@@ -313,7 +336,10 @@ def _time_ns(values: list[str], options: CSVOptions) -> np.ndarray:
             raise InputError("time_parse", "non-finite elapsed time")
         return np.rint(t * 1e9).astype(np.int64)
     # UTC timestamps
-    suffixes = {v[-6:] if (len(v) > 6 and v[-6] in "+-" and v[-3] == ":") else ("Z" if v.endswith(("Z", "z")) else "") for v in values}
+    suffixes = {
+        v[-6:] if (len(v) > 6 and v[-6] in "+-" and v[-3] == ":") else ("Z" if v.endswith(("Z", "z")) else "")
+        for v in values
+    }
     if suffixes == {""}:
         if not options.timestamps_declared_utc:
             raise InputError(
@@ -327,7 +353,9 @@ def _time_ns(values: list[str], options: CSVOptions) -> np.ndarray:
         suf = next(iter(suffixes))
         strip = 1 if suf == "Z" else 6
         try:
-            arr = np.array([v[:-strip].replace(" ", "T") for v in values], dtype="datetime64[ns]").astype(np.int64)
+            arr = np.array([v[:-strip].replace(" ", "T") for v in values], dtype="datetime64[ns]").astype(
+                np.int64
+            )
         except ValueError as exc:
             raise InputError("time_parse", f"invalid timestamp: {exc}") from exc
         if suf != "Z":
@@ -337,7 +365,9 @@ def _time_ns(values: list[str], options: CSVOptions) -> np.ndarray:
     return np.asarray([iso_to_ns(v) for v in values], dtype=np.int64)
 
 
-def _segment_by_time(t_ns: np.ndarray, data: np.ndarray, options: CSVOptions, diag: RecordingDiagnostics, info: CSVParseInfo):
+def _segment_by_time(
+    t_ns: np.ndarray, data: np.ndarray, options: CSVOptions, diag: RecordingDiagnostics, info: CSVParseInfo
+):
     d = np.diff(t_ns)
     if np.any(d <= 0):
         bad = int(np.flatnonzero(d <= 0)[0])
@@ -355,7 +385,10 @@ def _segment_by_time(t_ns: np.ndarray, data: np.ndarray, options: CSVOptions, di
         info.notes.append(f"sampling rate derived from the median timestamp interval: {fs} Hz")
     dt_ns = 1e9 / fs
     if np.any(d < 0.5 * dt_ns):
-        raise InputError("time_duplicate", "timestamp interval shorter than half a sample (duplicate or overlapping samples)")
+        raise InputError(
+            "time_duplicate",
+            "timestamp interval shorter than half a sample (duplicate or overlapping samples)",
+        )
     breaks = np.flatnonzero(d > 1.5 * dt_ns)
     starts = np.concatenate(([0], breaks + 1))
     stops = np.concatenate((breaks + 1, [t_ns.size]))
@@ -391,7 +424,9 @@ def _segment_by_time(t_ns: np.ndarray, data: np.ndarray, options: CSVOptions, di
     elif max_jit > 0:
         info.jitter_within_tolerance_nonzero = True
     if diag.gaps:
-        diag.warnings.append(f"{len(diag.gaps)} gap(s) detected; windows never span gaps and gaps are not interpolated")
+        diag.warnings.append(
+            f"{len(diag.gaps)} gap(s) detected; windows never span gaps and gaps are not interpolated"
+        )
     return fs, source, segments, t_first
 
 
@@ -399,7 +434,9 @@ def write_normalized_csv(rec: Recording) -> bytes:
     """Normalized waveform CSV (UTF-8): segment, sample index, time since start, UTC time, N, E, Z."""
     out = io.StringIO()
     units = {c.component: (c.units or "unknown") for c in rec.channels}
-    out.write(f"# normalized waveform export; sampling_rate_hz={rec.sampling_rate_hz!r}; units N={units['N']} E={units['E']} Z={units['Z']}\n")
+    out.write(
+        f"# normalized waveform export; sampling_rate_hz={rec.sampling_rate_hz!r}; units N={units['N']} E={units['E']} Z={units['Z']}\n"
+    )
     out.write("segment,sample_index,time_s,time_utc,N,E,Z\n")
     for si, seg in enumerate(rec.segments):
         k = np.arange(seg.n)

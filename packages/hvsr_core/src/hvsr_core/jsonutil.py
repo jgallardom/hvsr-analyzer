@@ -78,7 +78,9 @@ def to_jsonable(obj: Any) -> Any:
 
 def canonical_dumps(obj: Any) -> str:
     """Deterministic compact JSON: sorted keys, no NaN/Infinity, UTF-8 characters preserved."""
-    return json.dumps(to_jsonable(obj), sort_keys=True, separators=(",", ":"), allow_nan=False, ensure_ascii=False)
+    return json.dumps(
+        to_jsonable(obj), sort_keys=True, separators=(",", ":"), allow_nan=False, ensure_ascii=False
+    )
 
 
 def pretty_dumps(obj: Any) -> str:

@@ -69,7 +69,12 @@ def decimal_year(when_ns: int) -> float:
 def record_code(lat: float, lon: float, when_ns: int) -> dict:
     gh = geohash_encode(lat, lon, 12)
     dy = decimal_year(when_ns)
-    return {"geohash": gh, "geohash_part": geohash_code_part(gh), "decimal_year": dy, "base_code": f"{geohash_code_part(gh)}-{dy:.4f}"}
+    return {
+        "geohash": gh,
+        "geohash_part": geohash_code_part(gh),
+        "decimal_year": dy,
+        "base_code": f"{geohash_code_part(gh)}-{dy:.4f}",
+    }
 
 
 def with_suffix(base_code: str, n: int) -> str:

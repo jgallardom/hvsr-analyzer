@@ -81,7 +81,11 @@ def _ko_operator_cached(n: int, fs: float, grid_key: tuple, b: float, support: f
             indices.append(idx)
         indptr.append(indptr[-1] + ff.size)
     mat = sparse.csr_matrix(
-        (np.concatenate(data) if data else np.zeros(0), np.concatenate(indices) if indices else np.zeros(0, dtype=np.int64), np.asarray(indptr)),
+        (
+            np.concatenate(data) if data else np.zeros(0),
+            np.concatenate(indices) if indices else np.zeros(0, dtype=np.int64),
+            np.asarray(indptr),
+        ),
         shape=(fc.size, f.size),
     )
     return mat, counts, eff
@@ -135,7 +139,9 @@ def build_grid(config: AnalysisConfig, fs: float, n: int, usable_band: list[floa
     return Grid(sp.grid_points_per_decade, idx, freq, valid, reasons, counts, eff)
 
 
-def window_amplitudes(prep: Prepared, win: WindowTable, rows: np.ndarray, config: AnalysisConfig) -> np.ndarray:
+def window_amplitudes(
+    prep: Prepared, win: WindowTable, rows: np.ndarray, config: AnalysisConfig
+) -> np.ndarray:
     """|rFFT| / fs of demeaned, detrended, tapered windows. Returns (3, len(rows), n_fft)."""
     n = win.n_samples
     pp = config.preprocessing
@@ -183,9 +189,13 @@ def combine_horizontal(n_amp: np.ndarray, e_amp: np.ndarray, how: str) -> np.nda
     raise ValueError(how)
 
 
-def compute_spectra(prep: Prepared, win: WindowTable, grid: Grid, config: AnalysisConfig, batch: int = 128) -> SpectralData:
+def compute_spectra(
+    prep: Prepared, win: WindowTable, grid: Grid, config: AnalysisConfig, batch: int = 128
+) -> SpectralData:
     sp = config.spectral
-    op, _, _ = ko_operator(win.n_samples, prep.fs, grid.index, sp.grid_points_per_decade, sp.ko_bandwidth, sp.ko_support_rad)
+    op, _, _ = ko_operator(
+        win.n_samples, prep.fs, grid.index, sp.grid_points_per_decade, sp.ko_bandwidth, sp.ko_support_rad
+    )
     opT = op.T.tocsr()
     nw, ng = win.count, grid.freq.size
     H = np.full((nw, ng), np.nan)
@@ -201,7 +211,9 @@ def compute_spectra(prep: Prepared, win: WindowTable, grid: Grid, config: Analys
         N[rows] = amp[0] @ opT
         E[rows] = amp[1] @ opT
     hv, valid, invalid_counts = guarded_ratio(H, V, grid.valid, sp.vertical_floor_rel)
-    return SpectralData(prep.fs, win, grid, win.n_samples, prep.fs / win.n_samples, H, V, N, E, hv, valid, invalid_counts)
+    return SpectralData(
+        prep.fs, win, grid, win.n_samples, prep.fs / win.n_samples, H, V, N, E, hv, valid, invalid_counts
+    )
 
 
 def guarded_ratio(H: np.ndarray, V: np.ndarray, grid_valid: np.ndarray, floor_rel: float):

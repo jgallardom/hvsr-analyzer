@@ -22,8 +22,18 @@ from hvsr_core.templates import (
     write_bank,
 )
 
-MDOF2 = dict(n_dof=2, mass_ratio_grid=(0.25, 0.5, 1.0, 2.0), stiffness_ratio_grid=(0.25, 0.5, 1.0, 2.0), damping_grid=(0.02, 0.05, 0.1, 0.2))
-MDOF3 = dict(n_dof=3, mass_ratio_grid=(0.5, 1.0, 2.0), stiffness_ratio_grid=(0.5, 1.0, 2.0), damping_grid=(0.02, 0.05, 0.1, 0.2))
+MDOF2 = dict(
+    n_dof=2,
+    mass_ratio_grid=(0.25, 0.5, 1.0, 2.0),
+    stiffness_ratio_grid=(0.25, 0.5, 1.0, 2.0),
+    damping_grid=(0.02, 0.05, 0.1, 0.2),
+)
+MDOF3 = dict(
+    n_dof=3,
+    mass_ratio_grid=(0.5, 1.0, 2.0),
+    stiffness_ratio_grid=(0.5, 1.0, 2.0),
+    damping_grid=(0.02, 0.05, 0.1, 0.2),
+)
 
 
 def all_banks():
@@ -31,8 +41,12 @@ def all_banks():
     for b in SHIPPED_KO_BANDWIDTHS:
         yield lambda b=b: generate_sdof_bank(ko_conditioning(b))
     for spec, name in ((MDOF2, "mdof2"), (MDOF3, "mdof3")):
-        yield lambda spec=spec, name=name: generate_mdof_bank(conditioning=RAW, bank_id=f"{name}-raw-v1", **spec)
-        yield lambda spec=spec, name=name: generate_mdof_bank(conditioning=ko_conditioning(40.0), bank_id=f"{name}-ko40-v1", **spec)
+        yield lambda spec=spec, name=name: generate_mdof_bank(
+            conditioning=RAW, bank_id=f"{name}-raw-v1", **spec
+        )
+        yield lambda spec=spec, name=name: generate_mdof_bank(
+            conditioning=ko_conditioning(40.0), bank_id=f"{name}-ko40-v1", **spec
+        )
 
 
 def main() -> int:
@@ -52,7 +66,9 @@ def main() -> int:
             bad += not same
         else:
             write_bank(SHIPPED_DIR, manifest, data)
-            print(f"{manifest['bank_id']:<16} templates={manifest['n_templates']:<3} bytes={len(data):<7} {time.time() - t0:.1f}s")
+            print(
+                f"{manifest['bank_id']:<16} templates={manifest['n_templates']:<3} bytes={len(data):<7} {time.time() - t0:.1f}s"
+            )
     return 1 if bad else 0
 
 

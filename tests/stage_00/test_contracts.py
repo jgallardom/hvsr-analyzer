@@ -115,7 +115,12 @@ def structural_analysis_example() -> dict:
             "valid": [False, False],
             "invalid_reasons": {},
         },
-        "windows": {"candidate_count": 1, "qc_passed_count": 1, "rejected_by_reason": {}, "candidates_url": None},
+        "windows": {
+            "candidate_count": 1,
+            "qc_passed_count": 1,
+            "rejected_by_reason": {},
+            "candidates_url": None,
+        },
         "selections": [sel],
         "peak_families": [],
         "interpretation": {
@@ -125,7 +130,12 @@ def structural_analysis_example() -> dict:
             "flags": [],
             "human_annotations_url": None,
         },
-        "quality_dimensions": {"usability": {}, "peak_identifiability": {}, "sensitivity": {}, "summary_score": None},
+        "quality_dimensions": {
+            "usability": {},
+            "peak_identifiability": {},
+            "sensitivity": {},
+            "summary_score": None,
+        },
         "calibration": {"status": "uncalibrated", "profile": None, "note": "x"},
         "units": {"frequency": "Hz"},
         "ci_label": "Estimated 95% pointwise CI for the selected-window mean",
@@ -149,7 +159,21 @@ def structural_manifest_example() -> dict:
         "method": None,
         "source_refs": [],
     }
-    cats = {k: [] for k in ("original_data", "canonical_recordings", "sensor_metadata", "analysis_runs", "spectra", "plots", "templates", "provenance", "licensing", "quality_evaluation")}
+    cats = {
+        k: []
+        for k in (
+            "original_data",
+            "canonical_recordings",
+            "sensor_metadata",
+            "analysis_runs",
+            "spectra",
+            "plots",
+            "templates",
+            "provenance",
+            "licensing",
+            "quality_evaluation",
+        )
+    }
     cats["original_data"] = [art]
     return {
         "schema_id": "hvsr-analyzer/manifest",
@@ -206,7 +230,9 @@ def test_schemas_reject_malformed():
     bad["ci_label"] = "95% confidence band"
     assert validation_errors(bad, "analysis")
     man = structural_manifest_example()
-    man["categories"]["plots"] = [dict(man["categories"]["original_data"][0], url="https://bucket.example/signed?X-Amz-Expires=60")]
+    man["categories"]["plots"] = [
+        dict(man["categories"]["original_data"][0], url="https://bucket.example/signed?X-Amz-Expires=60")
+    ]
     assert validation_errors(man, "manifest"), "expiring signed URLs must not be permanent manifest links"
     with pytest.raises(ValidationError):
         AnalysisRequest.model_validate({"config": {"windowing": {"window_length_s": -1}}})
@@ -230,14 +256,21 @@ def _walk_fields(model: type[BaseModel], prefix=""):
 def test_no_undocumented_defaults(repo_root):
     undocumented = [p for p, f in _walk_fields(AnalysisRequest) if not (f.description or "").strip()]
     assert undocumented == []
-    assert (repo_root / "docs/configuration.md").read_text() == configuration_markdown(), "run scripts/gen_docs.py"
+    assert (repo_root / "docs/configuration.md").read_text() == configuration_markdown(), (
+        "run scripts/gen_docs.py"
+    )
     assert packaged_config_schema_text() == config_schema_text(), "run scripts/gen_docs.py"
 
 
 @pytest.mark.acceptance("AC-S0-04")
 def test_config_roundtrip_and_scientific_hash():
     req = AnalysisRequest.model_validate(
-        {"config": {"windowing": {"window_length_s": 60, "step_s": 2.5}, "spectral": {"horizontal_combination": "geometric"}}}
+        {
+            "config": {
+                "windowing": {"window_length_s": 60, "step_s": 2.5},
+                "spectral": {"horizontal_combination": "geometric"},
+            }
+        }
     )
     text = canonical_dumps(req)
     again = AnalysisRequest.model_validate(json.loads(text))
@@ -245,11 +278,21 @@ def test_config_roundtrip_and_scientific_hash():
     assert canonical_dumps(again) == text
     h = req.config.scientific_hash()
     code = "from hvsr_core.config import AnalysisRequest;import json,sys;print(AnalysisRequest.model_validate(json.loads(sys.argv[1])).config.scientific_hash())"
-    out = subprocess.run([sys.executable, "-c", code, text], capture_output=True, text=True, check=True).stdout.strip()
+    out = subprocess.run(
+        [sys.executable, "-c", code, text], capture_output=True, text=True, check=True
+    ).stdout.strip()
     assert out == h, "hash must be stable across processes"
-    toggled = req.model_copy(update={"report": ReportOptions(evaluate_sesame=False), "display": DisplayOptions(dpi=300), "robustness_check": False})
+    toggled = req.model_copy(
+        update={
+            "report": ReportOptions(evaluate_sesame=False),
+            "display": DisplayOptions(dpi=300),
+            "robustness_check": False,
+        }
+    )
     assert toggled.config.scientific_hash() == h
-    changed = req.config.model_copy(update={"spectral": req.config.spectral.model_copy(update={"ko_bandwidth": 41.0})})
+    changed = req.config.model_copy(
+        update={"spectral": req.config.spectral.model_copy(update={"ko_bandwidth": 41.0})}
+    )
     assert changed.scientific_hash() != h
 
 
@@ -320,7 +363,17 @@ def test_fixtures_known_and_redistributable(fixture_dir):
 def test_dependencies_locked(repo_root):
     lock = tomllib.loads((repo_root / "uv.lock").read_text())
     names = {p["name"]: p.get("version") for p in lock["package"]}
-    for dep in ("numpy", "scipy", "obspy", "pydantic", "fastapi", "sqlalchemy", "arch", "jsonschema", "matplotlib"):
+    for dep in (
+        "numpy",
+        "scipy",
+        "obspy",
+        "pydantic",
+        "fastapi",
+        "sqlalchemy",
+        "arch",
+        "jsonschema",
+        "matplotlib",
+    ):
         assert names.get(dep), f"{dep} not pinned in uv.lock"
 
 

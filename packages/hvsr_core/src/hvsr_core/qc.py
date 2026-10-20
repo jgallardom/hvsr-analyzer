@@ -63,7 +63,12 @@ def screen_windows(rec: Recording, prep: Prepared, win: WindowTable, config: Ana
                 bad = np.zeros(raw.shape[1], dtype=bool)
             sl_bad_p.append(_prefix(bad))
             sl_def_p.append(_prefix(defined))
-        per_seg[pos] = {"clip": np.vstack(clip_p), "change": np.vstack(dead_p), "slbad": np.vstack(sl_bad_p), "sldef": np.vstack(sl_def_p)}
+        per_seg[pos] = {
+            "clip": np.vstack(clip_p),
+            "change": np.vstack(dead_p),
+            "slbad": np.vstack(sl_bad_p),
+            "sldef": np.vstack(sl_def_p),
+        }
     passed = np.ones(win.count, dtype=bool)
     reasons: list[tuple[str, ...]] = []
     notes: list[tuple[str, ...]] = []

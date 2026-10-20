@@ -18,7 +18,9 @@ def _csv(rows, header="time_s,N,E,Z"):
 
 @pytest.mark.acceptance("AC-S1-01")
 def test_three_layouts_and_gzip(fixture_dir):
-    rec, info = read_csv((fixture_dir / "sdof2hz_elapsed_50hz.csv.gz").read_bytes(), CSVOptions(layout="elapsed_time"))
+    rec, info = read_csv(
+        (fixture_dir / "sdof2hz_elapsed_50hz.csv.gz").read_bytes(), CSVOptions(layout="elapsed_time")
+    )
     truth, _ = regenerate("sdof2hz_elapsed_50hz")
     assert rec.sampling_rate_hz == 50.0 and rec.sampling_rate_source == "timestamps"
     assert info.raw_bytes_were_gzip and rec.source["format"] == "csv.gz"
@@ -37,7 +39,9 @@ def test_three_layouts_and_gzip(fixture_dir):
     )
     assert rec3.sampling_rate_source == "declared" and rec3.t0_utc_ns == iso_to_ns("2026-10-20T00:00:00Z")
     with pytest.raises(InputError, match="explicitly declared sampling rate"):
-        read_csv((fixture_dir / "flat_samples_only_20hz.csv").read_bytes(), CSVOptions(layout="samples_with_rate"))
+        read_csv(
+            (fixture_dir / "flat_samples_only_20hz.csv").read_bytes(), CSVOptions(layout="samples_with_rate")
+        )
 
 
 @pytest.mark.acceptance("AC-S1-03")
@@ -54,7 +58,10 @@ def test_missing_and_ambiguous_components():
     with pytest.raises(InputError) as e:
         read_csv(_csv(rows3, "time_s,HH1,HH2,HHZ"), CSVOptions(layout="elapsed_time"))
     assert e.value.code == "components_require_mapping"
-    rec, _ = read_csv(_csv(rows3, "time_s,HH1,HH2,HHZ"), CSVOptions(layout="elapsed_time", column_map={"N": "HH1", "E": "HH2", "Z": "HHZ"}))
+    rec, _ = read_csv(
+        _csv(rows3, "time_s,HH1,HH2,HHZ"),
+        CSVOptions(layout="elapsed_time", column_map={"N": "HH1", "E": "HH2", "Z": "HHZ"}),
+    )
     assert [c.label_kind for c in rec.channels] == ["12Z_mapped", "12Z_mapped", "NEZ"]
     assert any("rotation-invariant" in w for w in rec.diagnostics.warnings)
 
@@ -67,13 +74,23 @@ def test_gaps_and_irregular_timing_not_resampled():
     assert len(rec.segments) == 2 and rec.segments[1].start_index == 150
     assert len(rec.diagnostics.gaps) == 1 and abs(rec.diagnostics.gaps[0].gap_s - 0.5) < 1e-9
     assert rec.total_samples == 200
-    assert np.array_equal(rec.segments[1].data[0], np.arange(100, 200, dtype=float)), "values never interpolated"
+    assert np.array_equal(rec.segments[1].data[0], np.arange(100, 200, dtype=float)), (
+        "values never interpolated"
+    )
 
     jitter = [(f"{i * 0.01 + (0.003 if i % 7 == 0 else 0):.4f}", i, i, i) for i in range(100)]
     rec, _ = read_csv(_csv(jitter), CSVOptions(layout="elapsed_time", sampling_rate_hz=100.0))
     assert rec.diagnostics.timing_irregular and rec.diagnostics.errors
     assert rec.total_samples == 100
-    rec, _ = read_csv(_csv(jitter), CSVOptions(layout="elapsed_time", sampling_rate_hz=100.0, timing_policy="nominal_rate", nominal_jitter_tolerance_fraction=0.4))
+    rec, _ = read_csv(
+        _csv(jitter),
+        CSVOptions(
+            layout="elapsed_time",
+            sampling_rate_hz=100.0,
+            timing_policy="nominal_rate",
+            nominal_jitter_tolerance_fraction=0.4,
+        ),
+    )
     assert not rec.diagnostics.timing_irregular and abs(rec.diagnostics.max_timing_jitter_s - 0.003) < 1e-9
 
 
@@ -97,7 +114,10 @@ def test_no_silent_inference_of_timezone_units_or_decimal_comma():
     assert e.value.code == "decimal_comma"
     rec, _ = read_csv(_csv([(0, 1, 2, 3), (0.1, 1, 2, 3)]), CSVOptions(layout="elapsed_time"))
     assert all(c.units is None and c.quantity == "unknown" for c in rec.channels), "units are never guessed"
-    rec, _ = read_csv(_csv([(0, 1, 2, 3), (0.1, 1, 2, 3)], "time_s,N [m/s],E [m/s],Z [m/s]"), CSVOptions(layout="elapsed_time"))
+    rec, _ = read_csv(
+        _csv([(0, 1, 2, 3), (0.1, 1, 2, 3)], "time_s,N [m/s],E [m/s],Z [m/s]"),
+        CSVOptions(layout="elapsed_time"),
+    )
     assert {c.units for c in rec.channels} == {"m/s"}, "units explicitly written in the header are recorded"
 
 
@@ -105,7 +125,20 @@ def test_no_silent_inference_of_timezone_units_or_decimal_comma():
 def test_pre_analysis_summary(fixture_dir):
     rec, _ = read_csv((fixture_dir / "flat_utc_20hz.csv").read_bytes(), CSVOptions(layout="utc_timestamps"))
     s = rec.summary()
-    for key in ("sampling_rate_hz", "components", "start_utc", "end_utc", "duration_s", "sample_count_per_channel", "units", "gaps", "clipped_samples", "timing_irregular", "errors", "warnings"):
+    for key in (
+        "sampling_rate_hz",
+        "components",
+        "start_utc",
+        "end_utc",
+        "duration_s",
+        "sample_count_per_channel",
+        "units",
+        "gaps",
+        "clipped_samples",
+        "timing_irregular",
+        "errors",
+        "warnings",
+    ):
         assert key in s
     assert s["duration_s"] == 60.0 and s["sample_count_per_channel"] == 1200
     assert s["start_utc"].endswith("Z")

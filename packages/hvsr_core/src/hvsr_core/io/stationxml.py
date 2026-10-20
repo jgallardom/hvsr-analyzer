@@ -31,7 +31,9 @@ def parse_stationxml(data: bytes, max_bytes: int = 20 * 1024 * 1024):
     try:
         inv = read_inventory(io.BytesIO(data), format="STATIONXML")
     except Exception as exc:  # noqa: BLE001
-        raise InputError("stationxml_invalid", f"unreadable StationXML ({type(exc).__name__}: {exc})") from exc
+        raise InputError(
+            "stationxml_invalid", f"unreadable StationXML ({type(exc).__name__}: {exc})"
+        ) from exc
     return inv, sha256_bytes(data)
 
 
@@ -48,14 +50,20 @@ def apply_stationxml(recording: Recording, inventory, sha256: str) -> tuple[Reco
         sid = ch.source_label
         parts = sid.split(".")
         if len(parts) != 4:
-            report["channels"][ch.component] = {"status": "not_matched", "reason": "channel has no NET.STA.LOC.CHA identifier"}
+            report["channels"][ch.component] = {
+                "status": "not_matched",
+                "reason": "channel has no NET.STA.LOC.CHA identifier",
+            }
             new.append(ch)
             continue
         net, sta, loc, cha = parts
         sel = inventory.select(network=net, station=sta, location=loc, channel=cha, time=when)
         chans = [c for n in sel for s in n for c in s]
         if len(chans) != 1 or chans[0].response is None or chans[0].response.instrument_sensitivity is None:
-            report["channels"][ch.component] = {"status": "not_matched", "reason": f"{len(chans)} matching channel epochs with sensitivity"}
+            report["channels"][ch.component] = {
+                "status": "not_matched",
+                "reason": f"{len(chans)} matching channel epochs with sensitivity",
+            }
             new.append(ch)
             continue
         c = chans[0]
@@ -69,7 +77,9 @@ def apply_stationxml(recording: Recording, inventory, sha256: str) -> tuple[Reco
                 sensitivity_units=f"{sens.output_units}/{sens.input_units}",
                 quantity="counts",
                 units="counts",
-                sensed_quantity=quantity if quantity in ("velocity", "acceleration", "displacement") else "other",
+                sensed_quantity=quantity
+                if quantity in ("velocity", "acceleration", "displacement")
+                else "other",
                 azimuth_deg=c.azimuth if c.azimuth is not None else ch.azimuth_deg,
                 dip_deg=c.dip if c.dip is not None else ch.dip_deg,
             )

@@ -50,6 +50,7 @@ def layered_sh_transfer(f: np.ndarray, layers: list[dict], halfspace: dict) -> n
     """
     f = np.asarray(f, dtype=float)
     w = 2.0 * np.pi * f
+
     # complex shear moduli
     def cvs(layer: dict) -> np.ndarray:
         return layer["vs"] * (1.0 + 1j * layer.get("damping", 0.0))
@@ -188,7 +189,9 @@ def generate_3c(
         phase = rng.uniform(0, 2 * np.pi)
         for ci, comp in enumerate("NEZ"):
             if comp in tone.get("components", "NEZ"):
-                data[ci] += tone["amplitude_rel"] * comp_rms[ci] * np.sin(2 * np.pi * tone["freq_hz"] * t + phase)
+                data[ci] += (
+                    tone["amplitude_rel"] * comp_rms[ci] * np.sin(2 * np.pi * tone["freq_hz"] * t + phase)
+                )
         tone_truth.append(dict(tone))
 
     transient_truth = []

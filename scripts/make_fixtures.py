@@ -53,7 +53,12 @@ def mseed_steim2(rec) -> bytes:
     start = UTCDateTime(ns=rec.t0_utc_ns)
     for ci, comp in enumerate("NEZ"):
         tr = Trace(data=rec.segments[0].data[ci].astype(np.int32))
-        tr.stats.network, tr.stats.station, tr.stats.location, tr.stats.channel = "XX", "SYN01", "", f"HH{comp}"
+        tr.stats.network, tr.stats.station, tr.stats.location, tr.stats.channel = (
+            "XX",
+            "SYN01",
+            "",
+            f"HH{comp}",
+        )
         tr.stats.sampling_rate = rec.sampling_rate_hz
         tr.stats.starttime = start
         st.append(tr)

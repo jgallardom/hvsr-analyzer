@@ -48,7 +48,9 @@ def run_core(
     n, step = sample_counts(prep.fs, config.windowing.window_length_s, config.windowing.step_s)
     win = build_candidates(prep, n, step)
     if win.count == 0:
-        raise InputError("no_windows", f"no {config.windowing.window_length_s} s window fits inside the analyzed span")
+        raise InputError(
+            "no_windows", f"no {config.windowing.window_length_s} s window fits inside the analyzed span"
+        )
     grid = build_grid(config, prep.fs, n, instrument.get("usable_band_hz", [None, None]))
     sd = compute_spectra(prep, win, grid, config)
     qc = screen_windows(rec, prep, win, config)

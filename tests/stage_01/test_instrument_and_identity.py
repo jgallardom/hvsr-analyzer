@@ -20,7 +20,9 @@ from hvsr_core.model import ChannelMeta, InputError, Recording, Segment, iso_to_
 
 def _rec(**chan_kw) -> Recording:
     chans = tuple(ChannelMeta(c, f"XX.STA..HH{c}", **chan_kw.get(c, {})) for c in "NEZ")
-    return Recording(100.0, iso_to_ns("2026-10-20T00:00:00Z"), "data", chans, [Segment(0, 0.0, np.zeros((3, 10)))])
+    return Recording(
+        100.0, iso_to_ns("2026-10-20T00:00:00Z"), "data", chans, [Segment(0, 0.0, np.zeros((3, 10)))]
+    )
 
 
 @pytest.mark.acceptance("AC-S1-04")
@@ -28,11 +30,20 @@ def test_gain_and_quantity_mismatch():
     r = _rec(N={"sensitivity": 1e9}, E={"sensitivity": 1e9}, Z={"sensitivity": 2e9})
     out = evaluate_instrument(r, None, "none")
     assert out["status"] == "invalid" and "gain_mismatch" in out["flags"]
-    r = _rec(**{c: {"sensitivity": s, "quantity": "counts", "sensed_quantity": "velocity"} for c, s in zip("NEZ", (1e9, 1e9, 2e9), strict=True)})
+    r = _rec(
+        **{
+            c: {"sensitivity": s, "quantity": "counts", "sensed_quantity": "velocity"}
+            for c, s in zip("NEZ", (1e9, 1e9, 2e9), strict=True)
+        }
+    )
     out = evaluate_instrument(r, None, "scalar_sensitivity")
     assert out["status"] == "verified_common_quantity"
     assert out["scale"] == {"N": 1e-9, "E": 1e-9, "Z": 0.5e-9}
-    r = _rec(N={"sensed_quantity": "velocity"}, E={"sensed_quantity": "velocity"}, Z={"sensed_quantity": "acceleration"})
+    r = _rec(
+        N={"sensed_quantity": "velocity"},
+        E={"sensed_quantity": "velocity"},
+        Z={"sensed_quantity": "acceleration"},
+    )
     assert evaluate_instrument(r, None, "none")["status"] == "invalid"
     assert evaluate_instrument(r, None, "scalar_sensitivity")["status"] == "invalid"
     r = _rec(N={"units": "m/s"}, E={"units": "m/s"}, Z={"units": "counts"})
@@ -48,7 +59,12 @@ def test_unknown_response_is_provisional():
     out = evaluate_instrument(_rec(), None, "none")
     assert out["status"] == "provisional_uncalibrated"
     assert "instrument_response_not_verified" in out["flags"]
-    sensor = SensorMetadata(channels=[ChannelSensor(component=c, units="m/s", quantity="velocity", sensed_quantity="velocity") for c in "NEZ"])
+    sensor = SensorMetadata(
+        channels=[
+            ChannelSensor(component=c, units="m/s", quantity="velocity", sensed_quantity="velocity")
+            for c in "NEZ"
+        ]
+    )
     r = apply_sensor_metadata(_rec(), sensor)
     assert evaluate_instrument(r, sensor, "none")["status"] == "verified_common_quantity"
 
@@ -56,9 +72,44 @@ def test_unknown_response_is_provisional():
 def _stationxml(sens=(1.5e9, 1.5e9, 3.0e9)) -> bytes:
     chans = []
     for c, s in zip("NEZ", sens, strict=True):
-        resp = Response(instrument_sensitivity=InstrumentSensitivity(value=s, frequency=1.0, input_units="M/S", output_units="COUNTS"))
-        chans.append(Channel(code=f"HH{c}", location_code="", latitude=0, longitude=0, elevation=0, depth=0, azimuth=0, dip=0, sample_rate=100, response=resp, start_date=UTCDateTime(2020, 1, 1)))
-    inv = Inventory(networks=[Network(code="XX", stations=[Station(code="STA", latitude=0, longitude=0, elevation=0, channels=chans, creation_date=UTCDateTime(2020, 1, 1))])], source="test")
+        resp = Response(
+            instrument_sensitivity=InstrumentSensitivity(
+                value=s, frequency=1.0, input_units="M/S", output_units="COUNTS"
+            )
+        )
+        chans.append(
+            Channel(
+                code=f"HH{c}",
+                location_code="",
+                latitude=0,
+                longitude=0,
+                elevation=0,
+                depth=0,
+                azimuth=0,
+                dip=0,
+                sample_rate=100,
+                response=resp,
+                start_date=UTCDateTime(2020, 1, 1),
+            )
+        )
+    inv = Inventory(
+        networks=[
+            Network(
+                code="XX",
+                stations=[
+                    Station(
+                        code="STA",
+                        latitude=0,
+                        longitude=0,
+                        elevation=0,
+                        channels=chans,
+                        creation_date=UTCDateTime(2020, 1, 1),
+                    )
+                ],
+            )
+        ],
+        source="test",
+    )
     buf = io.BytesIO()
     inv.write(buf, format="STATIONXML")
     return buf.getvalue()

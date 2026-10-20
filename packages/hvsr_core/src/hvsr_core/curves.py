@@ -31,7 +31,9 @@ def geometric_mean_curve(sd: SpectralData, rows: np.ndarray) -> MeanCurve:
     ng = sd.grid.freq.size
     if n == 0:
         nan = np.full(ng, np.nan)
-        return MeanCurve(nan, nan.copy(), nan.copy(), np.zeros(ng, dtype=np.int64), np.zeros(ng, dtype=bool), 0)
+        return MeanCurve(
+            nan, nan.copy(), nan.copy(), np.zeros(ng, dtype=np.int64), np.zeros(ng, dtype=bool), 0
+        )
     L = sd.ln_hv[rows]
     V = sd.valid[rows]
     count = V.sum(axis=0)

@@ -27,7 +27,9 @@ def _walk(model: type[BaseModel], prefix: str, rows: list[tuple[str, str, str, s
         if get_origin(ann) is Literal:
             type_txt = "one of " + ", ".join(repr(a) for a in get_args(ann))
         else:
-            type_txt = getattr(ann, "__name__", None) or str(ann).replace("typing.", "").replace("hvsr_core.config.", "")
+            type_txt = getattr(ann, "__name__", None) or str(ann).replace("typing.", "").replace(
+                "hvsr_core.config.", ""
+            )
         rows.append((path, type_txt, default, field.description or ""))
         if sub is not None:
             _walk(sub, path + ".", rows)

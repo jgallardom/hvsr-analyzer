@@ -127,7 +127,11 @@ def test_persistent_narrow_line_flagged_as_possible_source_not_removed(seed):
 @pytest.mark.acceptance("AC-S2-16")
 def test_only_a_source_line_gives_possible_source_status():
     rec, _ = generate_3c(
-        duration_s=1200, fs=50, tf=TFSpec("flat"), seed=4, tones=[{"freq_hz": 7.3, "amplitude_rel": 1.5, "components": "NE"}]
+        duration_s=1200,
+        fs=50,
+        tf=TFSpec("flat"),
+        seed=4,
+        tones=[{"freq_hz": 7.3, "amplitude_rel": 1.5, "components": "NE"}],
     )
     d = run_core(rec, AnalysisConfig()).discovery
     assert d.status == "possible_source_peak" and d.fundamental_hz is None
@@ -141,7 +145,9 @@ def test_lower_band_unresolved_when_rising_at_lowest_usable_frequency(seed):
     assert d.status == "lower_band_unresolved"
     assert "lower_band_unresolved" in d.flags
     assert d.fundamental_hz is None
-    assert d.lower_band["unresolved"] and d.lower_band["lowest_usable_frequency_hz"] == pytest.approx(0.2, rel=0.02)
+    assert d.lower_band["unresolved"] and d.lower_band["lowest_usable_frequency_hz"] == pytest.approx(
+        0.2, rel=0.02
+    )
     # a resolved low peak inside coverage is not flagged
     ok, _ = core_run("sdof2", seed)
     assert not ok.discovery.lower_band["unresolved"]

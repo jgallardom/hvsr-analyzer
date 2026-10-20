@@ -56,12 +56,16 @@ def test_separate_files_and_explicit_multi_trace_mapping():
     files = [(f"{c}.mseed", _write([_trace(c, _data("STEIM2", seed=i))])) for i, c in enumerate("NEZ")]
     rec = read_miniseed(files)
     assert [c.source_label for c in rec.channels] == ["XX.STA01..HHN", "XX.STA01..HHE", "XX.STA01..HHZ"]
-    two_sta = [_trace(c, _data("STEIM2", seed=i), sta=s) for s in ("STA01", "STA02") for i, c in enumerate("NEZ")]
+    two_sta = [
+        _trace(c, _data("STEIM2", seed=i), sta=s) for s in ("STA01", "STA02") for i, c in enumerate("NEZ")
+    ]
     payload = _write(two_sta)
     with pytest.raises(InputError) as e:
         read_miniseed([("x.mseed", payload)])
     assert e.value.code == "channel_mapping_required"
-    rec = read_miniseed([("x.mseed", payload)], mapping={"N": "XX.STA02..HHN", "E": "XX.STA02..HHE", "Z": "XX.STA02..HHZ"})
+    rec = read_miniseed(
+        [("x.mseed", payload)], mapping={"N": "XX.STA02..HHN", "E": "XX.STA02..HHE", "Z": "XX.STA02..HHZ"}
+    )
     assert rec.channels[0].source_label == "XX.STA02..HHN"
 
 
@@ -71,7 +75,9 @@ def test_mseed_12z_requires_mapping():
     with pytest.raises(InputError) as e:
         read_miniseed([("x.mseed", payload)])
     assert e.value.code == "components_require_mapping"
-    rec = read_miniseed([("x.mseed", payload)], mapping={"N": "XX.STA01..HH1", "E": "XX.STA01..HH2", "Z": "XX.STA01..HHZ"})
+    rec = read_miniseed(
+        [("x.mseed", payload)], mapping={"N": "XX.STA01..HH1", "E": "XX.STA01..HH2", "Z": "XX.STA01..HHZ"}
+    )
     assert rec.channels[0].label_kind == "12Z_mapped"
     payload2 = _write([_trace(c, _data("STEIM2", seed=i)) for i, c in enumerate("NE")])
     with pytest.raises(InputError):
@@ -111,14 +117,26 @@ def test_unsupported_versions_and_encodings():
 
 @pytest.mark.acceptance("AC-S1-20")
 def test_channels_not_silently_combined():
-    traces = [_trace("N", _data("STEIM2")), _trace("E", _data("STEIM2")), _trace("Z", _data("STEIM2", 2000), fs=200.0)]
+    traces = [
+        _trace("N", _data("STEIM2")),
+        _trace("E", _data("STEIM2")),
+        _trace("Z", _data("STEIM2", 2000), fs=200.0),
+    ]
     with pytest.raises(InputError) as e:
         read_miniseed([("x.mseed", _write(traces))])
     assert e.value.code == "sampling_rate_mismatch"
-    traces = [_trace("N", _data("STEIM2")), _trace("E", _data("STEIM2")), _trace("Z", _data("STEIM2"), start=T0 + 0.005)]
+    traces = [
+        _trace("N", _data("STEIM2")),
+        _trace("E", _data("STEIM2")),
+        _trace("Z", _data("STEIM2"), start=T0 + 0.005),
+    ]
     with pytest.raises(InputError) as e:
         read_miniseed([("x.mseed", _write(traces))])
     assert e.value.code == "channels_not_synchronized"
-    traces = [_trace("N", _data("STEIM2")), _trace("E", _data("STEIM2")), _trace("Z", _data("STEIM2"), start=T0 + 0.5)]
+    traces = [
+        _trace("N", _data("STEIM2")),
+        _trace("E", _data("STEIM2")),
+        _trace("Z", _data("STEIM2"), start=T0 + 0.5),
+    ]
     rec = read_miniseed([("x.mseed", _write(traces))])
     assert rec.total_samples == 950, "only the common, sample-aligned span is used"

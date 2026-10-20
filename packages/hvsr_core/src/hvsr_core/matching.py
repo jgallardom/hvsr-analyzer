@@ -47,7 +47,9 @@ class PeakEstimates:
     grid_index: np.ndarray  # -1 when no peak
 
 
-def estimate_peaks(ln_hv: np.ndarray, valid: np.ndarray, ln_f: np.ndarray, rows: np.ndarray, lo: int, hi: int, method: str) -> PeakEstimates:
+def estimate_peaks(
+    ln_hv: np.ndarray, valid: np.ndarray, ln_f: np.ndarray, rows: np.ndarray, lo: int, hi: int, method: str
+) -> PeakEstimates:
     fp = np.full(rows.size, np.nan)
     la = np.full(rows.size, np.nan)
     gi = np.full(rows.size, -1, dtype=np.int64)
@@ -73,7 +75,9 @@ def _bracket(ln_f: np.ndarray, lo_val: float, hi_val: float) -> tuple[int, int] 
     return max(a, 0), min(b, ln_f.size - 1)
 
 
-def fft_bins_between(f_lo: float, f_hi: float, df: float, lower_closed: bool = True, upper_closed: bool = True) -> int:
+def fft_bins_between(
+    f_lo: float, f_hi: float, df: float, lower_closed: bool = True, upper_closed: bool = True
+) -> int:
     k_lo = math.ceil(f_lo / df - 1e-9) if lower_closed else math.floor(f_lo / df + 1e-9) + 1
     k_hi = math.floor(f_hi / df + 1e-9) if upper_closed else math.ceil(f_hi / df - 1e-9) - 1
     return max(0, k_hi - max(k_lo, 1) + 1)
@@ -150,7 +154,8 @@ def match_family(
             continue
         if (
             fft_bins_between(fit[k, 0], fit[k, 1], df_hz) < cfg.min_fft_bins_in_fit_band
-            or fft_bins_between(fit[k, 0], peaks.fp[k], df_hz, upper_closed=False) < cfg.min_fft_bins_below_peak
+            or fft_bins_between(fit[k, 0], peaks.fp[k], df_hz, upper_closed=False)
+            < cfg.min_fft_bins_below_peak
         ):
             status[k] = "insufficient_resolution"
             continue
@@ -192,7 +197,9 @@ def match_family(
     return MatchTable(family_id, bank.provenance(), rows, peaks, status, Y, r2, best_k, best, flags, fit)
 
 
-def greedy_select(global_start: np.ndarray, ids: list[str], n_samples: int, score: np.ndarray, eligible: np.ndarray) -> list[int]:
+def greedy_select(
+    global_start: np.ndarray, ids: list[str], n_samples: int, score: np.ndarray, eligible: np.ndarray
+) -> list[int]:
     """Indices (into the arrays) chosen best-first; every candidate sharing a sample is removed.
 
     Order: higher score first, then lower global start index, then stable window ID.
@@ -225,12 +232,16 @@ class FamilySelection:
         return np.sort(self.selected)
 
 
-def select_family(table: MatchTable, win: WindowTable, sd: SpectralData, config: AnalysisConfig) -> FamilySelection:
+def select_family(
+    table: MatchTable, win: WindowTable, sd: SpectralData, config: AnalysisConfig
+) -> FamilySelection:
     cfg = config.sdof
     ids = win.ids()
     gs = win.global_start[table.rows]
     elig = table.eligible_mask()
-    order = greedy_select(gs, [ids[r] for r in table.rows], win.n_samples, np.nan_to_num(table.best_r2, nan=-np.inf), elig)
+    order = greedy_select(
+        gs, [ids[r] for r in table.rows], win.n_samples, np.nan_to_num(table.best_r2, nan=-np.inf), elig
+    )
     notes = []
     requested = None
     if cfg.selection_mode == "manual_top_n":
@@ -249,7 +260,13 @@ def select_family(table: MatchTable, win: WindowTable, sd: SpectralData, config:
     return FamilySelection(table.family_id, table.bank, table, sel, status, requested, mean, notes)
 
 
-def sdof_for_families(sd: SpectralData, qc_passed: np.ndarray, families: list[Family], bank: TemplateBank, config: AnalysisConfig) -> list[FamilySelection]:
+def sdof_for_families(
+    sd: SpectralData,
+    qc_passed: np.ndarray,
+    families: list[Family],
+    bank: TemplateBank,
+    config: AnalysisConfig,
+) -> list[FamilySelection]:
     """Rank and select separately inside each plausible peak family."""
     rows = np.flatnonzero(qc_passed)
     ln_hv = sd.ln_hv
@@ -258,6 +275,8 @@ def sdof_for_families(sd: SpectralData, qc_passed: np.ndarray, families: list[Fa
     for fam in families:
         if not fam.plausible:
             continue
-        table = match_family(ln_hv, sd.valid, ln_f, sd.df_hz, rows, fam.family_id, fam.lo_index, fam.hi_index, bank, config)
+        table = match_family(
+            ln_hv, sd.valid, ln_f, sd.df_hz, rows, fam.family_id, fam.lo_index, fam.hi_index, bank, config
+        )
         out.append(select_family(table, sd.window, sd, config))
     return out
