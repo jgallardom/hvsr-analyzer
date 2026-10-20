@@ -1,0 +1,890 @@
+# Acceptance requirements traced from docs/spec/HVSR_Analyzer_Cursor_Prompt_v2.md.
+#
+# Each [[req]] must be covered by at least one test tagged @pytest.mark.acceptance("<id>"),
+# unless it carries `status = "BLOCKED"` or `status = "UNVALIDATED"` with a `reason` and `needs`.
+# `kind = "scientific-validation"` marks gates that measure scientific performance; the application
+# mechanics can pass while such a gate remains UNVALIDATED (spec Stage 5).
+
+# ---------------------------------------------------------------- Stage 0
+[[req]]
+id = "AC-S0-01"
+stage = 0
+section = "13.3; Stage 0"
+text = "JSON Schemas (config, analysis, manifest, template bank) validate conforming examples."
+
+[[req]]
+id = "AC-S0-02"
+stage = 0
+section = "13.3; Stage 0"
+text = "Schemas reject malformed data: missing required fields, bad enums, NaN/Infinity, JSON-in-string."
+
+[[req]]
+id = "AC-S0-03"
+stage = 0
+section = "Stage 0"
+text = "No undocumented defaults: every configuration field has a description and the generated configuration reference is in sync with the model."
+
+[[req]]
+id = "AC-S0-04"
+stage = 0
+section = "12.1; Stage 0"
+text = "All result-affecting parameters serialize and round-trip exactly; the scientific hash is stable and excludes display/SESAME/report options."
+
+[[req]]
+id = "AC-S0-05"
+stage = 0
+section = "1; Stage 0"
+text = "The scientific core imports in a clean process without network, credentials, or web/DB/cloud modules."
+
+[[req]]
+id = "AC-S0-06"
+stage = 0
+section = "15.1"
+text = "Every stage 0-9 has acceptance IDs and every ID is traced to tests or an explicit BLOCKED/UNVALIDATED state."
+
+[[req]]
+id = "AC-S0-07"
+stage = 0
+section = "Stage 0"
+text = "Synthetic fixtures are generated deterministically with documented known properties and redistribution status."
+
+[[req]]
+id = "AC-S0-08"
+stage = 0
+section = "1; Stage 0"
+text = "Dependencies are pinned by a lockfile; versions used are recorded."
+
+[[req]]
+id = "AC-S0-09"
+stage = 0
+section = "2.3; 5"
+text = "Units and timing rules are documented and implemented: UTC ISO 8601, half-open sample intervals, integer-derived time bounds."
+
+# ---------------------------------------------------------------- Stage 1
+[[req]]
+id = "AC-S1-01"
+stage = 1
+section = "2.1"
+text = "CSV templates parse: elapsed time + 3 components, UTC timestamps + 3 components, 3 components + explicit sampling rate; CSV.GZ accepted."
+
+[[req]]
+id = "AC-S1-02"
+stage = 1
+section = "2.1"
+text = "MiniSEED v2 parses for each declared supported encoding; separate component files and multi-trace files with explicit mapping."
+
+[[req]]
+id = "AC-S1-03"
+stage = 1
+section = "2.1"
+text = "Missing or ambiguous components are rejected; 1/2/Z requires explicit manual mapping."
+
+[[req]]
+id = "AC-S1-04"
+stage = 1
+section = "2.2"
+text = "Differing gains/units: corrected to a common quantity with valid sensitivity, otherwise invalid/provisional with precise reason; incompatible quantities never divided."
+
+[[req]]
+id = "AC-S1-05"
+stage = 1
+section = "2.1"
+text = "Gaps and irregular timing are detected and reported; no silent interpolation or resampling."
+
+[[req]]
+id = "AC-S1-06"
+stage = 1
+section = "2.1"
+text = "Unsupported MiniSEED versions/encodings are rejected with a clear error."
+
+[[req]]
+id = "AC-S1-07"
+stage = 1
+section = "2.2"
+text = "Unknown response/uncalibrated counts allow only provisional analysis with an instrument-response-not-verified flag."
+
+[[req]]
+id = "AC-S1-08"
+stage = 1
+section = "4.1"
+text = "Compressed CSV preservation reconstructs the exact original byte stream and SHA-256; original and stored-object checksums are distinct."
+
+[[req]]
+id = "AC-S1-09"
+stage = 1
+section = "4.2"
+text = "FLOAT64 canonical MiniSEED round-trips bitwise at the declared canonical precision."
+
+[[req]]
+id = "AC-S1-10"
+stage = 1
+section = "4.2"
+text = "Integer data round-trips bitwise through STEIM2; floats are never rounded/scaled to integers for compression."
+
+[[req]]
+id = "AC-S1-11"
+stage = 1
+section = "4.2"
+text = "A failed canonical conversion never deletes or replaces the source."
+
+[[req]]
+id = "AC-S1-12"
+stage = 1
+section = "4.2"
+text = "Canonical-only labels are truthful: original_bytes_retained=false, 'Reconstructed CSV', never 'Original CSV'."
+
+[[req]]
+id = "AC-S1-13"
+stage = 1
+section = "3.2"
+text = "Decompression bombs and oversize decoded inputs are rejected by decoded-size and ratio limits."
+
+[[req]]
+id = "AC-S1-14"
+stage = 1
+section = "4.2"
+text = "Timestamps not representable by the canonical format cause canonical-only refusal (original preserved)."
+
+[[req]]
+id = "AC-S1-15"
+stage = 1
+section = "4.2"
+text = "Extra CSV columns are preserved in a sidecar or canonical-only is refused."
+
+[[req]]
+id = "AC-S1-16"
+stage = 1
+section = "2.1"
+text = "Ambiguous dates, time zones, and units are never silently inferred."
+
+[[req]]
+id = "AC-S1-17"
+stage = 1
+section = "2.3"
+text = "Record identity: full geohash retained, characters 3-7 (one-based), leap-aware UTC decimal year to 4 decimals, declared time source, ggggg-yyyy.yyyy format."
+
+[[req]]
+id = "AC-S1-18"
+stage = 1
+section = "2.2"
+text = "Photos: content validated, decompressed-size limited, orientation applied, exactly 300x300 with aspect-preserving pad, EXIF/GPS stripped."
+
+[[req]]
+id = "AC-S1-19"
+stage = 1
+section = "2.1"
+text = "Pre-analysis summary reports sampling frequency, components, start/end, duration, sample count, units, gaps, clipping, timing irregularities, errors."
+
+[[req]]
+id = "AC-S1-20"
+stage = 1
+section = "2.1"
+text = "Channels with different rates or non-synchronized sample times are not silently combined."
+
+[[req]]
+id = "AC-S1-21"
+stage = 1
+section = "2.2"
+text = "StationXML is accepted separately with checksum; per-channel sensitivity extracted; correction method/parameters/response checksum recorded."
+
+# ---------------------------------------------------------------- Stage 2
+[[req]]
+id = "AC-S2-01"
+stage = 2
+section = "5"
+text = "Windows are synchronized half-open integer sample intervals; time bounds derive from integer indices."
+
+[[req]]
+id = "AC-S2-02"
+stage = 2
+section = "5"
+text = "FFT resolution is reported separately from grid spacing; Nyquist and smoothing support are validated."
+
+[[req]]
+id = "AC-S2-03"
+stage = 2
+section = "5; 14"
+text = "Sparse Konno-Ohmachi operator equals a direct reference evaluation; normalization/support documented."
+
+[[req]]
+id = "AC-S2-04"
+stage = 2
+section = "Stage 2"
+text = "Per-window and mean HVSR match hvsrpy under matched settings on independently generated fixtures within a documented numerical tolerance."
+
+[[req]]
+id = "AC-S2-05"
+stage = 2
+section = "Stage 2"
+text = "Comparison against Geopsy under matched settings."
+status = "BLOCKED"
+reason = "Geopsy is not installed in this environment and no legally redistributable Geopsy-processed reference output is available."
+needs = "Install Geopsy (or obtain Geopsy outputs for the synthetic fixtures) and add tests/stage_02/test_geopsy_reference.py."
+
+[[req]]
+id = "AC-S2-06"
+stage = 2
+section = "6"
+text = "Flat (no resonance) recordings yield no_clear_peak, not a forced fundamental."
+
+[[req]]
+id = "AC-S2-07"
+stage = 2
+section = "6"
+text = "A clean single resonance yields single_plausible_peak near the known frequency."
+
+[[req]]
+id = "AC-S2-08"
+stage = 2
+section = "6"
+text = "Broad and multiple peaks are identified as families; multiple_plausible_peaks when more than one is defensible."
+
+[[req]]
+id = "AC-S2-09"
+stage = 2
+section = "6"
+text = "Weak low peak + stronger higher peak: global maximum stored separately; the lower family is reported, not overwritten by the maximum."
+
+[[req]]
+id = "AC-S2-10"
+stage = 2
+section = "8.1"
+text = "Clipped windows are detected and excluded by basic QC."
+
+[[req]]
+id = "AC-S2-11"
+stage = 2
+section = "5"
+text = "Zero/invalid vertical bins are masked invalid (not zero, not invented)."
+
+[[req]]
+id = "AC-S2-12"
+stage = 2
+section = "5"
+text = "Effective valid-frequency mask accounts for Nyquist/anti-alias limit, smoothing support, and declared usable band."
+
+[[req]]
+id = "AC-S2-13"
+stage = 2
+section = "6"
+text = "Peak discovery uses quality-screened NON-overlapping windows; recurrence cannot be inflated by overlapping copies."
+
+[[req]]
+id = "AC-S2-14"
+stage = 2
+section = "5"
+text = "Horizontal RMS combination by default; geometric combination available explicitly."
+
+[[req]]
+id = "AC-S2-15"
+stage = 2
+section = "5"
+text = "Preprocessing order is fixed and recorded; filtering off by default; derived operations recorded."
+
+[[req]]
+id = "AC-S2-16"
+stage = 2
+section = "6"
+text = "Persistent narrow lines are flagged as possible source peaks (diagnostic, not automatic rejection)."
+
+[[req]]
+id = "AC-S2-17"
+stage = 2
+section = "6"
+text = "Lower band unresolved when the curve is still rising at the lowest usable frequency."
+
+[[req]]
+id = "AC-S2-18"
+stage = 2
+section = "8.1"
+text = "Standard reference is deterministic: named basic QC then earliest-first non-overlapping selection; optional frequency-outlier rejection kept separate with a basic-only audit reference."
+
+[[req]]
+id = "AC-S2-19"
+stage = 2
+section = "5"
+text = "Timing endpoints: analyzed tmin/tmax map to integer sample bounds; raw and analyzed bounds preserved."
+
+# ---------------------------------------------------------------- Stage 3
+[[req]]
+id = "AC-S3-01"
+stage = 3
+section = "7.2"
+text = "Template designated peaks align at q=1 with amplitude 1 after normalization (raw and conditioned)."
+
+[[req]]
+id = "AC-S3-02"
+stage = 3
+section = "Stage 3"
+text = "Dense direct SDOF evaluation agrees with bank lookup."
+
+[[req]]
+id = "AC-S3-03"
+stage = 3
+section = "Stage 3"
+text = "Windows generated from a known template score near 1 within the declared interpolation tolerance and select that template."
+
+[[req]]
+id = "AC-S3-04"
+stage = 3
+section = "7.2"
+text = "The damped peak r_peak(zeta) is not confused with the undamped natural frequency."
+
+[[req]]
+id = "AC-S3-05"
+stage = 3
+section = "7.1"
+text = "q grid: 129 points uniform in ln q over [-ln 2, ln 2], symmetric, includes q=1."
+
+[[req]]
+id = "AC-S3-06"
+stage = 3
+section = "7.1"
+text = "Incomplete fit bands are rejected (no truncation, extrapolation, or gap bridging)."
+
+[[req]]
+id = "AC-S3-07"
+stage = 3
+section = "7.3"
+text = "No scores use data outside [fp/2, 2 fp]: perturbing outside the band leaves scores unchanged."
+
+[[req]]
+id = "AC-S3-08"
+stage = 3
+section = "7.3"
+text = "Negative R-squared values are retained unclamped."
+
+[[req]]
+id = "AC-S3-09"
+stage = 3
+section = "7.3"
+text = "Zero/near-zero log-amplitude variance is unrankable (undefined), never 1."
+
+[[req]]
+id = "AC-S3-10"
+stage = 3
+section = "8.2"
+text = "Manual top-n never fills the requested count with invalid or non-matching candidates."
+
+[[req]]
+id = "AC-S3-11"
+stage = 3
+section = "8.2"
+text = "Greedy selection removes any candidate sharing samples (half-open); ties broken by start index then stable ID."
+
+[[req]]
+id = "AC-S3-12"
+stage = 3
+section = "7.4; 12.1"
+text = "Switching template-bank versions changes recorded provenance (bank ID/hash)."
+
+[[req]]
+id = "AC-S3-13"
+stage = 3
+section = "7.4"
+text = "2DOF/3DOF top-mass absolute response agrees with an independent modal solution and low-frequency/SDOF limits."
+
+[[req]]
+id = "AC-S3-14"
+stage = 3
+section = "8.2; Stage 3 CRITICAL"
+text = "Final observed means and peak scatter retain original frequencies/amplitudes; a test fails if final spectra are peak-aligned or amplitude-normalized."
+
+[[req]]
+id = "AC-S3-15"
+stage = 3
+section = "7.4; 14"
+text = "Bank import rejects pickle/object arrays, unsafe archive paths, schema/hash/domain violations."
+
+[[req]]
+id = "AC-S3-16"
+stage = 3
+section = "7.1"
+text = "fp and Ap are frozen before template evaluation and do not depend on the bank."
+
+[[req]]
+id = "AC-S3-17"
+stage = 3
+section = "7.3"
+text = "Batched SSE via norms and dot products matches direct residual computation."
+
+[[req]]
+id = "AC-S3-18"
+stage = 3
+section = "7.1"
+text = "Insufficient FFT resolution in the fit band makes a candidate unrankable."
+
+[[req]]
+id = "AC-S3-19"
+stage = 3
+section = "6; 8.2"
+text = "Multiple peak families are ranked and selected separately."
+
+[[req]]
+id = "AC-S3-20"
+stage = 3
+section = "7.3"
+text = "Ties between templates and damping-grid boundary maxima are flagged."
+
+# ---------------------------------------------------------------- Stage 4
+[[req]]
+id = "AC-S4-01"
+stage = 4
+section = "8.2; 9.2"
+text = "Geometric mean equals exp(mean ln) of original per-window spectra."
+
+[[req]]
+id = "AC-S4-02"
+stage = 4
+section = "9.2"
+text = "Bootstrap results are deterministic for a recorded seed."
+
+[[req]]
+id = "AC-S4-03"
+stage = 4
+section = "9.2"
+text = "Resampling draws whole spectral vectors, preserving cross-frequency structure."
+
+[[req]]
+id = "AC-S4-04"
+stage = 4
+section = "9.2"
+text = "Clustered/correlated evidence does not acquire the iid sample count (block count, wider band than naive iid)."
+
+[[req]]
+id = "AC-S4-05"
+stage = 4
+section = "9.2"
+text = "Gaps are preserved: blocks are defined in original time, never on a gap-compressed index."
+
+[[req]]
+id = "AC-S4-06"
+stage = 4
+section = "9.2"
+text = "Too few informative blocks returns ci_not_estimable; no zero-width interval is ever reported."
+
+[[req]]
+id = "AC-S4-07"
+stage = 4
+section = "9.2"
+text = "Peak bootstrap tracks no-peak and alternate-family replicates instead of dropping them."
+
+[[req]]
+id = "AC-S4-08"
+stage = 4
+section = "8.3; 9.3"
+text = "Adding rejected data outside accepted windows does not widen the CI."
+
+[[req]]
+id = "AC-S4-09"
+stage = 4
+section = "9.2"
+text = "Predeclared block-length sensitivity is reported; the narrowest is not chosen."
+
+[[req]]
+id = "AC-S4-10"
+stage = 4
+section = "9.1"
+text = "Conditional-mean CI is distinct from window dispersion; only one band is exported for plotting."
+
+[[req]]
+id = "AC-S4-11"
+stage = 4
+section = "9.2"
+text = "Multimodal peak bootstrap distributions are reported as ambiguous."
+
+[[req]]
+id = "AC-S4-12"
+stage = 4
+section = "9.2; 14"
+text = "Bootstrap operates on cached spectra without recomputing FFTs."
+
+# ---------------------------------------------------------------- Stage 5
+[[req]]
+id = "AC-S5-01"
+stage = 5
+section = "Stage 5"
+text = "Research harness is reproducible from seeds; development and locked test sets are disjoint."
+
+[[req]]
+id = "AC-S5-02"
+stage = 5
+section = "Stage 5"
+text = "Protocol (counts, seeds, metrics, acceptance ranges) is predeclared and hash-locked before the test set runs."
+
+[[req]]
+id = "AC-S5-03"
+stage = 5
+section = "8.3"
+text = "Scenarios include flat, broad/asymmetric, multiple peaks, weak fundamental + strong higher peak, colored noise, transients, machine tones, component mismatch, layered site response."
+
+[[req]]
+id = "AC-S5-04"
+stage = 5
+section = "Stage 5"
+text = "Reports bias, abs/rel fp error, false-peak rate, coverage and width, no-result rate, retained evidence, compute cost for Standard and SDOF separately."
+
+[[req]]
+id = "AC-S5-05"
+stage = 5
+section = "Stage 5"
+text = "Includes and reports cases where R-squared improves while the inferred fundamental is wrong."
+
+[[req]]
+id = "AC-S5-06"
+stage = 5
+section = "Stage 5"
+kind = "scientific-validation"
+text = "Nominal 95% coverage and false-peak targets met within Monte Carlo error on the locked test set."
+
+[[req]]
+id = "AC-S5-07"
+stage = 5
+section = "8.3"
+text = "Reference layered/site-response cases from an appropriately sourced published benchmark."
+status = "BLOCKED"
+reason = "No legally redistributable published layered-site benchmark with recordings is bundled. Synthetic 1D SH layered transfer functions computed by this project are included instead (AC-S5-03)."
+needs = "Obtain a licensed benchmark dataset (e.g., a published InterPACIFIC-type case with redistribution rights) and add it to the locked test set."
+
+# ---------------------------------------------------------------- Stage 6
+[[req]]
+id = "AC-S6-01"
+stage = 6
+section = "10"
+text = "All SESAME reliability (3) and clarity (6) criteria implemented with pass/fail/not-evaluable cases and >=5 of 6 rule."
+
+[[req]]
+id = "AC-S6-02"
+stage = 6
+section = "10"
+text = "Unit tests immediately below, at, and above every SESAME threshold boundary, under the documented convention."
+
+[[req]]
+id = "AC-S6-03"
+stage = 6
+section = "10"
+text = "Toggling SESAME leaves candidate windows, selections, means, peaks, bootstrap results, and template scores identical."
+
+[[req]]
+id = "AC-S6-04"
+stage = 6
+section = "10"
+text = "Wider SESAME diagnostic bands never extend template scoring."
+
+[[req]]
+id = "AC-S6-05"
+stage = 6
+section = "12.1"
+text = "Verification replay bypasses the cache and reproduces numeric arrays and selections within the recorded tolerance."
+
+[[req]]
+id = "AC-S6-06"
+stage = 6
+section = "12.2"
+text = "50 s / 75 s runs on a clean synthetic agree within predeclared tolerances where adequately resolved."
+
+[[req]]
+id = "AC-S6-07"
+stage = 6
+section = "12.2"
+text = "Deliberately sensitive/multi-peak cases are flagged, not forced to agree; insufficient run B is not evaluable."
+
+[[req]]
+id = "AC-S6-08"
+stage = 6
+section = "13.2; 14"
+text = "Cosmetic/report changes reuse existing science and do not invoke FFT or bootstrap."
+
+[[req]]
+id = "AC-S6-09"
+stage = 6
+section = "11"
+text = "Usability, peak identifiability, and sensitivity are separate reported dimensions; any summary score exposes formula/weights/version."
+
+[[req]]
+id = "AC-S6-10"
+stage = 6
+section = "6"
+text = "Human interpretations are separate attributed annotations that cannot overwrite computed values."
+
+[[req]]
+id = "AC-S6-11"
+stage = 6
+section = "10"
+text = "Unchecked SESAME stores not_requested; with no defensible peak, peak-dependent checks are not evaluable."
+
+[[req]]
+id = "AC-S6-12"
+stage = 6
+section = "12.1"
+text = "Identical scientific requests reuse the cached immutable result."
+
+# ---------------------------------------------------------------- Stage 7
+[[req]]
+id = "AC-S7-01"
+stage = 7
+section = "3.2"
+text = "Concurrent quota reservations cannot exceed the monthly budget."
+
+[[req]]
+id = "AC-S7-02"
+stage = 7
+section = "3.2"
+text = "Retries with the same idempotency key are not charged twice; deletions do not refund."
+
+[[req]]
+id = "AC-S7-03"
+stage = 7
+section = "3.2"
+text = "Guest uploads (if enabled) are labeled best-effort; no per-person claim from IP/cookie."
+
+[[req]]
+id = "AC-S7-04"
+stage = 7
+section = "3.2; 4"
+text = "Staged and failed uploads are cleaned up safely without touching committed data."
+
+[[req]]
+id = "AC-S7-05"
+stage = 7
+section = "1"
+text = "Committed archives and metadata survive an application restart."
+
+[[req]]
+id = "AC-S7-06"
+stage = 7
+section = "13.3"
+text = "Manifest links are stable endpoints; expired signed URLs do not break them."
+
+[[req]]
+id = "AC-S7-07"
+stage = 7
+section = "4"
+text = "Original/canonical/reconstructed labels remain correct through storage."
+
+[[req]]
+id = "AC-S7-08"
+stage = 7
+section = "3.1"
+text = "Manifests carry license URL/ID, consent wording/version/timestamp, attribution, and modification history."
+
+[[req]]
+id = "AC-S7-09"
+stage = 7
+section = "1; 14"
+text = "Worker interruption/retry cannot publish partial or duplicate science."
+
+[[req]]
+id = "AC-S7-10"
+stage = 7
+section = "1; Stage 7"
+text = "One backup/restore cycle is demonstrated."
+
+[[req]]
+id = "AC-S7-11"
+stage = 7
+section = "2.3"
+text = "Record-code collision suffixes are allocated transactionally; never overwrite."
+
+[[req]]
+id = "AC-S7-12"
+stage = 7
+section = "2.3"
+text = "Metadata corrections are versioned; record code stable; analyses reference their metadata snapshot."
+
+[[req]]
+id = "AC-S7-13"
+stage = 7
+section = "3.1"
+text = "Consent checkbox is unchecked by default and required; wording/version stored."
+
+[[req]]
+id = "AC-S7-14"
+stage = 7
+section = "3.2"
+text = "Quota charges logical uncompressed waveform bytes; stored and transfer bytes metered separately."
+
+[[req]]
+id = "AC-S7-15"
+stage = 7
+section = "3.2"
+text = "Resource ceilings (request bytes, decoded bytes, ratio, samples, channels/files, duration, windows, bootstrap, comparisons, concurrency) are enforced and configurable."
+
+[[req]]
+id = "AC-S7-16"
+stage = 7
+section = "3.1"
+text = "Moderation/removal workflow exists; removal is recorded and explains limits of recall."
+
+[[req]]
+id = "AC-S7-17"
+stage = 7
+section = "3.2"
+text = "Upload tokens are stored hashed, never in public URLs; private identity is separate from public attribution."
+
+[[req]]
+id = "AC-S7-18"
+stage = 7
+section = "1"
+text = "S3-compatible object-store adapter works against the S3 API (emulated)."
+
+[[req]]
+id = "AC-S7-19"
+stage = 7
+section = "1"
+text = "Durable job table with atomic claims, leases, and expired-lease recovery."
+
+# ---------------------------------------------------------------- Stage 8
+[[req]]
+id = "AC-S8-01"
+stage = 8
+section = "Stage 8"
+text = "Complete upload-to-result flow through the HTTP interface."
+
+[[req]]
+id = "AC-S8-02"
+stage = 8
+section = "Stage 8"
+text = "Plot, CSV, and JSON of a run/method are numerically identical."
+
+[[req]]
+id = "AC-S8-03"
+stage = 8
+section = "13.3"
+text = "Original, canonical, numerical, and plot downloads are separate endpoints."
+
+[[req]]
+id = "AC-S8-04"
+stage = 8
+section = "13.3"
+text = "Normalized waveform CSV export is available without decoding MiniSEED."
+
+[[req]]
+id = "AC-S8-05"
+stage = 8
+section = "4.2; 13.3"
+text = "Missing originals are disclosed with explicit availability state."
+
+[[req]]
+id = "AC-S8-06"
+stage = 8
+section = "13.1"
+text = "Plots carry the required provenance footer and no SESAME explanations."
+
+[[req]]
+id = "AC-S8-07"
+stage = 8
+section = "13.1"
+text = "Figures and pages are readable on desktop and mobile widths."
+
+[[req]]
+id = "AC-S8-08"
+stage = 8
+section = "3.1"
+text = "License and attribution are visible on public pages."
+
+[[req]]
+id = "AC-S8-09"
+stage = 8
+section = "13.3"
+text = "Every manifest link resolves or has an explicit unavailable state."
+
+[[req]]
+id = "AC-S8-10"
+stage = 8
+section = "13.3"
+text = "Real exports validate against the published schemas."
+
+[[req]]
+id = "AC-S8-11"
+stage = 8
+section = "13.1"
+text = "Results title is RECORD_CODE (latitude, longitude); one band labeled exactly as specified."
+
+[[req]]
+id = "AC-S8-12"
+stage = 8
+section = "13.1"
+text = "English strings are centralized for later localization."
+
+[[req]]
+id = "AC-S8-13"
+stage = 8
+section = "13.3"
+text = "Numeric CSV is UTF-8 with explicit headers/units; unavailable values blank with reason, never zero."
+
+# ---------------------------------------------------------------- Stage 9
+[[req]]
+id = "AC-S9-01"
+stage = 9
+section = "14; Stage 9"
+text = "Reproducible performance report on declared hardware (wall time, peak memory, candidates, comparisons, bootstrap count, artifact bytes)."
+
+[[req]]
+id = "AC-S9-02"
+stage = 9
+section = "Stage 9"
+text = "Malformed input and malformed bank tests pass (no crash, clear rejection)."
+
+[[req]]
+id = "AC-S9-03"
+stage = 9
+section = "Stage 9"
+text = "Dependency vulnerability scan and static security scan executed and recorded."
+
+[[req]]
+id = "AC-S9-04"
+stage = 9
+section = "14"
+text = "Per-job CPU/wall-time limits and durable retries are enforced."
+
+[[req]]
+id = "AC-S9-05"
+stage = 9
+section = "Stage 9"
+text = "Warm-cache requests do not rerun science."
+
+[[req]]
+id = "AC-S9-06"
+stage = 9
+section = "Stage 9"
+text = "All mandatory gates are executed by one command, also used by CI."
+
+[[req]]
+id = "AC-S9-07"
+stage = 9
+section = "1"
+text = "Monthly cost assumptions for 100/1,000/10,000 measurements documented from current official prices."
+
+[[req]]
+id = "AC-S9-08"
+stage = 9
+section = "1"
+text = "Backup and restore procedure documented."
+
+[[req]]
+id = "AC-S9-09"
+stage = 9
+section = "Stage 9"
+text = "Fresh Docker build and container startup smoke test."
+status = "BLOCKED"
+reason = "Docker/Podman are not installed on the development machine; the Dockerfile is provided but unbuilt here."
+needs = "Run `docker build -t hvsr-analyzer . && docker run -p 8000:8000 hvsr-analyzer` then `scripts/smoke.sh`, or let the CI docker job run it."
+
+[[req]]
+id = "AC-S9-10"
+stage = 9
+section = "Stage 9"
+text = "Render blueprint is structurally valid and references only environment-provided secrets."
+
+[[req]]
+id = "AC-S9-11"
+stage = 9
+section = "Stage 9"
+text = "Fresh local startup smoke test: server starts and health endpoints respond."
+
+[[req]]
+id = "AC-S9-12"
+stage = 9
+section = "14"
+text = "Numerical thread oversubscription and runaway concurrency are prevented."

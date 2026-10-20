@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hvsr-analyzer.example/schemas/template-bank/1.0.0.json",
+  "title": "Template bank manifest",
+  "description": "Manifest accompanying a template bank NPZ file (loaded with allow_pickle=False). Templates are peak-normalized: designated peak at q=1 with amplitude 1.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "schema_version", "bank_id", "bank_version", "family", "excitation", "output", "transfer_quantity", "anchor", "grid", "conditioning", "parameters", "n_templates", "generator", "license", "data_file", "data_sha256", "created_utc"],
+  "properties": {
+    "schema_id": {"const": "hvsr-analyzer/template-bank"},
+    "schema_version": {"const": "1.0.0"},
+    "bank_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,80}$"},
+    "bank_version": {"type": "string"},
+    "family": {"enum": ["sdof", "mdof2", "mdof3"]},
+    "excitation": {"const": "harmonic_base_displacement"},
+    "output": {"const": "absolute_top_mass_displacement"},
+    "transfer_quantity": {"const": "abs_top_displacement_over_base_displacement"},
+    "anchor": {
+      "type": "object",
+      "required": ["rule", "mode"],
+      "properties": {"rule": {"type": "string"}, "mode": {"type": "integer", "minimum": 1}}
+    },
+    "grid": {
+      "type": "object",
+      "required": ["kind", "n_points", "x_min", "x_max"],
+      "properties": {
+        "kind": {"const": "uniform_ln_q"},
+        "n_points": {"const": 129},
+        "x_min": {"type": "number"},
+        "x_max": {"type": "number"}
+      }
+    },
+    "conditioning": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": {"enum": ["raw", "konno_ohmachi_continuous"]},
+        "ko_bandwidth": {"type": ["number", "null"]},
+        "ko_support_rad": {"type": ["number", "null"]}
+      }
+    },
+    "parameters": {"type": "object"},
+    "damping_convention": {"type": ["string", "null"]},
+    "n_templates": {"type": "integer", "minimum": 1, "maximum": 100000},
+    "generator": {"type": "object", "required": ["name", "version"]},
+    "license": {"type": "string"},
+    "data_file": {"type": "string", "pattern": "^[A-Za-z0-9._-]+\\.npz$"},
+    "data_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "created_utc": {"type": "string"},
+    "signature": {"type": ["object", "null"]},
+    "notes": {"type": ["string", "null"]}
+  }
+}

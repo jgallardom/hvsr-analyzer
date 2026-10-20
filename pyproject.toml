@@ -1,0 +1,76 @@
+[project]
+name = "hvsr-web"
+version = "0.1.0"
+description = "HVSR Analyzer web application: uploads, durable storage, quotas, jobs, public results and exports."
+readme = "README.md"
+license = "BSD-3-Clause"
+requires-python = ">=3.12"
+authors = [{ name = "HVSR Analyzer contributors" }]
+dependencies = [
+    "hvsr-core",
+    "fastapi>=0.115,<1",
+    "uvicorn[standard]>=0.30,<1",
+    "jinja2>=3.1,<4",
+    "python-multipart>=0.0.12",
+    "sqlalchemy>=2.0,<3",
+    "alembic>=1.13,<2",
+    "psycopg[binary]>=3.2,<4",
+    "boto3>=1.35,<2",
+    "pillow>=11,<14",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "httpx>=0.27",
+    "moto[s3]>=5.0",
+    "ruff>=0.7",
+    "pip-audit>=2.7",
+    "bandit>=1.7",
+    "pyyaml>=6",
+]
+# hvsrpy is GPL-3.0-or-later. It is used ONLY as an external numerical oracle in
+# tests; it is never imported by shipped code and is excluded from the image.
+reference = [
+    "hvsrpy>=2.0",
+    "ipython>=8",
+]
+
+[tool.uv]
+default-groups = ["dev", "reference"]
+
+[tool.uv.workspace]
+members = ["packages/hvsr_core"]
+
+[tool.uv.sources]
+hvsr-core = { workspace = true }
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hvsr_web"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+    "slow: long-running scientific or Monte Carlo test",
+    "reference: requires the GPL hvsrpy reference group",
+]
+filterwarnings = [
+    "error::RuntimeWarning:hvsr_core.*",
+]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S"]
+ignore = ["S101", "E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S", "B"]
+"scripts/**" = ["S603", "S607"]

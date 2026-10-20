@@ -1,0 +1,784 @@
+{
+  "$defs": {
+    "AnalysisConfig": {
+      "additionalProperties": false,
+      "description": "All scientific parameters. Its hash identifies a scientific computation.",
+      "properties": {
+        "basic_qc": {
+          "$ref": "#/$defs/BasicQC",
+          "description": "Basic invalid-data checks shared by all methods."
+        },
+        "config_schema_version": {
+          "const": "2.0.0",
+          "default": "2.0.0",
+          "description": "Configuration schema version.",
+          "title": "Config Schema Version",
+          "type": "string"
+        },
+        "peak_discovery": {
+          "$ref": "#/$defs/PeakDiscovery",
+          "description": "Shape-neutral peak-family discovery."
+        },
+        "peak_search": {
+          "$ref": "#/$defs/PeakSearch",
+          "description": "Peak search band."
+        },
+        "preprocessing": {
+          "$ref": "#/$defs/Preprocessing",
+          "description": "Preprocessing settings."
+        },
+        "sdof": {
+          "$ref": "#/$defs/SDOFMatching",
+          "description": "Peak-aligned template matching and selection."
+        },
+        "spectral": {
+          "$ref": "#/$defs/Spectral",
+          "description": "Spectral estimation and grid settings."
+        },
+        "standard_selection": {
+          "$ref": "#/$defs/StandardSelection",
+          "description": "Standard reference selection options."
+        },
+        "uncertainty": {
+          "$ref": "#/$defs/Uncertainty",
+          "description": "Dependence-aware bootstrap settings."
+        },
+        "windowing": {
+          "$ref": "#/$defs/Windowing",
+          "description": "Window length, step, and time span."
+        }
+      },
+      "title": "AnalysisConfig",
+      "type": "object"
+    },
+    "BandpassFilter": {
+      "additionalProperties": false,
+      "properties": {
+        "high_hz": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Low-pass corner in Hz (None = no low-pass).",
+          "title": "High Hz"
+        },
+        "low_hz": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "High-pass corner in Hz (None = no high-pass).",
+          "title": "Low Hz"
+        },
+        "order": {
+          "default": 4,
+          "description": "Butterworth order per pass.",
+          "maximum": 8,
+          "minimum": 1,
+          "title": "Order",
+          "type": "integer"
+        },
+        "zero_phase": {
+          "default": true,
+          "description": "Apply forward-backward (sosfiltfilt) zero-phase filtering.",
+          "title": "Zero Phase",
+          "type": "boolean"
+        }
+      },
+      "title": "BandpassFilter",
+      "type": "object"
+    },
+    "BasicQC": {
+      "additionalProperties": false,
+      "properties": {
+        "clip_detection": {
+          "default": true,
+          "description": "Reject windows containing clipped samples.",
+          "title": "Clip Detection",
+          "type": "boolean"
+        },
+        "clip_fraction_of_full_scale": {
+          "default": 0.995,
+          "description": "|x| >= this fraction of a declared full-scale value counts as clipped.",
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Clip Fraction Of Full Scale",
+          "type": "number"
+        },
+        "flat_top_run_samples": {
+          "default": 5,
+          "description": "Runs of >= this many identical samples at the record extreme count as clipped.",
+          "minimum": 2,
+          "title": "Flat Top Run Samples",
+          "type": "integer"
+        },
+        "lta_s": {
+          "default": 30.0,
+          "description": "Long-term average length (s).",
+          "exclusiveMinimum": 0,
+          "title": "Lta S",
+          "type": "number"
+        },
+        "sta_lta_enabled": {
+          "default": true,
+          "description": "Anti-trigger transient screening with STA/LTA on |x|.",
+          "title": "Sta Lta Enabled",
+          "type": "boolean"
+        },
+        "sta_lta_max": {
+          "default": 2.5,
+          "description": "Window rejected if STA/LTA exceeds this anywhere inside it.",
+          "exclusiveMinimum": 0,
+          "title": "Sta Lta Max",
+          "type": "number"
+        },
+        "sta_lta_min": {
+          "default": 0.2,
+          "description": "Window rejected if STA/LTA falls below this anywhere inside it.",
+          "minimum": 0,
+          "title": "Sta Lta Min",
+          "type": "number"
+        },
+        "sta_s": {
+          "default": 1.0,
+          "description": "Short-term average length (s).",
+          "exclusiveMinimum": 0,
+          "title": "Sta S",
+          "type": "number"
+        }
+      },
+      "title": "BasicQC",
+      "type": "object"
+    },
+    "DisplayOptions": {
+      "additionalProperties": false,
+      "properties": {
+        "dpi": {
+          "default": 150,
+          "description": "PNG resolution.",
+          "maximum": 600,
+          "minimum": 50,
+          "title": "Dpi",
+          "type": "integer"
+        },
+        "figure_height_in": {
+          "default": 6.0,
+          "description": "Static figure height (inches).",
+          "exclusiveMinimum": 2,
+          "maximum": 30,
+          "title": "Figure Height In",
+          "type": "number"
+        },
+        "figure_width_in": {
+          "default": 9.0,
+          "description": "Static figure width (inches).",
+          "exclusiveMinimum": 2,
+          "maximum": 30,
+          "title": "Figure Width In",
+          "type": "number"
+        },
+        "show_alternate_method": {
+          "default": false,
+          "description": "Overlay the other method's mean curve.",
+          "title": "Show Alternate Method",
+          "type": "boolean"
+        },
+        "show_individual_windows": {
+          "default": false,
+          "description": "Overlay selected individual window curves.",
+          "title": "Show Individual Windows",
+          "type": "boolean"
+        }
+      },
+      "title": "DisplayOptions",
+      "type": "object"
+    },
+    "PeakDiscovery": {
+      "additionalProperties": false,
+      "properties": {
+        "family_max_halfwidth_decades": {
+          "default": 0.12,
+          "description": "Maximum family half-width around its KDE mode (log10 decades).",
+          "exclusiveMinimum": 0,
+          "title": "Family Max Halfwidth Decades",
+          "type": "number"
+        },
+        "kde_bandwidth_decades": {
+          "default": 0.03,
+          "description": "Gaussian KDE bandwidth (log10 decades) for clustering window peaks into families.",
+          "exclusiveMinimum": 0,
+          "title": "Kde Bandwidth Decades",
+          "type": "number"
+        },
+        "lower_edge_min_hv": {
+          "default": 1.5,
+          "description": "Rising curve at the lowest usable frequency with H/V >= this flags lower_band_unresolved.",
+          "exclusiveMinimum": 0,
+          "title": "Lower Edge Min Hv",
+          "type": "number"
+        },
+        "mean_min_prominence_ratio": {
+          "default": 1.5,
+          "description": "Discovery mean-curve local peak minimum prominence (amplitude ratio) for plausibility.",
+          "exclusiveMinimum": 1,
+          "title": "Mean Min Prominence Ratio",
+          "type": "number"
+        },
+        "min_discovery_windows": {
+          "default": 5,
+          "description": "Minimum non-overlapping QC windows for discovery.",
+          "minimum": 2,
+          "title": "Min Discovery Windows",
+          "type": "integer"
+        },
+        "min_recurrence": {
+          "default": 0.3,
+          "description": "Minimum fraction of discovery windows with a peak inside the family.",
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Min Recurrence",
+          "type": "number"
+        },
+        "narrow_line_max_width_bins": {
+          "default": 3,
+          "description": "Maximum width (FFT bins) of a narrow line.",
+          "minimum": 1,
+          "title": "Narrow Line Max Width Bins",
+          "type": "integer"
+        },
+        "narrow_line_min_contrast_ratio": {
+          "default": 3.0,
+          "description": "Raw-spectrum line contrast vs. its neighbourhood that counts as a narrow line.",
+          "exclusiveMinimum": 1,
+          "title": "Narrow Line Min Contrast Ratio",
+          "type": "number"
+        },
+        "narrow_line_min_persistence": {
+          "default": 0.8,
+          "description": "Fraction of windows in which the line must recur to be persistent.",
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Narrow Line Min Persistence",
+          "type": "number"
+        },
+        "smoothing_sensitivity_bandwidth": {
+          "default": 80.0,
+          "description": "Alternate (narrower) Konno-Ohmachi b used for the smoothing-sensitivity diagnostic.",
+          "exclusiveMinimum": 0,
+          "title": "Smoothing Sensitivity Bandwidth",
+          "type": "number"
+        },
+        "window_min_prominence_ratio": {
+          "default": 1.25,
+          "description": "Per-window local peak minimum topographic prominence (amplitude ratio).",
+          "exclusiveMinimum": 1,
+          "title": "Window Min Prominence Ratio",
+          "type": "number"
+        }
+      },
+      "title": "PeakDiscovery",
+      "type": "object"
+    },
+    "PeakSearch": {
+      "additionalProperties": false,
+      "properties": {
+        "fmax_hz": {
+          "default": 20.0,
+          "description": "Upper limit of the peak search band (Hz).",
+          "exclusiveMinimum": 0,
+          "title": "Fmax Hz",
+          "type": "number"
+        },
+        "fmin_hz": {
+          "default": 0.2,
+          "description": "Lower limit of the peak search band (Hz).",
+          "exclusiveMinimum": 0,
+          "title": "Fmin Hz",
+          "type": "number"
+        }
+      },
+      "title": "PeakSearch",
+      "type": "object"
+    },
+    "Preprocessing": {
+      "additionalProperties": false,
+      "properties": {
+        "bandpass": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BandpassFilter"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Optional record-level Butterworth filter. Off by default; recorded as a derived operation."
+        },
+        "detrend": {
+          "default": "linear",
+          "description": "Per-window detrend applied after the per-window mean removal.",
+          "enum": [
+            "none",
+            "constant",
+            "linear"
+          ],
+          "title": "Detrend",
+          "type": "string"
+        },
+        "response_correction": {
+          "default": "none",
+          "description": "Instrument correction. 'scalar_sensitivity' divides each channel by its declared overall sensitivity (valid only inside the declared passband). Full deconvolution is not implemented.",
+          "enum": [
+            "none",
+            "scalar_sensitivity"
+          ],
+          "title": "Response Correction",
+          "type": "string"
+        },
+        "taper_alpha": {
+          "default": 0.1,
+          "description": "Tukey taper fraction (total tapered fraction of the window).",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Taper Alpha",
+          "type": "number"
+        },
+        "taper_type": {
+          "const": "tukey",
+          "default": "tukey",
+          "description": "Per-window taper family.",
+          "title": "Taper Type",
+          "type": "string"
+        }
+      },
+      "title": "Preprocessing",
+      "type": "object"
+    },
+    "ReportOptions": {
+      "additionalProperties": false,
+      "properties": {
+        "evaluate_sesame": {
+          "default": true,
+          "description": "Evaluate SESAME criteria (reporting only; never changes scientific results).",
+          "title": "Evaluate Sesame",
+          "type": "boolean"
+        }
+      },
+      "title": "ReportOptions",
+      "type": "object"
+    },
+    "SDOFMatching": {
+      "additionalProperties": false,
+      "properties": {
+        "calibration_profile": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Optional offline calibration profile ID supplying stronger eligibility thresholds.",
+          "title": "Calibration Profile"
+        },
+        "extra_banks": {
+          "default": [],
+          "description": "Optional additional template families (e.g. 2DOF/3DOF bank IDs), reported separately.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Extra Banks",
+          "type": "array"
+        },
+        "manual_n": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Requested count for manual_top_n.",
+          "title": "Manual N"
+        },
+        "min_fft_bins_below_peak": {
+          "default": 4,
+          "description": "Minimum original FFT bins inside [fp/2, fp).",
+          "minimum": 1,
+          "title": "Min Fft Bins Below Peak",
+          "type": "integer"
+        },
+        "min_fft_bins_in_fit_band": {
+          "default": 10,
+          "description": "Minimum original FFT bins inside [fp/2, 2 fp] for a rankable fit.",
+          "minimum": 3,
+          "title": "Min Fft Bins In Fit Band",
+          "type": "integer"
+        },
+        "min_log_variance": {
+          "default": 1e-06,
+          "description": "Weighted variance of y below this makes R-squared undefined (unrankable).",
+          "exclusiveMinimum": 0,
+          "title": "Min Log Variance",
+          "type": "number"
+        },
+        "peak_interpolation": {
+          "default": "parabolic_log",
+          "description": "Peak estimator: 3-point parabola in (ln f, ln A), offset bounded to +/- half a grid step.",
+          "enum": [
+            "parabolic_log",
+            "none"
+          ],
+          "title": "Peak Interpolation",
+          "type": "string"
+        },
+        "r2_min": {
+          "default": 0.0,
+          "description": "Eligibility requires R2_log strictly greater than this (0 = better than a constant).",
+          "title": "R2 Min",
+          "type": "number"
+        },
+        "selection_mode": {
+          "default": "automatic",
+          "description": "automatic: all greedy survivors; manual_top_n: first n (selection-conditional).",
+          "enum": [
+            "automatic",
+            "manual_top_n"
+          ],
+          "title": "Selection Mode",
+          "type": "string"
+        },
+        "template_bank": {
+          "default": "auto",
+          "description": "SDOF bank ID; 'auto' selects the shipped bank conditioned for this run's Konno-Ohmachi b if available.",
+          "title": "Template Bank",
+          "type": "string"
+        }
+      },
+      "title": "SDOFMatching",
+      "type": "object"
+    },
+    "Spectral": {
+      "additionalProperties": false,
+      "properties": {
+        "anti_alias_fraction": {
+          "default": 0.8,
+          "description": "Frequencies above this fraction of Nyquist are invalid (anti-alias roll-off).",
+          "exclusiveMinimum": 0,
+          "maximum": 1.0,
+          "title": "Anti Alias Fraction",
+          "type": "number"
+        },
+        "grid_fmax_hz": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Highest grid frequency (None = peak_search.fmax_hz * 4, capped by the anti-alias limit).",
+          "title": "Grid Fmax Hz"
+        },
+        "grid_fmin_hz": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Lowest grid frequency (None = peak_search.fmin_hz / 4, for SESAME [f0/4, 4 f0] checks).",
+          "title": "Grid Fmin Hz"
+        },
+        "grid_points_per_decade": {
+          "default": 200,
+          "description": "Anchored log grid f_i = 10**(i/P); P points per decade.",
+          "maximum": 2000,
+          "minimum": 20,
+          "title": "Grid Points Per Decade",
+          "type": "integer"
+        },
+        "horizontal_combination": {
+          "default": "rms",
+          "description": "rms: H = sqrt((N^2 + E^2)/2); geometric: H = sqrt(N*E).",
+          "enum": [
+            "rms",
+            "geometric"
+          ],
+          "title": "Horizontal Combination",
+          "type": "string"
+        },
+        "ko_bandwidth": {
+          "default": 40.0,
+          "description": "Konno-Ohmachi bandwidth coefficient b.",
+          "exclusiveMinimum": 0,
+          "title": "Ko Bandwidth",
+          "type": "number"
+        },
+        "ko_support_rad": {
+          "default": 3.0,
+          "description": "Konno-Ohmachi truncation: weights used where |b*log10(f/fc)| <= this value (3.0 matches hvsrpy).",
+          "exclusiveMinimum": 0,
+          "maximum": 3.141592653589793,
+          "title": "Ko Support Rad",
+          "type": "number"
+        },
+        "min_smoothing_bins": {
+          "default": 3,
+          "description": "Minimum nonzero-frequency FFT bins inside the smoothing support for a valid grid point.",
+          "minimum": 1,
+          "title": "Min Smoothing Bins",
+          "type": "integer"
+        },
+        "processing_order": {
+          "const": "combine_then_smooth",
+          "default": "combine_then_smooth",
+          "description": "Horizontal combination of raw Fourier amplitudes, then Konno-Ohmachi smoothing of H and V (hvsrpy 2.x convention).",
+          "title": "Processing Order",
+          "type": "string"
+        },
+        "smoothing": {
+          "const": "konno_ohmachi",
+          "default": "konno_ohmachi",
+          "description": "Smoothing operator.",
+          "title": "Smoothing",
+          "type": "string"
+        },
+        "vertical_floor_rel": {
+          "default": 1e-09,
+          "description": "A smoothed vertical amplitude below this fraction of the window's median smoothed vertical amplitude makes the bin invalid (no invented H/V).",
+          "exclusiveMinimum": 0,
+          "title": "Vertical Floor Rel",
+          "type": "number"
+        }
+      },
+      "title": "Spectral",
+      "type": "object"
+    },
+    "StandardSelection": {
+      "additionalProperties": false,
+      "properties": {
+        "fdwra_max_iterations": {
+          "default": 50,
+          "description": "FDWRA iteration cap.",
+          "minimum": 1,
+          "title": "Fdwra Max Iterations",
+          "type": "integer"
+        },
+        "fdwra_n_std": {
+          "default": 2.0,
+          "description": "FDWRA rejection half-width in lognormal standard deviations.",
+          "exclusiveMinimum": 0,
+          "title": "Fdwra N Std",
+          "type": "number"
+        },
+        "frequency_outlier_rejection": {
+          "default": "none",
+          "description": "Optional frequency-domain window rejection after basic QC (can alter the peak distribution).",
+          "enum": [
+            "none",
+            "fdwra_cox2020"
+          ],
+          "title": "Frequency Outlier Rejection",
+          "type": "string"
+        }
+      },
+      "title": "StandardSelection",
+      "type": "object"
+    },
+    "TimeRange": {
+      "additionalProperties": false,
+      "properties": {
+        "tmax_s": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Analyzed end, seconds after the first canonical sample (None = end).",
+          "title": "Tmax S"
+        },
+        "tmin_s": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Analyzed start, seconds after the first canonical sample (None = start).",
+          "title": "Tmin S"
+        }
+      },
+      "title": "TimeRange",
+      "type": "object"
+    },
+    "Uncertainty": {
+      "additionalProperties": false,
+      "properties": {
+        "adjacent_block_corr_max": {
+          "default": 0.3,
+          "description": "If lag-1 correlation of block-mean features exceeds this, block length is doubled.",
+          "exclusiveMaximum": 1,
+          "exclusiveMinimum": 0,
+          "title": "Adjacent Block Corr Max",
+          "type": "number"
+        },
+        "irregular_block_lw_factor": {
+          "default": 5.0,
+          "description": "Irregular sequences: original-time block length = factor * Lw (before dependence doubling).",
+          "exclusiveMinimum": 0,
+          "title": "Irregular Block Lw Factor",
+          "type": "number"
+        },
+        "max_block_doublings": {
+          "default": 3,
+          "description": "Maximum dependence-driven block doublings.",
+          "minimum": 0,
+          "title": "Max Block Doublings",
+          "type": "integer"
+        },
+        "min_informative_blocks": {
+          "default": 10,
+          "description": "Experimental guard: fewer informative blocks returns ci_not_estimable.",
+          "minimum": 2,
+          "title": "Min Informative Blocks",
+          "type": "integer"
+        },
+        "n_bootstrap": {
+          "default": 2000,
+          "description": "Bootstrap replicates for final results.",
+          "maximum": 20000,
+          "minimum": 100,
+          "title": "N Bootstrap",
+          "type": "integer"
+        },
+        "regular_spacing_max_ratio": {
+          "default": 1.5,
+          "description": "Retained sequence is 'regular' if max/min spacing between consecutive windows <= this.",
+          "minimum": 1,
+          "title": "Regular Spacing Max Ratio",
+          "type": "number"
+        },
+        "seed": {
+          "default": 20261020,
+          "description": "Deterministic bootstrap seed (recorded).",
+          "minimum": 0,
+          "title": "Seed",
+          "type": "integer"
+        },
+        "sensitivity_factors": {
+          "default": [
+            0.5,
+            2.0
+          ],
+          "description": "Predeclared block-length multipliers reported as sensitivity (never chosen by width).",
+          "items": {
+            "type": "number"
+          },
+          "title": "Sensitivity Factors",
+          "type": "array"
+        },
+        "sensitivity_width_ratio_limit": {
+          "default": 1.5,
+          "description": "Band width ratio across sensitivity lengths above this marks ci_limited.",
+          "exclusiveMinimum": 1,
+          "title": "Sensitivity Width Ratio Limit",
+          "type": "number"
+        }
+      },
+      "title": "Uncertainty",
+      "type": "object"
+    },
+    "Windowing": {
+      "additionalProperties": false,
+      "properties": {
+        "step_s": {
+          "default": 5.0,
+          "description": "Candidate window step dt in seconds; rounded to an integer sample count.",
+          "exclusiveMinimum": 0,
+          "title": "Step S",
+          "type": "number"
+        },
+        "time_range": {
+          "$ref": "#/$defs/TimeRange",
+          "description": "Analyzed time span."
+        },
+        "window_length_s": {
+          "default": 50.0,
+          "description": "Window length Lw in seconds; rounded to an integer sample count (actual value recorded).",
+          "exclusiveMinimum": 0,
+          "title": "Window Length S",
+          "type": "number"
+        }
+      },
+      "title": "Windowing",
+      "type": "object"
+    }
+  },
+  "$id": "https://hvsr-analyzer.example/schemas/config/2.0.0.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "config": {
+      "$ref": "#/$defs/AnalysisConfig",
+      "description": "Scientific configuration."
+    },
+    "display": {
+      "$ref": "#/$defs/DisplayOptions",
+      "description": "Display options."
+    },
+    "report": {
+      "$ref": "#/$defs/ReportOptions",
+      "description": "Reporting options."
+    },
+    "robustness_check": {
+      "default": true,
+      "description": "Plan run B (1.5 x Lw, other settings unchanged) before results are examined.",
+      "title": "Robustness Check",
+      "type": "boolean"
+    },
+    "robustness_lw_factor": {
+      "const": 1.5,
+      "default": 1.5,
+      "description": "Run B window-length multiplier (fixed in v1).",
+      "title": "Robustness Lw Factor",
+      "type": "number"
+    }
+  },
+  "title": "AnalysisRequest",
+  "type": "object"
+}

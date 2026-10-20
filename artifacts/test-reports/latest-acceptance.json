@@ -1,0 +1,59 @@
+{
+ "results": {
+  "AC-S0-01": [
+   [
+    "tests.stage_00.test_contracts::test_schemas_accept_conforming_examples",
+    "passed"
+   ]
+  ],
+  "AC-S0-02": [
+   [
+    "tests.stage_00.test_contracts::test_schemas_reject_malformed",
+    "passed"
+   ]
+  ],
+  "AC-S0-03": [
+   [
+    "tests.stage_00.test_contracts::test_no_undocumented_defaults",
+    "passed"
+   ]
+  ],
+  "AC-S0-04": [
+   [
+    "tests.stage_00.test_contracts::test_config_roundtrip_and_scientific_hash",
+    "passed"
+   ]
+  ],
+  "AC-S0-05": [
+   [
+    "tests.stage_00.test_contracts::test_core_imports_without_web_or_network",
+    "passed"
+   ]
+  ],
+  "AC-S0-06": [
+   [
+    "tests.stage_00.test_contracts::test_every_stage_has_traceable_ids",
+    "passed"
+   ]
+  ],
+  "AC-S0-07": [
+   [
+    "tests.stage_00.test_contracts::test_fixtures_known_and_redistributable",
+    "passed"
+   ]
+  ],
+  "AC-S0-08": [
+   [
+    "tests.stage_00.test_contracts::test_dependencies_locked",
+    "passed"
+   ]
+  ],
+  "AC-S0-09": [
+   [
+    "tests.stage_00.test_contracts::test_timing_rules",
+    "passed"
+   ]
+  ]
+ },
+ "updated_utc": "2026-10-20T23:20:27Z"
+}

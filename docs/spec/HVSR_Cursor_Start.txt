@@ -1,0 +1,6 @@
+Read HVSR_Analyzer_Cursor_Prompt_v2.md completely and treat it as the project specification.
+Start with Stage 0. Create AGENTS.md, the acceptance matrix, and implementation-status log.
+Implement the stages in order and execute each acceptance gate and all previous regression tests.
+Do not stop at a plan. Do not invent test results or call experimental statistical coverage validated.
+Keep SDOF R-squared ranking, precomputed peak-aligned templates, and original-frequency observed-spectrum averaging exactly as specified.
+When blocked, record the exact failing gate and required next action; do not silently skip it.

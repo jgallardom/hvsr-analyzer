@@ -1,0 +1,1 @@
+"""HVSR scientific core."""
