@@ -86,6 +86,7 @@ class ChannelMeta:
     sensitivity: float | None = None
     sensitivity_units: str | None = None
     full_scale: float | None = None
+    sensed_quantity: Literal["velocity", "acceleration", "displacement", "other", "unknown"] = "unknown"
 
     def as_dict(self) -> dict:
         return {
@@ -95,6 +96,7 @@ class ChannelMeta:
             "azimuth_deg": self.azimuth_deg,
             "dip_deg": self.dip_deg,
             "quantity": self.quantity,
+            "sensed_quantity": self.sensed_quantity,
             "units": self.units,
             "sensitivity": self.sensitivity,
             "sensitivity_units": self.sensitivity_units,

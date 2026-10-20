@@ -28,3 +28,23 @@ Delivered:
 - `scripts/gate.py` with acceptance-ID tracing via JUnit properties.
 
 Command: `uv run python scripts/gate.py --stage 0` -> exit 0, 10 tests passed, 9/9 IDs PASS.
+
+## Stage 1 - Inputs, sensor checks, preservation
+
+Goal: CSV/CSV.GZ (three layouts) and MiniSEED parsing, component mapping, gap/timing detection,
+sensor/response status, StationXML, hashes, original preservation, verified canonical conversion,
+canonical-only safety, photos, record identity.
+
+IDs: AC-S1-01 ... AC-S1-21.
+
+Delivered: `hvsr_core.io` (`csv_reader`, `mseed_reader`, `stationxml`, `preservation`, `limits`),
+`hvsr_core.identity`, `hvsr_core.metadata.evaluate_instrument`, `hvsr_web.photos`,
+`docs/supported-formats.md`.
+
+Findings recorded:
+- ObsPy 1.5.1 has no MiniSEED 3 reader -> MiniSEED 3 rejected explicitly.
+- MiniSEED 2 (ObsPy writer) stores start times at microsecond precision -> exact nanosecond start is
+  kept in the canonical sidecar (`miniseed_start_exact: false`).
+
+Command: `uv run python scripts/gate.py --stage 1` -> exit 0, 40 tests passed (stages 0-1 +
+regression), 30/30 IDs PASS, 1.8 s.

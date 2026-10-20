@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -17,7 +18,9 @@ Context = Literal[
     "structure_other",
     "unknown",
 ]
-QuantityField = Literal["counts", "velocity", "acceleration", "displacement", "other", "unknown"]
+RecordedQuantity = Literal["counts", "velocity", "acceleration", "displacement", "other", "unknown"]
+SensedQuantity = Literal["velocity", "acceleration", "displacement", "other", "unknown"]
+PHYSICAL = ("velocity", "acceleration", "displacement")
 
 
 class _M(BaseModel):
@@ -29,8 +32,9 @@ class ChannelSensor(_M):
     source_label: str | None = None
     azimuth_deg: float | None = Field(None, ge=0, lt=360)
     dip_deg: float | None = Field(None, ge=-90, le=90)
-    quantity: QuantityField = "unknown"
-    units: str | None = Field(None, description="Physical units of the recorded samples, e.g. counts, m/s, m/s**2.")
+    quantity: RecordedQuantity = Field("unknown", description="Quantity of the recorded samples (counts if uncorrected).")
+    sensed_quantity: SensedQuantity = Field("unknown", description="Physical quantity the sensor responds to.")
+    units: str | None = Field(None, description="Units of the recorded samples, e.g. counts, m/s, m/s**2.")
     sensitivity: float | None = Field(None, gt=0, description="Counts per physical unit (overall channel gain).")
     sensitivity_units: str | None = None
     full_scale: float | None = Field(None, gt=0, description="Digitizer full scale (in sample units) for clipping checks.")
@@ -68,105 +72,73 @@ class MeasurementMetadata(_M):
     sensor: SensorMetadata = Field(default_factory=SensorMetadata)
 
 
-InstrumentStatus = Literal["verified_common_quantity", "provisional_uncalibrated", "invalid"]
+def _result(status: str, reasons: list[str], flags: list[str], correction: str, scale: dict, sensor) -> dict:
+    return {
+        "status": status,
+        "reasons": reasons,
+        "flags": flags,
+        "correction": correction,
+        "scale": scale,
+        "usable_band_hz": [sensor.usable_fmin_hz, sensor.usable_fmax_hz] if sensor is not None else [None, None],
+        "natural_frequency_hz": sensor.natural_frequency_hz if sensor is not None else None,
+    }
 
 
 def evaluate_instrument(recording: Recording, sensor: SensorMetadata | None, correction: str) -> dict:
-    """Decide whether the H/V ratio of this recording is physically meaningful.
+    """Decide whether H/V of this recording divides comparable quantities.
 
-    Returns a dict with ``status`` (verified_common_quantity | provisional_uncalibrated | invalid),
-    precise ``reasons``, ``flags``, the correction actually applicable, per-channel scale factors to
-    apply (``scale``), and the declared usable band.
+    status: verified_common_quantity | provisional_uncalibrated | invalid, with precise reasons.
+    ``scale`` holds per-component multipliers applied by the preprocessing step.
     """
-    reasons: list[str] = []
-    flags: list[str] = []
-    chans = {c.component: c for c in recording.channels}
-    quantities = {k: c.quantity for k, c in chans.items()}
-    units = {k: c.units for k, c in chans.items()}
-    sens = {k: c.sensitivity for k, c in chans.items()}
+    ch = {c.component: c for c in recording.channels}
     scale = {"N": 1.0, "E": 1.0, "Z": 1.0}
+    sensed = {k: c.sensed_quantity for k, c in ch.items()}
+    recorded = {k: c.quantity for k, c in ch.items()}
+    units = {k: c.units for k, c in ch.items()}
+    sens = {k: c.sensitivity for k, c in ch.items()}
 
-    known_q = {q for q in quantities.values() if q not in ("unknown", "counts")}
-    if len(known_q) > 1:
-        return {
-            "status": "invalid",
-            "reasons": [f"channels record physically different quantities {quantities}; H/V would divide incompatible quantities"],
-            "flags": ["incompatible_quantities"],
-            "correction": "none",
-            "scale": scale,
-            "usable_band_hz": _band(sensor),
-        }
+    known_sensed = {q for q in sensed.values() if q != "unknown"}
+    if len(known_sensed) > 1:
+        return _result("invalid", [f"sensors respond to different physical quantities {sensed}; H/V would divide incompatible quantities"], ["incompatible_quantities"], "none", scale, sensor)
+    known_recorded_phys = {q for q in recorded.values() if q in PHYSICAL}
+    if len(known_recorded_phys) > 1:
+        return _result("invalid", [f"recorded samples are in different physical quantities {recorded}"], ["incompatible_quantities"], "none", scale, sensor)
 
     if correction == "scalar_sensitivity":
         missing = [k for k, s in sens.items() if s is None]
         if missing:
-            return {
-                "status": "invalid",
-                "reasons": [f"scalar_sensitivity correction requested but sensitivity missing for {missing}"],
-                "flags": ["missing_sensitivity"],
-                "correction": "none",
-                "scale": scale,
-                "usable_band_hz": _band(sensor),
-            }
+            return _result("invalid", [f"scalar_sensitivity correction requested but sensitivity missing for {missing}"], ["missing_sensitivity"], "none", scale, sensor)
+        if any(recorded[k] in PHYSICAL for k in ch):
+            return _result("invalid", ["scalar_sensitivity correction requested for samples already in physical units"], ["double_correction"], "none", scale, sensor)
         for k in scale:
             scale[k] = 1.0 / float(sens[k])  # type: ignore[arg-type]
-        status: InstrumentStatus = "verified_common_quantity"
-        reasons.append("each channel divided by its declared overall sensitivity (valid only within the passband)")
-        if any(q == "unknown" for q in quantities.values()):
-            status = "provisional_uncalibrated"
-            flags.append("instrument_response_not_verified")
-            reasons.append("physical quantity of at least one channel is unknown")
-        return {"status": status, "reasons": reasons, "flags": flags, "correction": "scalar_sensitivity", "scale": scale, "usable_band_hz": _band(sensor)}
+        reasons = ["each channel divided by its declared overall sensitivity (valid only within the instrument passband)"]
+        if len(known_sensed) == 1 and all(q != "unknown" for q in sensed.values()):
+            return _result("verified_common_quantity", reasons, [], "scalar_sensitivity", scale, sensor)
+        reasons.append("the physical quantity sensed by at least one channel is unknown")
+        return _result("provisional_uncalibrated", reasons, ["instrument_response_not_verified"], "scalar_sensitivity", scale, sensor)
 
-    # No correction requested.
     distinct_units = {u for u in units.values() if u is not None}
     if len(distinct_units) > 1:
-        return {
-            "status": "invalid",
-            "reasons": [f"channels have different units {units} and no correction to a common quantity was requested"],
-            "flags": ["unit_mismatch"],
-            "correction": "none",
-            "scale": scale,
-            "usable_band_hz": _band(sensor),
-        }
+        return _result("invalid", [f"channels have different units {units} and no correction to a common quantity was requested"], ["unit_mismatch"], "none", scale, sensor)
     known_sens = {k: s for k, s in sens.items() if s is not None}
-    if len(known_sens) == 3 and len({round(s, 12) for s in known_sens.values()}) > 1:
-        return {
-            "status": "invalid",
-            "reasons": [f"channel sensitivities differ {known_sens}; request scalar_sensitivity correction"],
-            "flags": ["gain_mismatch"],
-            "correction": "none",
-            "scale": scale,
-            "usable_band_hz": _band(sensor),
-        }
-    if 0 < len(known_sens) < 3:
-        flags.append("instrument_response_not_verified")
-        reasons.append("sensitivity known for only some channels; equal gains cannot be verified")
-        return {"status": "provisional_uncalibrated", "reasons": reasons, "flags": flags, "correction": "none", "scale": scale, "usable_band_hz": _band(sensor)}
+    if len(known_sens) == 3 and len({float(s) for s in known_sens.values()}) > 1:
+        return _result("invalid", [f"channel sensitivities differ {known_sens}; request scalar_sensitivity correction"], ["gain_mismatch"], "none", scale, sensor)
+    if len(known_recorded_phys) == 1 and all(q in PHYSICAL for q in recorded.values()) and len(distinct_units) == 1 and None not in units.values():
+        return _result("verified_common_quantity", ["samples are declared in a common physical quantity and unit"], [], "none", scale, sensor)
+    if len(known_sens) == 3 and len(known_sensed) == 1 and all(q != "unknown" for q in sensed.values()):
+        return _result("verified_common_quantity", ["all channels share the same declared sensitivity and sensed quantity; gains cancel in H/V"], [], "none", scale, sensor)
     if len(known_sens) == 3:
-        reasons.append("all channels share the same declared sensitivity and units; gains cancel in H/V")
-        if any(q == "unknown" for q in quantities.values()):
-            flags.append("instrument_response_not_verified")
-            reasons.append("recorded physical quantity unknown")
-            return {"status": "provisional_uncalibrated", "reasons": reasons, "flags": flags, "correction": "none", "scale": scale, "usable_band_hz": _band(sensor)}
-        return {"status": "verified_common_quantity", "reasons": reasons, "flags": flags, "correction": "none", "scale": scale, "usable_band_hz": _band(sensor)}
-    flags.append("instrument_response_not_verified")
-    reasons.append("no channel sensitivities declared; equal channel gains assumed but not verified")
-    return {"status": "provisional_uncalibrated", "reasons": reasons, "flags": flags, "correction": "none", "scale": scale, "usable_band_hz": _band(sensor)}
-
-
-def _band(sensor: SensorMetadata | None) -> list[float | None]:
-    if sensor is None:
-        return [None, None]
-    return [sensor.usable_fmin_hz, sensor.usable_fmax_hz]
+        return _result("provisional_uncalibrated", ["equal declared sensitivities, but the sensed physical quantity is unknown"], ["instrument_response_not_verified"], "none", scale, sensor)
+    if known_sens:
+        return _result("provisional_uncalibrated", ["sensitivity known for only some channels; equal gains cannot be verified"], ["instrument_response_not_verified"], "none", scale, sensor)
+    return _result("provisional_uncalibrated", ["no channel sensitivities declared; equal channel gains assumed but not verified"], ["instrument_response_not_verified"], "none", scale, sensor)
 
 
 def apply_sensor_metadata(recording: Recording, sensor: SensorMetadata | None) -> Recording:
-    """Return a recording whose ChannelMeta carries declared sensor fields (explicit values win)."""
+    """Attach declared per-channel sensor fields to the recording (explicit declared values win)."""
     if sensor is None or not sensor.channels:
         return recording
-    from dataclasses import replace
-
     by_comp = {c.component: c for c in sensor.channels}
     new = []
     for ch in recording.channels:
@@ -180,6 +152,7 @@ def apply_sensor_metadata(recording: Recording, sensor: SensorMetadata | None) -
                 azimuth_deg=s.azimuth_deg if s.azimuth_deg is not None else ch.azimuth_deg,
                 dip_deg=s.dip_deg if s.dip_deg is not None else ch.dip_deg,
                 quantity=s.quantity if s.quantity != "unknown" else ch.quantity,
+                sensed_quantity=s.sensed_quantity if s.sensed_quantity != "unknown" else ch.sensed_quantity,
                 units=s.units if s.units is not None else ch.units,
                 sensitivity=s.sensitivity if s.sensitivity is not None else ch.sensitivity,
                 sensitivity_units=s.sensitivity_units if s.sensitivity_units is not None else ch.sensitivity_units,

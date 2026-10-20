@@ -53,7 +53,165 @@
     "tests.stage_00.test_contracts::test_timing_rules",
     "passed"
    ]
+  ],
+  "AC-S1-01": [
+   [
+    "tests.stage_01.test_csv_inputs::test_three_layouts_and_gzip",
+    "passed"
+   ]
+  ],
+  "AC-S1-02": [
+   [
+    "tests.stage_01.test_mseed_inputs::test_supported_encodings_roundtrip[INT16]",
+    "passed"
+   ],
+   [
+    "tests.stage_01.test_mseed_inputs::test_supported_encodings_roundtrip[INT32]",
+    "passed"
+   ],
+   [
+    "tests.stage_01.test_mseed_inputs::test_supported_encodings_roundtrip[FLOAT32]",
+    "passed"
+   ],
+   [
+    "tests.stage_01.test_mseed_inputs::test_supported_encodings_roundtrip[FLOAT64]",
+    "passed"
+   ],
+   [
+    "tests.stage_01.test_mseed_inputs::test_supported_encodings_roundtrip[STEIM1]",
+    "passed"
+   ],
+   [
+    "tests.stage_01.test_mseed_inputs::test_supported_encodings_roundtrip[STEIM2]",
+    "passed"
+   ],
+   [
+    "tests.stage_01.test_mseed_inputs::test_separate_files_and_explicit_multi_trace_mapping",
+    "passed"
+   ]
+  ],
+  "AC-S1-03": [
+   [
+    "tests.stage_01.test_csv_inputs::test_missing_and_ambiguous_components",
+    "passed"
+   ],
+   [
+    "tests.stage_01.test_mseed_inputs::test_mseed_12z_requires_mapping",
+    "passed"
+   ]
+  ],
+  "AC-S1-04": [
+   [
+    "tests.stage_01.test_instrument_and_identity::test_gain_and_quantity_mismatch",
+    "passed"
+   ]
+  ],
+  "AC-S1-05": [
+   [
+    "tests.stage_01.test_csv_inputs::test_gaps_and_irregular_timing_not_resampled",
+    "passed"
+   ],
+   [
+    "tests.stage_01.test_mseed_inputs::test_mseed_gap_detected_not_filled",
+    "passed"
+   ]
+  ],
+  "AC-S1-06": [
+   [
+    "tests.stage_01.test_mseed_inputs::test_unsupported_versions_and_encodings",
+    "passed"
+   ]
+  ],
+  "AC-S1-07": [
+   [
+    "tests.stage_01.test_instrument_and_identity::test_unknown_response_is_provisional",
+    "passed"
+   ]
+  ],
+  "AC-S1-08": [
+   [
+    "tests.stage_01.test_preservation::test_exact_original_reconstruction",
+    "passed"
+   ]
+  ],
+  "AC-S1-09": [
+   [
+    "tests.stage_01.test_preservation::test_float64_canonical_roundtrip_bitwise",
+    "passed"
+   ]
+  ],
+  "AC-S1-10": [
+   [
+    "tests.stage_01.test_preservation::test_integer_steim2_and_no_float_rounding",
+    "passed"
+   ]
+  ],
+  "AC-S1-11": [
+   [
+    "tests.stage_01.test_preservation::test_failed_conversion_never_deletes_source",
+    "passed"
+   ]
+  ],
+  "AC-S1-12": [
+   [
+    "tests.stage_01.test_preservation::test_canonical_only_labels_truthful",
+    "passed"
+   ]
+  ],
+  "AC-S1-13": [
+   [
+    "tests.stage_01.test_preservation::test_decompression_bomb_rejected",
+    "passed"
+   ]
+  ],
+  "AC-S1-14": [
+   [
+    "tests.stage_01.test_preservation::test_nonrepresentable_timestamps",
+    "passed"
+   ]
+  ],
+  "AC-S1-15": [
+   [
+    "tests.stage_01.test_preservation::test_extra_columns_preserved",
+    "passed"
+   ]
+  ],
+  "AC-S1-16": [
+   [
+    "tests.stage_01.test_csv_inputs::test_no_silent_inference_of_timezone_units_or_decimal_comma",
+    "passed"
+   ]
+  ],
+  "AC-S1-17": [
+   [
+    "tests.stage_01.test_instrument_and_identity::test_record_identity",
+    "passed"
+   ]
+  ],
+  "AC-S1-18": [
+   [
+    "tests.stage_01.test_instrument_and_identity::test_photo_processing_strips_exif_and_pads",
+    "passed"
+   ]
+  ],
+  "AC-S1-19": [
+   [
+    "tests.stage_01.test_csv_inputs::test_pre_analysis_summary",
+    "passed"
+   ]
+  ],
+  "AC-S1-20": [
+   [
+    "tests.stage_01.test_mseed_inputs::test_channels_not_silently_combined",
+    "passed"
+   ]
+  ],
+  "AC-S1-21": [
+   [
+    "tests.stage_01.test_instrument_and_identity::test_stationxml_sensitivity_and_checksum",
+    "passed"
+   ]
   ]
  },
- "updated_utc": "2026-10-20T23:20:27Z"
+ "updated_utc": "2026-10-20T23:26:04Z"
 }
