@@ -208,6 +208,14 @@
     "PeakDiscovery": {
       "additionalProperties": false,
       "properties": {
+        "family_listing_min_recurrence": {
+          "default": 0.1,
+          "description": "Families below this recurrence are not listed at all (clutter control only).",
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Family Listing Min Recurrence",
+          "type": "number"
+        },
         "family_max_halfwidth_decades": {
           "default": 0.12,
           "description": "Maximum family half-width around its KDE mode (log10 decades).",
@@ -220,6 +228,14 @@
           "description": "Gaussian KDE bandwidth (log10 decades) for clustering window peaks into families.",
           "exclusiveMinimum": 0,
           "title": "Kde Bandwidth Decades",
+          "type": "number"
+        },
+        "kde_merge_valley_ratio": {
+          "default": 0.8,
+          "description": "Adjacent KDE modes merge when the density minimum between them is >= this fraction of the lower mode.",
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Kde Merge Valley Ratio",
           "type": "number"
         },
         "lower_edge_min_hv": {

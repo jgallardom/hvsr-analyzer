@@ -157,7 +157,8 @@ def _channel_codes(rec: Recording) -> dict[str, tuple[str, str, str, str]]:
 def build_canonical(rec: Recording, original: PreservedOriginal | None = None, csv_info: CSVParseInfo | None = None, csv_bytes: bytes | None = None) -> CanonicalArtifact:
     """Write canonical MiniSEED (STEIM2 for int32 data, FLOAT64 otherwise) and verify it by reading
     it back with the production reader. Raises InputError when verification fails."""
-    from obspy import Stream, Trace, UTCDateTime, __version__ as obspy_version
+    from obspy import Stream, Trace, UTCDateTime
+    from obspy import __version__ as obspy_version
 
     codes = _channel_codes(rec)
     t0 = rec.t0_utc_ns if rec.t0_utc_ns is not None else 0

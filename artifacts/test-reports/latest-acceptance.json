@@ -211,7 +211,175 @@
     "tests.stage_01.test_instrument_and_identity::test_stationxml_sensitivity_and_checksum",
     "passed"
    ]
+  ],
+  "AC-S2-01": [
+   [
+    "tests.stage_02.test_spectral_core::test_windows_are_half_open_integer_intervals_within_segments",
+    "passed"
+   ]
+  ],
+  "AC-S2-02": [
+   [
+    "tests.stage_02.test_spectral_core::test_fft_resolution_separate_from_grid_and_coverage_validated",
+    "passed"
+   ]
+  ],
+  "AC-S2-03": [
+   [
+    "tests.stage_02.test_spectral_core::test_sparse_konno_ohmachi_equals_direct_reference",
+    "passed"
+   ]
+  ],
+  "AC-S2-04": [
+   [
+    "tests.stage_02.test_hvsrpy_reference::test_matches_hvsrpy[sdof2hz_elapsed_50hz.csv.gz-rms-squared_average]",
+    "passed"
+   ],
+   [
+    "tests.stage_02.test_hvsrpy_reference::test_matches_hvsrpy[lognormal3hz_steim2_50hz.mseed-rms-squared_average]",
+    "passed"
+   ],
+   [
+    "tests.stage_02.test_hvsrpy_reference::test_matches_hvsrpy[lognormal3hz_steim2_50hz.mseed-geometric-geometric_mean]",
+    "passed"
+   ]
+  ],
+  "AC-S2-06": [
+   [
+    "tests.stage_02.test_peak_discovery::test_flat_record_has_no_clear_peak[1]",
+    "passed"
+   ],
+   [
+    "tests.stage_02.test_peak_discovery::test_flat_record_has_no_clear_peak[2]",
+    "passed"
+   ],
+   [
+    "tests.stage_02.test_peak_discovery::test_flat_record_has_no_clear_peak[3]",
+    "passed"
+   ]
+  ],
+  "AC-S2-07": [
+   [
+    "tests.stage_02.test_peak_discovery::test_clean_single_resonance[1]",
+    "passed"
+   ],
+   [
+    "tests.stage_02.test_peak_discovery::test_clean_single_resonance[2]",
+    "passed"
+   ],
+   [
+    "tests.stage_02.test_peak_discovery::test_clean_single_resonance[3]",
+    "passed"
+   ]
+  ],
+  "AC-S2-08": [
+   [
+    "tests.stage_02.test_peak_discovery::test_broad_and_multiple_peaks_become_families[1]",
+    "passed"
+   ],
+   [
+    "tests.stage_02.test_peak_discovery::test_broad_and_multiple_peaks_become_families[2]",
+    "passed"
+   ],
+   [
+    "tests.stage_02.test_peak_discovery::test_broad_and_multiple_peaks_become_families[3]",
+    "passed"
+   ]
+  ],
+  "AC-S2-09": [
+   [
+    "tests.stage_02.test_peak_discovery::test_weak_low_peak_not_overwritten_by_global_maximum[1]",
+    "passed"
+   ],
+   [
+    "tests.stage_02.test_peak_discovery::test_weak_low_peak_not_overwritten_by_global_maximum[2]",
+    "passed"
+   ],
+   [
+    "tests.stage_02.test_peak_discovery::test_weak_low_peak_not_overwritten_by_global_maximum[3]",
+    "passed"
+   ]
+  ],
+  "AC-S2-10": [
+   [
+    "tests.stage_02.test_spectral_core::test_clipped_windows_detected_and_excluded",
+    "passed"
+   ]
+  ],
+  "AC-S2-11": [
+   [
+    "tests.stage_02.test_spectral_core::test_zero_and_invalid_vertical_bins_are_masked_not_zero",
+    "passed"
+   ]
+  ],
+  "AC-S2-12": [
+   [
+    "tests.stage_02.test_spectral_core::test_effective_valid_mask_covers_nyquist_smoothing_and_usable_band",
+    "passed"
+   ]
+  ],
+  "AC-S2-13": [
+   [
+    "tests.stage_02.test_peak_discovery::test_discovery_uses_nonoverlapping_windows_and_overlap_cannot_inflate_recurrence",
+    "passed"
+   ]
+  ],
+  "AC-S2-14": [
+   [
+    "tests.stage_02.test_spectral_core::test_rms_horizontal_default_and_geometric_explicit",
+    "passed"
+   ]
+  ],
+  "AC-S2-15": [
+   [
+    "tests.stage_02.test_spectral_core::test_preprocessing_order_fixed_filter_off_and_operations_recorded",
+    "passed"
+   ]
+  ],
+  "AC-S2-16": [
+   [
+    "tests.stage_02.test_peak_discovery::test_persistent_narrow_line_flagged_as_possible_source_not_removed[1]",
+    "passed"
+   ],
+   [
+    "tests.stage_02.test_peak_discovery::test_persistent_narrow_line_flagged_as_possible_source_not_removed[2]",
+    "passed"
+   ],
+   [
+    "tests.stage_02.test_peak_discovery::test_persistent_narrow_line_flagged_as_possible_source_not_removed[3]",
+    "passed"
+   ],
+   [
+    "tests.stage_02.test_peak_discovery::test_only_a_source_line_gives_possible_source_status",
+    "passed"
+   ]
+  ],
+  "AC-S2-17": [
+   [
+    "tests.stage_02.test_peak_discovery::test_lower_band_unresolved_when_rising_at_lowest_usable_frequency[1]",
+    "passed"
+   ],
+   [
+    "tests.stage_02.test_peak_discovery::test_lower_band_unresolved_when_rising_at_lowest_usable_frequency[2]",
+    "passed"
+   ],
+   [
+    "tests.stage_02.test_peak_discovery::test_lower_band_unresolved_when_rising_at_lowest_usable_frequency[3]",
+    "passed"
+   ]
+  ],
+  "AC-S2-18": [
+   [
+    "tests.stage_02.test_spectral_core::test_standard_reference_is_deterministic_earliest_first_and_fdwra_separate",
+    "passed"
+   ]
+  ],
+  "AC-S2-19": [
+   [
+    "tests.stage_02.test_spectral_core::test_time_range_maps_to_integer_sample_bounds_and_raw_bounds_are_preserved",
+    "passed"
+   ]
   ]
  },
- "updated_utc": "2026-10-20T23:26:04Z"
+ "updated_utc": "2026-10-20T23:33:58Z"
 }

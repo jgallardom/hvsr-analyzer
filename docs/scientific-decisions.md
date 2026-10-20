@@ -42,6 +42,17 @@ with a reason, not dropped silently.
 `1e-9 x` the window's median smoothed V makes that bin invalid for that window. No floor value is
 substituted.
 
+**D-015.** Mean curves (discovery reference, Standard, SDOF selections) are `exp(mean ln(H/V))` over
+the windows valid at each bin, without weights. A mean bin is valid when the grid point is valid and
+at least half of the windows (and at least one) are valid there; the per-bin window count is stored.
+
+**D-016.** Numerical agreement with hvsrpy 2.1.0 (test oracle, `tests/stage_02/test_hvsrpy_reference.py`):
+fed identical half-open windows, linear detrend, Tukey 0.1, `fft_settings={"n": None}` (hvsrpy
+otherwise zero-pads to >= 2^15 samples, which changes the spectral sampling) and our grid frequencies,
+per-window and lognormal-mean H/V agree to relative 1e-9 for RMS and geometric combinations. The
+tolerance only covers float64 summation order. hvsrpy returns NaN (0/0) where no FFT bin falls in the
+smoothing support; we mark those points `insufficient_smoothing_bins`.
+
 ## Window screening and the Standard reference (basic-qc-v1, std-earliest-nonoverlap-v1)
 
 **D-020.** Basic QC (applied identically to every method): windows never cross gaps (structural);
@@ -50,7 +61,18 @@ clipping = any sample with `|x| >= 0.995 * full_scale` when full scale is declar
 `|x - mean|` with STA 1 s, LTA 30 s, window rejected if the ratio leaves `[0.2, 2.5]` anywhere inside
 it on any component. These thresholds are the values commonly used for H/V anti-triggering (e.g.
 Geopsy's documented defaults; verify against your installed version). They are implementation
-conventions and research parameters, not SESAME constants.
+conventions and research parameters, not SESAME constants. STA/LTA is computed on the prepared
+(optionally filtered) segment; clipping on the raw recorded samples (full scale is in recorded units).
+A window whose samples never change on some component is rejected as `dead_channel`. Windows that
+start within the first LTA seconds of a segment are screened only where the ratio is defined and
+carry the note `sta_lta_partially_evaluated`.
+
+Known limitation (observed in Stage 2): when a component is dominated by narrow-band or low-frequency
+energy (e.g. a strong resonance near 0.1 Hz, or microseisms on broadband sensors), a 1 s STA on |x|
+dips below 0.2 near envelope minima and STA/LTA rejects most windows. A Hilbert-envelope
+characteristic function was tried and reduced but did not remove the effect, so the established |x|
+form is kept. The analysis warns when STA/LTA rejects more than half of the candidates and recommends
+an STA of several dominant periods. The data-yield report makes the rejection visible.
 
 **D-021 (project decision).** Standard reference = basic QC, then earliest-first non-overlapping
 packing of passing candidates on the candidate step grid. It has no preferred oscillator shape.
@@ -63,11 +85,24 @@ separate step, off by default. When it is enabled, a basic-QC-only audit referen
 **D-030.** Discovery uses the Standard reference windows (quality-screened, non-overlapping), so a
 time interval can contribute at most once. Per window: local maxima of ln(H/V) inside the search band
 with topographic prominence ratio >= 1.25 (edge maxima are not peaks). Peak log10-frequencies are
-clustered with a Gaussian KDE (bandwidth 0.03 decades); each KDE mode defines a family bounded by
-the adjacent KDE minima, clipped to +/- 0.12 decades. Recurrence = fraction of discovery windows with
-at least one peak inside the family. A family is plausible when recurrence >= 0.3 AND the discovery
+clustered with a Gaussian KDE (bandwidth 0.03 decades) evaluated on the analysis grid; adjacent KDE
+modes are merged when the density minimum between them is >= 0.8 x the lower mode; each (merged)
+mode defines a family bounded by the adjacent KDE minima (the minimum belongs to the lower family),
+clipped to +/- 0.12 decades around the highest mode. Families are disjoint and numbered F1, F2, ...
+by frequency. Recurrence = fraction of discovery windows with at least one peak inside the family;
+families below 0.1 are not listed. A family is plausible when recurrence >= 0.3 AND the discovery
 geometric-mean curve has a local maximum inside the family with prominence ratio >= 1.5. All are
 research thresholds requiring null/contamination tests (Stage 5), not SESAME rules.
+
+Observed in Stage 2: on flat synthetic records, per-window noise peaks give low-frequency families
+with recurrence 0.6-1.0 (wide families collect many small noise peaks), so recurrence alone does not
+discriminate; the mean-curve prominence rule is what rejects them. Stage 5 must measure the false
+discovery rate of the combined rule.
+
+Interpretation status priority: `not_computable` (fewer than `min_discovery_windows` or no valid
+band) > `lower_band_unresolved` > `possible_source_peak` (all plausible families are flagged lines) >
+`no_clear_peak` > `single_plausible_peak` / `multiple_plausible_peaks` (counting non-source plausible
+families). All applicable conditions are also listed in `flags`.
 
 **D-031.** Source-peak diagnostic: in the geometric-mean RAW (unsmoothed) component spectra, a line
 inside a family whose contrast to its +/-20% neighbourhood median is >= 3 on at least two

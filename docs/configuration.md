@@ -58,7 +58,9 @@ Defaults are initial, editable settings, not universally suitable values. Fields
 | `config.peak_discovery.window_min_prominence_ratio` | `float` | `1.25` | Per-window local peak minimum topographic prominence (amplitude ratio). |
 | `config.peak_discovery.kde_bandwidth_decades` | `float` | `0.03` | Gaussian KDE bandwidth (log10 decades) for clustering window peaks into families. |
 | `config.peak_discovery.family_max_halfwidth_decades` | `float` | `0.12` | Maximum family half-width around its KDE mode (log10 decades). |
+| `config.peak_discovery.kde_merge_valley_ratio` | `float` | `0.8` | Adjacent KDE modes merge when the density minimum between them is >= this fraction of the lower mode. |
 | `config.peak_discovery.min_recurrence` | `float` | `0.3` | Minimum fraction of discovery windows with a peak inside the family. |
+| `config.peak_discovery.family_listing_min_recurrence` | `float` | `0.1` | Families below this recurrence are not listed at all (clutter control only). |
 | `config.peak_discovery.mean_min_prominence_ratio` | `float` | `1.5` | Discovery mean-curve local peak minimum prominence (amplitude ratio) for plausibility. |
 | `config.peak_discovery.min_discovery_windows` | `int` | `5` | Minimum non-overlapping QC windows for discovery. |
 | `config.peak_discovery.lower_edge_min_hv` | `float` | `1.5` | Rising curve at the lowest usable frequency with H/V >= this flags lower_band_unresolved. |

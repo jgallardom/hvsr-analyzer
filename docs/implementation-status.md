@@ -48,3 +48,30 @@ Findings recorded:
 
 Command: `uv run python scripts/gate.py --stage 1` -> exit 0, 40 tests passed (stages 0-1 +
 regression), 30/30 IDs PASS, 1.8 s.
+
+## Stage 2 - Standard HVSR scientific core
+
+Goal: preprocessing, half-open integer windows, FFT, sparse Konno-Ohmachi, H/V with vertical guard,
+valid-frequency mask, basic QC, Standard reference (+ optional FDWRA with basic-only audit), discovery
+mean curve, peak families, source-line diagnostics, lower-band check, interpretation status.
+
+IDs: AC-S2-01 ... AC-S2-19 (AC-S2-05 BLOCKED).
+
+Delivered: `hvsr_core.preprocess`, `windows`, `spectra`, `qc.screen_windows`, `selection`, `curves`,
+`peaks`, `core.run_core`; tests in `tests/stage_02/`.
+
+Findings recorded:
+- hvsrpy 2.1.0 agrees with our per-window and mean H/V to relative 1e-9 when fed identical windows
+  and `fft_settings={"n": None}` (D-016). hvsrpy pads to >= 2^15 samples by default.
+- Classic STA/LTA (STA 1 s) rejects most windows when horizontals are dominated by narrow-band
+  low-frequency energy; documented as a limitation with a runtime warning (D-020).
+- Recurrence alone does not discriminate noise families on flat records; plausibility relies on the
+  mean-curve prominence rule (D-030). False-discovery rate to be measured in Stage 5.
+
+Blocked:
+- AC-S2-05 Geopsy comparison. Geopsy is not installed and no redistributable Geopsy output exists.
+  Next action: install Geopsy (or obtain Geopsy outputs for `tests/fixtures/*`) and add
+  `tests/stage_02/test_geopsy_reference.py`.
+
+Command: `uv run python scripts/gate.py --stage 2` -> exit 0, 75 tests passed (stages 0-2 +
+regression), 48 PASS, 1 BLOCKED (AC-S2-05).

@@ -170,8 +170,17 @@ class PeakDiscovery(_Model):
     family_max_halfwidth_decades: float = Field(
         0.12, gt=0, description="Maximum family half-width around its KDE mode (log10 decades)."
     )
+    kde_merge_valley_ratio: float = Field(
+        0.8,
+        gt=0,
+        le=1,
+        description="Adjacent KDE modes merge when the density minimum between them is >= this fraction of the lower mode.",
+    )
     min_recurrence: float = Field(
         0.3, gt=0, le=1, description="Minimum fraction of discovery windows with a peak inside the family."
+    )
+    family_listing_min_recurrence: float = Field(
+        0.1, ge=0, le=1, description="Families below this recurrence are not listed at all (clutter control only)."
     )
     mean_min_prominence_ratio: float = Field(
         1.5, gt=1, description="Discovery mean-curve local peak minimum prominence (amplitude ratio) for plausibility."

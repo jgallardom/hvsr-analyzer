@@ -112,7 +112,7 @@ def test_pre_analysis_summary(fixture_dir):
 
 
 def test_csv_gz_multi_member_and_bom():
-    raw = "\ufefftime_s,N,E,Z\n0,1,2,3\n".encode() 
+    raw = "\ufefftime_s,N,E,Z\n0,1,2,3\n".encode()
     data = gzip.compress(raw, mtime=0) + gzip.compress(b"0.1,1,2,3\n", mtime=0)
     rec, _ = read_csv(data, CSVOptions(layout="elapsed_time"))
     assert rec.total_samples == 2
