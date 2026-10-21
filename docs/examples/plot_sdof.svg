@@ -8,7 +8,7 @@
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
     <dc:title>jmgtw-2026.8030 (40.416775, -3.70379)</dc:title>
-    <dc:description>run rb72a848579e2231a02adf50c; method sdof; plotted-series SHA-256 d80596439a02461502f1d3e536131a67292a32a28c28537ae3300a0b301de808</dc:description>
+    <dc:description>run rea2edca77cfb5107cc0116a5; method sdof; plotted-series SHA-256 d80596439a02461502f1d3e536131a67292a32a28c28537ae3300a0b301de808</dc:description>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -1739,7 +1739,7 @@ z
    <text style="font-size: 7.5px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #333333" x="6.48" y="386.098242" transform="rotate(-0 6.48 386.098242)">Lw 50 s, step 5 s, n = 28 | Konno-Ohmachi b = 40 | search 0.2-20 Hz | time 0-1800 s | RMS horizontal combination</text>
   </g>
   <g id="footer">
-   <text style="font-size: 7.5px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #333333" x="6.48" y="375.973242" transform="rotate(-0 6.48 375.973242)">jmgtw-2026.8030 (40.416775, -3.70379) | run rb72a848579e2231a02adf50c | SDOF-selected | peak family F3</text>
+   <text style="font-size: 7.5px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #333333" x="6.48" y="375.973242" transform="rotate(-0 6.48 375.973242)">jmgtw-2026.8030 (40.416775, -3.70379) | run rea2edca77cfb5107cc0116a5 | SDOF-selected | peak family F3</text>
   </g>
   <g id="title">
    <text style="font-weight: 700; font-size: 11.5px; font-family: 'DejaVu Sans'; text-anchor: middle" x="324" y="13.058203" transform="rotate(-0 324 13.058203)">jmgtw-2026.8030 (40.416775, -3.70379)</text>
