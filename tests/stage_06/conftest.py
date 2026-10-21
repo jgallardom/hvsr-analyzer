@@ -31,11 +31,3 @@ def record(case: str, seed: int, duration_s: float = 1800.0):
 @pytest.fixture(scope="session")
 def make_record():
     return record
-
-
-def strip_time(obj):
-    if isinstance(obj, dict):
-        return {k: strip_time(v) for k, v in obj.items() if k != "generated_utc"}
-    if isinstance(obj, list):
-        return [strip_time(v) for v in obj]
-    return obj

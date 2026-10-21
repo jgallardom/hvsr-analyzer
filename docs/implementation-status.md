@@ -220,3 +220,83 @@ Known limits:
 
 Command: `uv run python scripts/gate.py --stage 6` -> exit 0, 213 tests passed, 97 PASS, 2 BLOCKED
 (AC-S2-05, AC-S5-07), 1 UNVALIDATED (AC-S5-06). `ruff check .` and `ruff format --check .` are clean.
+
+---
+
+## Stage 7 - Durable storage, quotas, licensing, and job execution
+
+Goal: object storage, database migrations, artifact commits, stable URLs, the contributor quota
+ledger, CC BY consent, moderation, recoverable jobs, and one demonstrated backup restore.
+
+IDs: AC-S7-01 ... AC-S7-19.
+
+Delivered (`src/hvsr_web/`; design in `docs/storage-and-jobs.md`, `docs/quotas-and-limits.md`,
+`docs/licensing-and-moderation.md`, `docs/backup-restore.md`):
+- `settings.py`: every secret and limit is an `HVSR_*` environment variable.
+- `db.py` and `migrations/` (Alembic revision `0001`, 13 tables). SQLite serializes writers with
+  `BEGIN IMMEDIATE`. Downgrades are refused unless explicitly authorized.
+- `storage.py`: local and S3 adapters. Committed keys are content-addressed and immutable; only
+  `staging/` is mutable. Each request to a stable link issues a fresh HMAC- or SigV4-signed URL.
+- `submissions.py`: validate, reserve, stage, write and verify, then one publishing transaction.
+  The staging sweeper also releases stale reservations left by crashed submissions.
+- `quota.py`, `auth.py`, `records.py`, `licensing.py`, `moderation.py`, `manifests.py`.
+- `jobs.py` and `analysis_jobs.py`:
+  - durable claims with leases and fencing tokens;
+  - a compute-budget estimate checked at request time and again by the worker;
+  - science documents cached immutably in the object store;
+  - one fenced publication transaction for runs, artifacts, compute usage, and job completion.
+- `backup.py`: JSON Lines per table plus objects with a SHA-256 manifest. Restore goes only into an
+  empty, migrated database, and the result is verified.
+- `api.py`: a minimal FastAPI app covering health, limits, manifests, artifacts, blobs, comparisons,
+  submissions, analyses, jobs, reports, and admin remove/restore. The web pages are Stage 8.
+- `hvsr_core.io.preservation.recording_from_canonical`. Its `recording_hash` equals the original
+  parse for the elapsed-time, UTC-timestamp, and samples-only CSV fixtures.
+
+Defects found and fixed during this stage:
+- Stage 6 cache key: the science key omitted the record identity block that the documents embed.
+  The same bytes submitted as two measurements, or a metadata correction, would have been served
+  documents with the wrong record code or stale coordinates. The key now includes the block, and a
+  regression test was added to AC-S6-12.
+- Default CSV submissions stored a FLOAT64 canonical MiniSEED (737 KB for a 604 KB CSV.GZ) next
+  to the original. It is now `on_demand`; the fixture's stored bytes are now 606,584 (the original
+  plus small metadata objects), without the 737 KB canonical copy.
+- MiniSEED was charged by file size, so Steim2 compression was a quota bypass (196,608 bytes on
+  disk vs 360,000 decoded). It is now charged at the larger of the two.
+- A crashed submission's `reserved` ledger entry held quota indefinitely. The sweeper now releases
+  it after the staging TTL, but never for an accepted submission.
+- Reader limit errors surfaced as generic `InputError` (HTTP 422). All `*_limit` codes now surface
+  as `LimitExceeded` (HTTP 413).
+- Plain-CSV originals are stored as gzip. Redirecting to the blob would have served gzip bytes
+  under a `.csv` name, so the artifact endpoint now decompresses and verifies the exact original.
+- Manifest run order depended on database insertion order, so it changed after a restore (found
+  by the backup test failing intermittently in the full suite). Runs are now ordered by
+  (created, role, run ID); the backup test passed 10 of 10 repeats.
+- `from conftest import ...` in Stage 6 resolved to Stage 7's `conftest.py` once a second stage
+  folder had one. Helpers now live in uniquely named `stageN_support.py` modules (noted in
+  `AGENTS.md`).
+
+Observed on fixtures:
+- A 600 s, 50 Hz CSV.GZ analysis job takes about 0.3 s wall time. It produces run A and run B, four
+  analysis JSONs, and a robustness comparison.
+- The cost estimate for that record is 111 and 106 candidate windows. A SESAME-off request
+  reuses the run and adds report-variant artifacts only.
+- Concurrency: 16 concurrent 1000-byte reservations against a 10,000-byte budget gave exactly 10
+  accepted. Three concurrent submissions against 2.5 x the logical size gave 2 accepted with codes
+  `X` and `X-02`.
+
+Known limits:
+- Per-job CPU and wall-time ceilings are configured but not yet enforced by process isolation
+  (Stage 9).
+- `on_demand` artifacts (normalized CSV, canonical recording in default mode, reconstructed CSV)
+  return HTTP 409 until Stage 8 adds generation.
+- Content-addressed objects written by a submission that failed after step 4 stay unreferenced;
+  they are not garbage-collected automatically.
+- S3 immutability relies on conditional writes (`If-None-Match`); providers that ignore them lose
+  the overwrite protection for `analyses/science/` keys.
+- SQLite is single-host; PostgreSQL is supported by the models and migrations but was not
+  exercised in this environment.
+- The S3 adapter is tested against moto, not a live provider. No deployment or remote push has
+  been done.
+
+Command: `uv run python scripts/gate.py --stage 7` -> exit 0, 240 tests passed, 116 PASS, 2 BLOCKED
+(AC-S2-05, AC-S5-07), 1 UNVALIDATED (AC-S5-06). `ruff check .` and `ruff format --check .` are clean.

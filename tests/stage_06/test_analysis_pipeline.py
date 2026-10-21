@@ -7,7 +7,6 @@ import math
 
 import numpy as np
 import pytest
-from conftest import strip_time
 
 from hvsr_core import analysis, uncertainty
 from hvsr_core.analysis import AnalysisCache, apply_report, run_analysis, verify_replay
@@ -16,6 +15,8 @@ from hvsr_core.core import run_core
 from hvsr_core.matching import _bracket, estimate_peaks, match_family
 from hvsr_core.schema_validation import validation_errors
 from hvsr_core.templates import resolve_sdof_bank
+
+from stage6_support import strip_time
 
 ON = AnalysisRequest(report=ReportOptions(evaluate_sesame=True))
 OFF = AnalysisRequest(report=ReportOptions(evaluate_sesame=False))
@@ -231,8 +232,13 @@ def test_identical_requests_reuse_immutable_cached_result(make_record, tmp_path,
     fresh.put(r1.key, {"standard": {"run_id": "tampered"}})
     assert fresh.get(r1.key)["standard"]["run_id"] == r1.run_id
     assert AnalysisCache(tmp_path).get(r1.key)["standard"]["run_id"] == r1.run_id
+    # the same bytes under another measurement or metadata snapshot are a different run
+    other = run_analysis(rec, ON, analysis.RecordInfo(measurement_id="m-2", metadata_revision=1), cache=cache)
+    assert not other.cached and other.run_id != r1.run_id
+    assert other.published["standard"]["record"]["measurement_id"] == "m-2"
+    assert len(calls) == 4
     # a scientific change misses the cache
     base = AnalysisConfig()
     cfg = base.model_copy(update={"windowing": base.windowing.model_copy(update={"step_s": 10.0})})
     r5 = run_analysis(rec, AnalysisRequest(config=cfg, robustness_check=False), cache=cache)
-    assert not r5.cached and r5.key != r1.key and len(calls) == 3
+    assert not r5.cached and r5.key != r1.key and len(calls) == 5

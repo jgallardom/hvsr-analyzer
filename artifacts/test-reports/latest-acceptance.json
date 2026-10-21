@@ -1003,7 +1003,165 @@
     "tests.stage_06.test_analysis_pipeline::test_identical_requests_reuse_immutable_cached_result",
     "passed"
    ]
+  ],
+  "AC-S7-01": [
+   [
+    "tests.stage_07.test_quota::test_concurrent_reservations_never_exceed_the_monthly_budget",
+    "passed"
+   ],
+   [
+    "tests.stage_07.test_quota::test_concurrent_full_submissions_respect_quota_and_get_distinct_codes",
+    "passed"
+   ]
+  ],
+  "AC-S7-02": [
+   [
+    "tests.stage_07.test_quota::test_retry_with_same_key_is_not_charged_twice_and_removal_does_not_refund",
+    "passed"
+   ],
+   [
+    "tests.stage_07.test_quota::test_failed_submission_releases_its_reservation_and_retry_charges_once",
+    "passed"
+   ]
+  ],
+  "AC-S7-03": [
+   [
+    "tests.stage_07.test_quota::test_guest_pool_is_best_effort_and_makes_no_per_person_claim",
+    "passed"
+   ]
+  ],
+  "AC-S7-04": [
+   [
+    "tests.stage_07.test_quota::test_failed_submission_releases_its_reservation_and_retry_charges_once",
+    "passed"
+   ],
+   [
+    "tests.stage_07.test_storage::test_staging_sweep_removes_only_staging_objects",
+    "passed"
+   ],
+   [
+    "tests.stage_07.test_storage::test_committed_objects_are_immutable",
+    "passed"
+   ]
+  ],
+  "AC-S7-05": [
+   [
+    "tests.stage_07.test_storage::test_committed_archives_and_metadata_survive_restart",
+    "passed"
+   ]
+  ],
+  "AC-S7-06": [
+   [
+    "tests.stage_07.test_storage::test_manifest_links_are_stable_and_survive_signed_url_expiry",
+    "passed"
+   ]
+  ],
+  "AC-S7-07": [
+   [
+    "tests.stage_07.test_storage::test_original_canonical_and_reconstructed_labels_survive_storage",
+    "passed"
+   ]
+  ],
+  "AC-S7-08": [
+   [
+    "tests.stage_07.test_records::test_manifest_carries_license_consent_attribution_and_history",
+    "passed"
+   ]
+  ],
+  "AC-S7-09": [
+   [
+    "tests.stage_07.test_jobs::test_crash_inside_publication_leaves_nothing_and_the_retry_publishes_once",
+    "passed"
+   ],
+   [
+    "tests.stage_07.test_jobs::test_stale_worker_cannot_publish_after_its_lease_was_taken_over",
+    "passed"
+   ]
+  ],
+  "AC-S7-10": [
+   [
+    "tests.stage_07.test_backup::test_backup_and_restore_cycle",
+    "passed"
+   ]
+  ],
+  "AC-S7-11": [
+   [
+    "tests.stage_07.test_quota::test_concurrent_full_submissions_respect_quota_and_get_distinct_codes",
+    "passed"
+   ],
+   [
+    "tests.stage_07.test_records::test_record_code_suffixes_are_allocated_transactionally",
+    "passed"
+   ]
+  ],
+  "AC-S7-12": [
+   [
+    "tests.stage_07.test_jobs::test_analysis_references_its_metadata_snapshot",
+    "passed"
+   ],
+   [
+    "tests.stage_07.test_records::test_metadata_corrections_are_versioned_and_keep_the_record_code",
+    "passed"
+   ]
+  ],
+  "AC-S7-13": [
+   [
+    "tests.stage_07.test_records::test_consent_is_unchecked_by_default_required_and_recorded",
+    "passed"
+   ]
+  ],
+  "AC-S7-14": [
+   [
+    "tests.stage_07.test_quota::test_quota_charges_logical_bytes_and_meters_stored_and_transfer_separately",
+    "passed"
+   ]
+  ],
+  "AC-S7-15": [
+   [
+    "tests.stage_07.test_jobs::test_claims_are_atomic_and_bounded_by_the_concurrency_ceiling",
+    "passed"
+   ],
+   [
+    "tests.stage_07.test_jobs::test_compute_ceilings_reject_expensive_requests_with_advice",
+    "passed"
+   ],
+   [
+    "tests.stage_07.test_quota::test_input_ceilings_come_from_environment_and_are_enforced",
+    "passed"
+   ]
+  ],
+  "AC-S7-16": [
+   [
+    "tests.stage_07.test_records::test_moderation_report_remove_restore_and_purge",
+    "passed"
+   ]
+  ],
+  "AC-S7-17": [
+   [
+    "tests.stage_07.test_storage::test_tokens_are_hashed_never_in_urls_and_identity_is_private",
+    "passed"
+   ]
+  ],
+  "AC-S7-18": [
+   [
+    "tests.stage_07.test_storage::test_s3_adapter_against_emulated_s3_api",
+    "passed"
+   ]
+  ],
+  "AC-S7-19": [
+   [
+    "tests.stage_07.test_jobs::test_claims_are_atomic_and_bounded_by_the_concurrency_ceiling",
+    "passed"
+   ],
+   [
+    "tests.stage_07.test_jobs::test_expired_lease_is_recovered_and_the_old_holder_is_fenced",
+    "passed"
+   ],
+   [
+    "tests.stage_07.test_jobs::test_retries_are_bounded_and_permanent_errors_are_not_retried",
+    "passed"
+   ]
   ]
  },
- "updated_utc": "2026-10-21T00:38:44Z"
+ "updated_utc": "2026-10-21T01:00:27Z"
 }

@@ -73,7 +73,7 @@ ignore = ["S101", "E501"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["hvsr_core", "hvsr_web"]
-known-local-folder = ["stage2_cases"]
+known-local-folder = ["stage2_cases", "stage6_support", "stage7_support"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S", "B"]

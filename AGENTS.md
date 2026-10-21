@@ -44,6 +44,10 @@ def test_final_mean_is_not_peak_aligned(): ...
 
 `tests/conftest.py` copies these IDs into the JUnit XML so the gate can trace them.
 
+Shared helpers for a stage's tests go in a uniquely named module (`tests/stage_NN/stageN_support.py`,
+listed under `known-local-folder` in `pyproject.toml`). Never `from conftest import ...`: every
+stage folder has a `conftest.py`, and the import silently resolves to whichever was loaded first.
+
 ## Environment notes
 
 - Python 3.12, dependencies managed by `uv` (`uv sync`). The lockfile is `uv.lock`.

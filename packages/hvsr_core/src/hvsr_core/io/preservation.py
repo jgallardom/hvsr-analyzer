@@ -13,6 +13,7 @@ ONLY after the canonical data were written and verified. Downloads are then labe
 from __future__ import annotations
 
 import csv
+import dataclasses
 import gzip
 import io
 from dataclasses import dataclass, field
@@ -21,7 +22,7 @@ from typing import Literal, Protocol
 import numpy as np
 
 from ..jsonutil import canonical_dumps, sha256_bytes
-from ..model import InputError, Recording, ns_to_iso
+from ..model import ChannelMeta, InputError, Recording, RecordingDiagnostics, Segment, ns_to_iso
 from ..versions import ALGORITHM_VERSIONS, PACKAGE_VERSION
 from .csv_reader import CSVParseInfo
 from .limits import InputLimits, is_gzip, safe_gunzip
@@ -421,6 +422,51 @@ def finalize_canonical_only(
         }
     store.delete(staged_original_key)
     return {"ok": True, "original_deleted": True, "keys": keys, "original_bytes_retained": False}
+
+
+def recording_from_canonical(mseed: bytes, sidecar: dict, limits: InputLimits | None = None) -> Recording:
+    """The parsed Recording from canonical storage: samples from the MiniSEED, exact start time,
+    channel metadata, sample type, and timing diagnostics from the sidecar."""
+    mapping = {c["component"]: c["miniseed_id"] for c in sidecar["channels"]}
+    read = read_miniseed([("canonical.mseed", mseed)], mapping=mapping, limits=limits)
+    data = np.concatenate([s.data for s in read.segments], axis=1)
+    layout = sidecar["segments"]
+    if sum(int(s["n"]) for s in layout) != data.shape[1]:
+        raise InputError("canonical_layout", "canonical sample count does not match its sidecar")
+    segments, pos = [], 0
+    for s in layout:
+        n = int(s["n"])
+        segments.append(
+            Segment(
+                int(s["start_index"]),
+                float(s["start_offset_s"]),
+                np.ascontiguousarray(data[:, pos : pos + n]),
+            )
+        )
+        pos += n
+    names = {f.name for f in dataclasses.fields(ChannelMeta)}
+    channels = tuple(ChannelMeta(**{k: v for k, v in c.items() if k in names}) for c in sidecar["channels"])
+    if [c.component for c in channels] != ["N", "E", "Z"]:
+        raise InputError("canonical_layout", "canonical sidecar channels must be N, E, Z in order")
+    start, timing = sidecar["start_time"], sidecar["timing"]
+    return Recording(
+        sampling_rate_hz=float(sidecar["sampling_rate_hz"]),
+        t0_utc_ns=start["exact_utc_ns"],
+        t0_source=start["source"],
+        channels=channels,  # type: ignore[arg-type]
+        segments=segments,
+        sampling_rate_source=sidecar["sampling_rate_source"],
+        sample_dtype=sidecar["sample_dtype"],
+        diagnostics=RecordingDiagnostics(
+            gaps=read.diagnostics.gaps,
+            timing_irregular=bool(timing["irregular"]),
+            max_timing_jitter_s=timing["max_jitter_s"],
+            timing_policy=timing["policy"],
+            clipped_samples=dict(read.diagnostics.clipped_samples),
+            warnings=["recording rebuilt from the canonical MiniSEED and its sidecar"],
+        ),
+        source={"layout": sidecar.get("source_layout"), "canonical": True},
+    )
 
 
 def reconstructed_csv(mseed: bytes, sidecar: dict, residual_gz: bytes | None) -> bytes:

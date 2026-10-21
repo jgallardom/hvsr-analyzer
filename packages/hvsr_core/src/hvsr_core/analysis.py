@@ -129,6 +129,7 @@ def science_key(rec: Recording, config: AnalysisConfig, info: RecordInfo) -> str
             "recording": recording_hash(rec),
             "config": config.scientific_hash(),
             "record_science": info.scientific(),
+            "record": info.block(),  # documents embed it; a run belongs to one measurement snapshot
             "algorithms": ALGORITHM_VERSIONS,
             "package": PACKAGE_VERSION,
             "bank": bank.manifest["data_sha256"],
