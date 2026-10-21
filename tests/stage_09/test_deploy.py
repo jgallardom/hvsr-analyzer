@@ -205,6 +205,8 @@ def test_ci_runs_the_same_single_gate_command_with_postgres_and_scans():
     assert "uv sync --frozen" in runs
     assert "uv run ruff check ." in runs and "uv run ruff format --check ." in runs
     assert "uv run python scripts/gate.py --all" in runs
+    checkout = next(s for s in gate["steps"] if s.get("uses", "").startswith("actions/checkout@"))
+    assert checkout.get("with", {}).get("fetch-depth") == 0, "the Stage 5 lock test needs full git history"
     pg = gate["services"]["postgres"]
     major = _blueprint()["databases"][0]["postgresMajorVersion"]
     assert pg["image"] == f"postgres:{major}", "CI must test the PostgreSQL major version deployed"

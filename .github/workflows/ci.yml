@@ -43,7 +43,10 @@ jobs:
     env:
       HVSR_TEST_POSTGRES_URL: postgresql://postgres@localhost:5432/postgres
     steps:
+      # The Stage 5 lock test checks commit ancestry, which a shallow clone does not contain.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@v6
         with:
           version: ${{ env.UV_VERSION }}
