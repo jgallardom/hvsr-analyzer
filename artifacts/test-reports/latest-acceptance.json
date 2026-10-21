@@ -803,7 +803,207 @@
     "tests.stage_05.test_validation_harness::test_validation_status_is_consistent_with_published_verdict",
     "passed"
    ]
+  ],
+  "AC-S6-01": [
+   [
+    "tests.stage_06.test_sesame::test_clean_peak_reliable_and_clear_with_measured_values",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_sesame::test_at_least_five_of_six_rule_and_reliability_states",
+    "passed"
+   ]
+  ],
+  "AC-S6-02": [
+   [
+    "tests.stage_06.test_sesame::test_strict_comparator_at_boundary[0.05]",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_sesame::test_strict_comparator_at_boundary[0.2]",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_sesame::test_strict_comparator_at_boundary[2.0]",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_sesame::test_strict_comparator_at_boundary[200.0]",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_sesame::test_strict_comparator_at_boundary[1.58]",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_sesame::test_strict_comparator_at_boundary[1.7782794100389228]",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_sesame::test_band_boundaries_convention_c1",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_sesame::test_r1_boundary",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_sesame::test_r2_boundary",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_sesame::test_r3_boundary[f0>0.5]",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_sesame::test_r3_boundary[f0=0.5(C-3)]",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_sesame::test_r3_boundary[f0<0.5]",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_sesame::test_r3_boundary[f0=0.3]",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_sesame::test_r3_universal_violation_and_open_interval",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_sesame::test_half_amplitude_boundary[C1]",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_sesame::test_half_amplitude_boundary[C2]",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_sesame::test_half_amplitude_closed_interval_and_truncation",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_sesame::test_c3_boundary",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_sesame::test_c4_boundary_strict_five_percent",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_sesame::test_c5_boundary_and_window_requirements",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_sesame::test_c6_boundary[band>2Hz]",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_sesame::test_c6_boundary[band1-2Hz]",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_sesame::test_c6_boundary[band0.2-0.5Hz]",
+    "passed"
+   ]
+  ],
+  "AC-S6-03": [
+   [
+    "tests.stage_06.test_analysis_pipeline::test_sesame_toggle_leaves_science_identical",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_analysis_pipeline::test_published_documents_validate_against_schema",
+    "passed"
+   ]
+  ],
+  "AC-S6-04": [
+   [
+    "tests.stage_06.test_analysis_pipeline::test_sesame_interval_never_extends_template_scoring",
+    "passed"
+   ]
+  ],
+  "AC-S6-05": [
+   [
+    "tests.stage_06.test_analysis_pipeline::test_published_documents_validate_against_schema",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_analysis_pipeline::test_replay_bypasses_cache_and_reproduces",
+    "passed"
+   ]
+  ],
+  "AC-S6-06": [
+   [
+    "tests.stage_06.test_robustness::test_criteria_are_the_predeclared_d060_values",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_robustness::test_clean_sdof_runs_agree_within_tolerances",
+    "passed"
+   ]
+  ],
+  "AC-S6-07": [
+   [
+    "tests.stage_06.test_robustness::test_broad_plateau_is_flagged_not_forced_to_agree",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_robustness::test_multi_peak_families_are_compared_separately",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_robustness::test_insufficient_run_b_is_not_evaluable_without_alternative",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_robustness::test_comparison_logic_on_modified_run_b",
+    "passed"
+   ]
+  ],
+  "AC-S6-08": [
+   [
+    "tests.stage_06.test_analysis_pipeline::test_report_and_display_changes_do_not_recompute",
+    "passed"
+   ]
+  ],
+  "AC-S6-09": [
+   [
+    "tests.stage_06.test_analysis_pipeline::test_quality_dimensions_are_separate_without_summary_score",
+    "passed"
+   ]
+  ],
+  "AC-S6-10": [
+   [
+    "tests.stage_06.test_annotations::test_annotations_are_separate_and_attributed",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_annotations::test_annotations_cannot_carry_or_change_computed_fields",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_annotations::test_superseding_is_append_only",
+    "passed"
+   ]
+  ],
+  "AC-S6-11": [
+   [
+    "tests.stage_06.test_analysis_pipeline::test_flat_record_has_no_forced_peak_and_unchecked_is_not_requested",
+    "passed"
+   ],
+   [
+    "tests.stage_06.test_sesame::test_not_requested_and_no_defensible_peak",
+    "passed"
+   ]
+  ],
+  "AC-S6-12": [
+   [
+    "tests.stage_06.test_analysis_pipeline::test_identical_requests_reuse_immutable_cached_result",
+    "passed"
+   ]
   ]
  },
- "updated_utc": "2026-10-21T00:25:23Z"
+ "updated_utc": "2026-10-21T00:38:44Z"
 }

@@ -170,3 +170,53 @@ uncertainty and QC methods are experimental; no validated 95 % claim is made.
 
 Command: `uv run python scripts/gate.py --stage 5` -> exit 0, 85 PASS, 2 BLOCKED (AC-S2-05,
 AC-S5-07), 1 UNVALIDATED (AC-S5-06).
+
+## Stage 6 - SESAME report, replay, robustness comparison, quality dimensions, annotations
+
+Goal: the official SESAME checks as a reporting-only diagnostic with documented boundary conventions;
+exact-input replay; the predeclared 1.5 x Lw robustness comparison; separate quality dimensions; and
+attributed human annotations.
+
+IDs: AC-S6-01 ... AC-S6-12.
+
+Delivered:
+- `hvsr_core.sesame`: R1-R3 and C1-C6 with measured values, thresholds, comparison, status and reason.
+  Existential and universal checks handle coverage, and all scalar comparisons go through one strict
+  comparator. Source title/URL are persisted; the checksum is NOT verified (`sha256: null`, with a note).
+- `docs/sesame-implementation.md`: conventions C-1 to C-5, labelled as implementation choices.
+- `hvsr_core.analysis`:
+  - `compute_science` and `science_docs` produce the per-method documents, which validate against
+    `analysis.schema.json`.
+  - `apply_report` is a pure reporting layer.
+  - `AnalysisCache` holds immutable results in memory or as JSON (first result wins).
+  - `run_analysis` runs A and B (both methods each) and produces the comparison record.
+  - `verify_replay` bypasses the cache and recomputes. Science is compared within the tolerance
+    policy; provenance is compared exactly and reported separately.
+- `hvsr_core.robustness`: criteria predeclared in D-060, before any comparison result was examined.
+- `hvsr_core.annotations`: an append-only, frozen, `extra=forbid` log; `merge_for_display` keeps
+  computed documents unchanged and in a separate key.
+- Decisions D-060 (robustness criteria) and D-061 (quality dimensions, no summary score).
+
+Observed robustness outcomes (fixed criteria, 1800 s synthetics at 50 Hz):
+- Clean 2 Hz SDOF, seeds 1-5: all consistent for both methods. The largest |ln fp ratio| was 0.011,
+  and the largest median curve difference was 0.019.
+- Broad 0.5-decade plateau peak at 3 Hz, seeds 1-5: 3 of 5 flagged `sensitive` by Standard
+  (|ln fp ratio| 0.184 and 0.080, and one changed plausible-family set), 2 of 5 consistent. SDOF had
+  no matched resolved family on these records (`not_evaluable`).
+- Two-peak record: both families are compared separately; both are consistent.
+- Run B with too few windows (20 s / 30 s on 110 s), or with no fitting window: `not_evaluable`,
+  with the planned B length reported and no alternative B tried.
+
+Boundary tests:
+- Every SESAME threshold is tested just below, at, and above, with float64-exact constructions where
+  the boundary is representable.
+- Where it is not (exp(c) never equals exactly 3.0 or some theta values), the adjacent reachable
+  values are tested, and equality is tested on the shared comparator.
+
+Known limits:
+- The SESAME PDF checksum is unverified.
+- The robustness tolerances are research criteria checked only on synthetics.
+- No summary score is computed.
+
+Command: `uv run python scripts/gate.py --stage 6` -> exit 0, 213 tests passed, 97 PASS, 2 BLOCKED
+(AC-S2-05, AC-S5-07), 1 UNVALIDATED (AC-S5-06). `ruff check .` and `ruff format --check .` are clean.

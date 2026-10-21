@@ -232,3 +232,44 @@ decision rule (docs/validation/report-v1.md). Therefore:
   site resonance;
 - fixing either failure requires a method change and a NEW protocol version with fresh locked seeds;
   v1 seeds must not be reused for tuning.
+
+## Stage 6
+
+**D-060 (robust-lw1.5-v1; fixed before any comparison result was examined).** Run B uses
+round(1.5 x Lw x fs) samples, with every other scientific setting unchanged (`robustness_config`).
+If B cannot be computed, the comparison is `not_evaluable` with the reason, and no alternative B is
+searched for. Both methods are attempted in both runs.
+
+Matching and resolution:
+- Peak families are matched by the closest fp within |log10 ratio| <= 0.1.
+- A family is adequately resolved when fp x Lw_A >= 10 cycles and max(df_A, df_B)/fp <= 0.1.
+
+Agreement tolerances, applied only to matched, adequately resolved families:
+- |ln(fp_B/fp_A)| <= 0.05;
+- |ln(Ap_B/Ap_A)| <= 0.20;
+- the median |ln HV_B - ln HV_A| over valid search-band bins of the common frequency grid <= 0.10.
+
+Reported but not judged: half-amplitude peak width (ln f), selected window counts, the fraction of
+run A's selected time also selected by B, uncertainty statuses, FFT resolutions, and the max
+|ln HV| difference.
+
+Per-method status:
+- `sensitive` if the plausible family sets differ or any tolerance fails;
+- `consistent` if at least one resolved matched family exists and all checks pass;
+- otherwise `not_evaluable`.
+
+The overall status is `sensitive` if any method is sensitive, otherwise `consistent` if any method is.
+Because the runs share a waveform, they are correlated: never averaged, never counted as
+independent, and neither is preferred. The tolerances are research criteria checked on known
+synthetic signals (AC-S6-06/07), not SESAME rules.
+
+**D-061 (quality dimensions).** The analysis reports three separate dimensions:
+- usability: channels, clipping, duration, gaps, coverage, response status, non-overlapping windows
+  and temporal groups;
+- peak identifiability: prominence, recurrence, fp/Ap variation, competing plausible families and
+  source-artifact flags;
+- sensitivity: Standard vs SDOF, selection counts, and the Lw robustness comparison.
+
+No 0-100 summary score is computed (`summary_score: null`, with a note). An optional score would need
+an explicit formula, weights, inputs, version and limitations; none has been validated. A flat curve
+and a Standard/SDOF disagreement are not penalized as poor recording quality.
