@@ -521,8 +521,8 @@ Changes to earlier-stage code and tests (no assertion weakened, no fingerprinted
     (D-099);
   - the JUnit XML is parsed with defusedxml.
 
-Command: `uv run python scripts/gate.py --all` (stage 9 includes every earlier stage). It exited 0
-in 144 s:
+Command: `uv run python scripts/gate.py --all` (stage 9 includes every earlier stage), on a clean
+checkout of commit `8ec3f80`. It exited 0 in 141 s:
 - 329 tests passed, 1 skipped (the Docker smoke test);
 - 142 PASS, 3 BLOCKED (AC-S2-05, AC-S5-07, AC-S9-09), 1 UNVALIDATED (AC-S5-06).
 

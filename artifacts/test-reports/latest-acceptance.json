@@ -1351,7 +1351,7 @@
    ],
    [
     "tests.stage_09.test_perf::test_profiling_small_case_again_reproduces_the_deterministic_counts",
-    "failed"
+    "passed"
    ]
   ],
   "AC-S9-02": [
@@ -1585,5 +1585,5 @@
    ]
   ]
  },
- "updated_utc": "2026-10-21T14:09:18Z"
+ "updated_utc": "2026-10-21T14:13:43Z"
 }
