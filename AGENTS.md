@@ -37,6 +37,7 @@ prompt, code comment, or habit, the specification wins.
 ```python
 import pytest
 
+
 @pytest.mark.acceptance("AC-S3-14")
 def test_final_mean_is_not_peak_aligned(): ...
 ```

@@ -17,7 +17,9 @@ ALLOWED_FORMATS = {"JPEG", "PNG", "WEBP"}
 TARGET = (300, 300)
 
 
-def process_photo(data: bytes, max_input_bytes: int = 15 * 1024 * 1024, max_pixels: int = 40_000_000) -> tuple[bytes, dict]:
+def process_photo(
+    data: bytes, max_input_bytes: int = 15 * 1024 * 1024, max_pixels: int = 40_000_000
+) -> tuple[bytes, dict]:
     if len(data) > max_input_bytes:
         raise InputError("photo_size", "photo exceeds the upload size limit")
     try:
@@ -27,7 +29,9 @@ def process_photo(data: bytes, max_input_bytes: int = 15 * 1024 * 1024, max_pixe
             if fmt not in ALLOWED_FORMATS:
                 raise InputError("photo_format", f"unsupported image format {fmt}; use JPEG, PNG or WebP")
             if w * h > max_pixels:
-                raise InputError("photo_pixels", f"image has {w * h} pixels; limit is {max_pixels} (decompression safety)")
+                raise InputError(
+                    "photo_pixels", f"image has {w * h} pixels; limit is {max_pixels} (decompression safety)"
+                )
             probe.verify()
     except InputError:
         raise
@@ -41,10 +45,17 @@ def process_photo(data: bytes, max_input_bytes: int = 15 * 1024 * 1024, max_pixe
             img.load()
             oriented = ImageOps.exif_transpose(img)
             rgb = oriented.convert("RGB")
-            out_img = ImageOps.pad(rgb, TARGET, method=Image.Resampling.LANCZOS, color=(255, 255, 255), centering=(0.5, 0.5))
+            out_img = ImageOps.pad(
+                rgb, TARGET, method=Image.Resampling.LANCZOS, color=(255, 255, 255), centering=(0.5, 0.5)
+            )
     finally:
         Image.MAX_IMAGE_PIXELS = previous
     buf = io.BytesIO()
     out_img.save(buf, format="JPEG", quality=88, optimize=True)
     out = buf.getvalue()
-    return out, {"input_format": fmt, "input_size": [w, h], "output_size": list(out_img.size), "exif_removed": True}
+    return out, {
+        "input_format": fmt,
+        "input_size": [w, h],
+        "output_size": list(out_img.size),
+        "exif_removed": True,
+    }
