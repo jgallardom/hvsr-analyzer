@@ -21,7 +21,7 @@ ALGORITHM_VERSIONS: dict[str, str] = {
     "source_diagnostics": "narrow-line-v1",
     "sdof_matching": "sdof-r2log-q129-v1",
     "sdof_selection": "sdof-greedy-nonoverlap-v1",
-    "uncertainty": "temporal-block-bootstrap-v1",
+    "uncertainty": "temporal-block-bootstrap-v2",
     "peak_bootstrap": "peak-replicate-v1",
     "sesame": "sesame-d23.12-impl-v1",
     "robustness": "robust-lw1.5-v1",

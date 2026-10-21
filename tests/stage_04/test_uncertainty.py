@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import math
 import sys
 from pathlib import Path
 
@@ -168,11 +169,13 @@ def test_correlated_regular_sequence_gets_blocks_and_wider_band_than_iid():
     assert res.info["block_length_windows"] > 1
     assert res.info["informative_blocks"] < n
     iid = plan_regular(t, F, CFG, base=1)
+    ones = np.ones(L.shape[1], bool)
+    plain = 10**9  # plain 2.5/97.5 % levels for both, so only the resampling scheme differs
     lo, hi, _ = band_from_replicates(
-        replicate_means(L, V, replicate_counts(iid, n, 1000, np.random.default_rng(CFG.seed))),
-        np.ones(L.shape[1], bool),
+        replicate_means(L, V, replicate_counts(iid, n, 1000, np.random.default_rng(CFG.seed))), ones, plain
     )
-    w_block = np.median(res.upper_ln - res.lower_ln)
+    blo, bhi, _ = band_from_replicates(res.replicates, ones, plain)
+    w_block = np.median(bhi - blo)
     w_iid = np.median(hi - lo)
     assert w_block > 1.5 * w_iid, (w_block, w_iid)
 
@@ -303,6 +306,19 @@ def test_no_zero_width_on_pipeline_cases(case):
     lo, hi = su.ci.lower_ln, su.ci.upper_ln
     fin = np.isfinite(lo) & np.isfinite(hi)
     assert np.all(hi[fin] - lo[fin] > 1e-12)
+
+
+@pytest.mark.acceptance("AC-S4-06")
+def test_expanded_percentile_levels_widen_for_few_blocks():
+    from scipy.stats import norm, t
+
+    from hvsr_core.uncertainty import expanded_levels
+
+    q18, u18 = expanded_levels(18)
+    assert q18 == pytest.approx(norm.cdf(-math.sqrt(18 / 17) * t.ppf(0.975, 17)), rel=1e-12)
+    assert q18 + u18 == pytest.approx(1.0)
+    assert expanded_levels(10)[0] < q18 < expanded_levels(100)[0] < 0.025
+    assert expanded_levels(10**6)[0] == pytest.approx(0.025, abs=1e-4)
 
 
 # --------------------------------------------------------------------------- AC-S4-07

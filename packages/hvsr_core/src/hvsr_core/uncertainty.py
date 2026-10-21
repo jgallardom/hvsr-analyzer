@@ -1,4 +1,4 @@
-"""Dependence-aware temporal block bootstrap of the selected-window mean (temporal-block-bootstrap-v1)
+"""Dependence-aware temporal block bootstrap of the selected-window mean (temporal-block-bootstrap-v2)
 and peak-replicate outcomes (peak-replicate-v1).
 
 Estimand: the frequency-by-frequency geometric mean of the windows retained by the declared selection
@@ -217,14 +217,26 @@ def replicate_means(L: np.ndarray, V: np.ndarray, counts: np.ndarray) -> np.ndar
         return np.where(den > 0, num / den, np.nan)
 
 
-def band_from_replicates(reps: np.ndarray, mean_valid: np.ndarray) -> tuple[np.ndarray, np.ndarray, int]:
+def expanded_levels(k: int) -> tuple[float, float]:
+    """Expanded percentile levels (Hesterberg 2015) for k resampling units: Phi^-1(q) = -sqrt(k/(k-1)) t_{0.975,k-1}."""
+    from scipy.stats import norm, t
+
+    if k < 2:
+        return 0.025, 0.975
+    q = float(norm.cdf(-math.sqrt(k / (k - 1)) * t.ppf(0.975, k - 1)))
+    return q, 1.0 - q
+
+
+def band_from_replicates(
+    reps: np.ndarray, mean_valid: np.ndarray, k: int
+) -> tuple[np.ndarray, np.ndarray, int]:
     if reps.size == 0:
         nan = np.full(reps.shape[1], np.nan)
         return nan, nan.copy(), 0
     masked = np.where(mean_valid, reps, np.nan)
     with np.errstate(invalid="ignore"), warnings.catch_warnings():
         warnings.simplefilter("ignore", RuntimeWarning)  # all-NaN columns at invalid bins
-        lo, hi = np.nanquantile(masked, [0.025, 0.975], axis=0)
+        lo, hi = np.nanquantile(masked, list(expanded_levels(k)), axis=0)
     zero = mean_valid & np.isfinite(lo) & np.isfinite(hi) & (hi - lo <= 1e-12)
     lo = np.where(mean_valid & ~zero, lo, np.nan)
     hi = np.where(mean_valid & ~zero, hi, np.nan)
@@ -295,6 +307,7 @@ def selected_mean_ci(
         "seed": cfg.seed,
         "n_bootstrap": n_boot,
         "resampling_unit": "whole window spectra (all frequencies jointly), ln-amplitude averaging",
+        "interval": "expanded percentile (Hesterberg 2015) with k = informative blocks",
         "excludes": [
             "sensor/response uncertainty",
             "template/model mismatch",
@@ -346,7 +359,7 @@ def selected_mean_ci(
         return UncertaintyResult("ci_not_estimable", reason, nan, nan.copy(), None, info)
     rng = np.random.default_rng(cfg.seed)
     reps = replicate_means(L, V, replicate_counts(plan, n, n_boot, rng))
-    lo, hi, zero_bins = band_from_replicates(reps, mean_valid)
+    lo, hi, zero_bins = band_from_replicates(reps, mean_valid, plan.n_blocks)
     if zero_bins:
         reasons.append(f"{zero_bins} bins had zero bootstrap width and are reported as null")
         status = "ci_limited"
@@ -386,7 +399,7 @@ def selected_mean_ci(
             )
             continue
         r2 = replicate_means(L, V, replicate_counts(p2, n, n_boot, np.random.default_rng(cfg.seed)))
-        l2, h2, _ = band_from_replicates(r2, mean_valid)
+        l2, h2, _ = band_from_replicates(r2, mean_valid, p2.n_blocks)
         w2 = _width(l2, h2, width_mask)
         sens.append(
             {

@@ -1,0 +1,801 @@
+{
+  "algorithm_versions": {
+    "basic_qc": "basic-qc-v1",
+    "canonical_conversion": "canon-mseed2-v1",
+    "csv_parser": "csv-parse-v1",
+    "frequency_outlier_rejection": "fdwra-cox2020-impl-v1",
+    "peak_bootstrap": "peak-replicate-v1",
+    "peak_discovery": "peak-families-kde-v1",
+    "plotting": "mpl-static-v1",
+    "preprocessing": "prep-v1",
+    "quality_dimensions": "quality-dims-v1",
+    "robustness": "robust-lw1.5-v1",
+    "sdof_matching": "sdof-r2log-q129-v1",
+    "sdof_selection": "sdof-greedy-nonoverlap-v1",
+    "sesame": "sesame-d23.12-impl-v1",
+    "source_diagnostics": "narrow-line-v1",
+    "spectra": "fas-ko-sparse-v1",
+    "standard_selection": "std-earliest-nonoverlap-v1",
+    "uncertainty": "temporal-block-bootstrap-v2",
+    "windowing": "win-halfopen-v1"
+  },
+  "analysis_config": {
+    "basic_qc": {
+      "clip_detection": true,
+      "clip_fraction_of_full_scale": 0.995,
+      "flat_top_run_samples": 5,
+      "lta_s": 30.0,
+      "sta_lta_enabled": true,
+      "sta_lta_max": 2.5,
+      "sta_lta_min": 0.2,
+      "sta_s": 1.0
+    },
+    "peak_discovery": {
+      "family_listing_min_recurrence": 0.1,
+      "family_max_halfwidth_decades": 0.12,
+      "kde_bandwidth_decades": 0.03,
+      "kde_merge_valley_ratio": 0.8,
+      "lower_edge_min_hv": 1.5,
+      "mean_min_prominence_ratio": 1.5,
+      "min_discovery_windows": 5,
+      "min_recurrence": 0.3,
+      "narrow_line_max_width_bins": 3,
+      "narrow_line_min_contrast_ratio": 3.0,
+      "narrow_line_min_persistence": 0.8,
+      "smoothing_sensitivity_bandwidth": 80.0,
+      "window_min_prominence_ratio": 1.25
+    },
+    "peak_search": {
+      "fmax_hz": 20.0,
+      "fmin_hz": 0.2
+    },
+    "preprocessing": {
+      "bandpass": null,
+      "detrend": "linear",
+      "response_correction": "none",
+      "taper_alpha": 0.1,
+      "taper_type": "tukey"
+    },
+    "sdof": {
+      "calibration_profile": null,
+      "extra_banks": [],
+      "manual_n": null,
+      "min_fft_bins_below_peak": 4,
+      "min_fft_bins_in_fit_band": 10,
+      "min_log_variance": 1e-06,
+      "peak_interpolation": "parabolic_log",
+      "r2_min": 0.0,
+      "selection_mode": "automatic",
+      "template_bank": "auto"
+    },
+    "spectral": {
+      "anti_alias_fraction": 0.8,
+      "grid_fmax_hz": null,
+      "grid_fmin_hz": null,
+      "grid_points_per_decade": 200,
+      "horizontal_combination": "rms",
+      "ko_bandwidth": 40.0,
+      "ko_support_rad": 3.0,
+      "min_smoothing_bins": 3,
+      "processing_order": "combine_then_smooth",
+      "smoothing": "konno_ohmachi",
+      "vertical_floor_rel": 1e-09
+    },
+    "standard_selection": {
+      "fdwra_max_iterations": 50,
+      "fdwra_n_std": 2.0,
+      "frequency_outlier_rejection": "none"
+    },
+    "uncertainty": {
+      "adjacent_block_corr_max": 0.3,
+      "dependence_test_alpha": 0.05,
+      "irregular_block_lw_factor": 2.0,
+      "max_block_doublings": 3,
+      "min_informative_blocks": 10,
+      "n_bootstrap": 2000,
+      "pw_min_windows": 75,
+      "regular_spacing_max_ratio": 1.5,
+      "seed": 20261020,
+      "sensitivity_factors": [
+        0.5,
+        2.0
+      ],
+      "sensitivity_width_ratio_limit": 1.5
+    },
+    "windowing": {
+      "step_s": 5.0,
+      "time_range": {
+        "tmax_s": null,
+        "tmin_s": null
+      },
+      "window_length_s": 50.0
+    }
+  },
+  "code_fingerprint": {
+    "bank_manifests": {
+      "sdof-ko100-v1.json": "f91e0a877bd95127c266cacc754b07a040c7fd10847fab5119cd452d591773f7",
+      "sdof-ko20-v1.json": "91fcf11255388a41fa30e4c9d69126240a80c115ef1d227443e4e47aac6e7d83",
+      "sdof-ko30-v1.json": "9c93f6c38159f95dc447d34f236ac8ed2238cb038c9b3c694ce6d1ceb3fc15f3",
+      "sdof-ko40-v1.json": "75386811255c6ea737aae9346b9c62099da2572c69fd9c0db35526712ff9f5b8",
+      "sdof-ko50-v1.json": "76ac6386c00fb7b64048196295486ebe07d7a5d0e50d89895078b9178052d851",
+      "sdof-ko60-v1.json": "5d19f624e345fb0197cf818e2a1c3dbec046bdddfe98dfd8a612a3cf0e925c54",
+      "sdof-ko80-v1.json": "42c94d85d4ae66bc9311a0598e62d434912acf4f8f6ccfeeefadc330193e163d",
+      "sdof-raw-v1.json": "22a7a2683f9dd137896bd5d722517393714d010b41dc55dfe7cdfb8cab479dc6"
+    },
+    "files": {
+      "core.py": "e7ceed05d5efcaf9c813d0facb0818122772e073508b0e30ad13a53b3e125c0e",
+      "curves.py": "9b3fb4294023d237ba433c0bb2f7f7f0ab1accdae5db15dd5fbab15ac2335585",
+      "matching.py": "e342fd880688c62dfb67e4b3e2847c35e4cbf74f3c842576f47704abdf5b9b82",
+      "metadata.py": "4624e0f1b261c625d0c304d037e3a72ef441a7f8a632038e7927cd98d1ddf470",
+      "peaks.py": "23fcb0eee45f0f2a42211c69a0559524caf668f7fd262c1104331d4ab0accf7a",
+      "preprocess.py": "15ac7888e54f6139cb5a09b8f5e80c52d2a051a8bbe096555c594aa1a903b7cc",
+      "qc.py": "1c5abc6c2af244c79bc1d86d0cf77b417b55c0569cabc5bd5ab1b7451daefcf6",
+      "research/synthetic.py": "cba3060ce877fa2decf85afa3c1e767cf41b62d571815ee600cc810682435dcd",
+      "research/validation.py": "d0d1103a633e9481d36dd9ec526096514133a0b30fc9f20c5146de19a0988e1b",
+      "research/validation_protocol.py": "fe0312c7afb26fd51562600215acc90cf67b7fce8215639ee76d6942f0bc30c3",
+      "selection.py": "ea69003dc133b8b2d3efe95662c89bfcf444a4b976cf4d2dcbde379a37fb24b3",
+      "spectra.py": "9eb0e835e78f981262cc4b67e71b7d690e7b70ec89f0db70d1c6cc7f55d2b782",
+      "templates.py": "a54a4b6681ec358335908d68a17f3e4215aaf7c4c5f4eb6e03edc9b59fcc6759",
+      "uncertainty.py": "e911dc15547c1adc9d0ce92846e4a8cd582764b000298f6ceb9923aa417a0def",
+      "windows.py": "34443f55dec3cfc2c933be64281ae7b790134f7acfefb6fcf5f08bd6523cf022"
+    }
+  },
+  "decision_rule": "AC-S5-06 is met only if every target passes. Otherwise the failure is published and the CI remains labelled nominal/uncalibrated.",
+  "development_log": [
+    "dev run 1 (50 replicates/scenario, development seeds only) showed: (a) default STA/LTA rejects 96-100 % of windows in the alpha = 1.5 coloured-noise scenarios, so no CI is produced (kept unchanged; reported as a QC limitation); (b) the transient scenario with 40 bursts per 30 min left about 10 clean windows, contrary to the spec's 'clean windows mixed with strong transients'; reduced to 12 bursts; (c) coverage 43/49 in flat_white, consistent with plain-percentile narrowness for k = 18 blocks; the expanded percentile interval (D-052) was adopted; (d) regime_switching under-covered (24/33, 27/37); the method was NOT changed for this.",
+    "added colored_mild_sdof (alpha = 0.75) and episodes_lognormal (white noise with amplitude episodes) so CI behaviour under coloured noise and under episodes can be evaluated at all; the harsh variants are kept.",
+    "dev run 2 (after the changes above): regime_switching still under-covers (26/33, 29/37) and the alpha = 1.5 scenarios still produce no CI; both are expected to fail on the test set and no further change was made.",
+    "no locked-test-set seed was used before the lock."
+  ],
+  "estimands": {
+    "physical": "ln|T(f)| of the generating transfer function at the coverage frequency (RMS-combined with any declared horizontal gain mismatch) and the true fundamental frequency; not a CI target",
+    "policy_mean": "expected ln H/V at the coverage frequency over windows retained by the method's policy; estimated by pooling retained windows of all truth records",
+    "sdof_policy": "SDOF R2_log greedy selection inside the plausible family matching the true fundamental (selected-regime mean)",
+    "standard_policy": "basic QC + earliest-first non-overlapping windows (Standard reference)"
+  },
+  "generator_version": "synthetic-3c-v1",
+  "harness_version": "mc-harness-v1",
+  "matching_rules": {
+    "false_peak": "plausible family without possible_source_peak flag that matches no true transfer-function peak",
+    "family_matches_true_peak": "true peak inside [lo_hz, hi_hz] or |log10(mean_peak_hz / true)| <= 0.1",
+    "fundamental_correct": "|log10(inferred fundamental / true fundamental)| <= 0.1"
+  },
+  "metrics": [
+    "bias of ln(fp/f0); median |ln(fp/f0)|; mean |fp - f0| / f0 (Standard and SDOF separately)",
+    "fundamental-correct rate; false-peak rate; source-flag rate",
+    "pointwise CI coverage of the policy mean (target) and of the physical amplitude (reported)",
+    "CI width in ln at the coverage frequency",
+    "no-result rates: ci_not_estimable, ci_limited, no SDOF selection, no fp",
+    "retained evidence: windows, informative blocks",
+    "peak-replicate conditional interval coverage of f0 (reported, conditional, not a 95 % claim)",
+    "compute cost per replicate",
+    "R2-vs-fundamental: R2-preferred family wrong; SDOF R2 above Standard windows while |fp error| worse"
+  ],
+  "package_version": "0.1.0",
+  "protocol_id": "hvsr-mc-validation-v1",
+  "record": {
+    "duration_s": 1800.0,
+    "sampling_rate_hz": 50.0
+  },
+  "scenarios": [
+    {
+      "categories": [
+        "flat",
+        "null"
+      ],
+      "coverage_frequency_hz": 2.0,
+      "fundamental_hz": null,
+      "generator": {},
+      "known_source_lines_hz": [],
+      "name": "flat_white",
+      "transfer": {
+        "kind": "flat",
+        "params": {}
+      },
+      "true_peaks_hz": []
+    },
+    {
+      "categories": [
+        "flat",
+        "null",
+        "colored_noise",
+        "temporal_correlation"
+      ],
+      "coverage_frequency_hz": 2.0,
+      "fundamental_hz": null,
+      "generator": {
+        "episodes": {
+          "sigma_ln": 0.7,
+          "tau_s": 120.0
+        },
+        "noise_alpha": 1.5
+      },
+      "known_source_lines_hz": [],
+      "name": "flat_colored_episodes",
+      "transfer": {
+        "kind": "flat",
+        "params": {}
+      },
+      "true_peaks_hz": []
+    },
+    {
+      "categories": [
+        "sdof_in_model"
+      ],
+      "coverage_frequency_hz": 1.958078,
+      "fundamental_hz": 1.958078,
+      "generator": {},
+      "known_source_lines_hz": [],
+      "name": "sdof_2hz",
+      "transfer": {
+        "kind": "sdof",
+        "params": {
+          "fn": 2.0,
+          "zeta": 0.15
+        }
+      },
+      "true_peaks_hz": [
+        1.958078
+      ]
+    },
+    {
+      "categories": [
+        "broad",
+        "asymmetric",
+        "non_sdof"
+      ],
+      "coverage_frequency_hz": 3.00006,
+      "fundamental_hz": 3.00006,
+      "generator": {},
+      "known_source_lines_hz": [],
+      "name": "broad_asymmetric_3hz",
+      "transfer": {
+        "kind": "asymmetric_peak",
+        "params": {
+          "amplitude": 3.5,
+          "fc": 3.0,
+          "width_left_decades": 0.25,
+          "width_right_decades": 0.08
+        }
+      },
+      "true_peaks_hz": [
+        3.00006
+      ]
+    },
+    {
+      "categories": [
+        "multiple_peaks",
+        "non_sdof"
+      ],
+      "coverage_frequency_hz": 1.500134,
+      "fundamental_hz": 1.500134,
+      "generator": {},
+      "known_source_lines_hz": [],
+      "name": "two_peaks",
+      "transfer": {
+        "kind": "multi_peak",
+        "params": {
+          "peaks": [
+            {
+              "amplitude": 4.0,
+              "fc": 1.5,
+              "width_decades": 0.06
+            },
+            {
+              "amplitude": 4.0,
+              "fc": 6.0,
+              "width_decades": 0.06
+            }
+          ]
+        }
+      },
+      "true_peaks_hz": [
+        1.500134,
+        5.999706
+      ]
+    },
+    {
+      "categories": [
+        "weak_fundamental",
+        "multiple_peaks",
+        "non_sdof"
+      ],
+      "coverage_frequency_hz": 1.000069,
+      "fundamental_hz": 1.000069,
+      "generator": {},
+      "known_source_lines_hz": [],
+      "name": "weak_fundamental",
+      "transfer": {
+        "kind": "multi_peak",
+        "params": {
+          "peaks": [
+            {
+              "amplitude": 2.2,
+              "fc": 1.0,
+              "width_decades": 0.06
+            },
+            {
+              "amplitude": 6.0,
+              "fc": 6.0,
+              "width_decades": 0.06
+            }
+          ]
+        }
+      },
+      "true_peaks_hz": [
+        1.000069,
+        5.999706
+      ]
+    },
+    {
+      "categories": [
+        "temporal_correlation",
+        "non_sdof"
+      ],
+      "coverage_frequency_hz": 2.0,
+      "fundamental_hz": 2.0,
+      "generator": {},
+      "known_source_lines_hz": [],
+      "name": "regime_switching",
+      "regime_switching": {
+        "alt_tf": {
+          "kind": "lognormal_peak",
+          "params": {
+            "amplitude": 2.5,
+            "fc": 2.0,
+            "width_decades": 0.1
+          }
+        },
+        "p": 0.5,
+        "span_s": 300.0
+      },
+      "transfer": {
+        "kind": "lognormal_peak",
+        "params": {
+          "amplitude": 4.0,
+          "fc": 2.0,
+          "width_decades": 0.1
+        }
+      },
+      "true_peaks_hz": [
+        2.0
+      ]
+    },
+    {
+      "categories": [
+        "colored_noise",
+        "temporal_correlation",
+        "sdof_in_model"
+      ],
+      "coverage_frequency_hz": 1.157791,
+      "fundamental_hz": 1.157791,
+      "generator": {
+        "episodes": {
+          "sigma_ln": 0.7,
+          "tau_s": 120.0
+        },
+        "noise_alpha": 1.5
+      },
+      "known_source_lines_hz": [],
+      "name": "colored_sdof",
+      "transfer": {
+        "kind": "sdof",
+        "params": {
+          "fn": 1.2,
+          "zeta": 0.2
+        }
+      },
+      "true_peaks_hz": [
+        1.157791
+      ]
+    },
+    {
+      "categories": [
+        "transients",
+        "non_sdof"
+      ],
+      "coverage_frequency_hz": 2.499942,
+      "fundamental_hz": 2.499942,
+      "generator": {},
+      "known_source_lines_hz": [],
+      "name": "transients",
+      "random_transients": {
+        "amplitude_rel": 50.0,
+        "count": 12,
+        "duration_s": 2.0
+      },
+      "transfer": {
+        "kind": "lognormal_peak",
+        "params": {
+          "amplitude": 4.0,
+          "fc": 2.5,
+          "width_decades": 0.1
+        }
+      },
+      "true_peaks_hz": [
+        2.499942
+      ]
+    },
+    {
+      "categories": [
+        "colored_noise",
+        "sdof_in_model"
+      ],
+      "coverage_frequency_hz": 1.157791,
+      "fundamental_hz": 1.157791,
+      "generator": {
+        "noise_alpha": 0.75
+      },
+      "known_source_lines_hz": [],
+      "name": "colored_mild_sdof",
+      "transfer": {
+        "kind": "sdof",
+        "params": {
+          "fn": 1.2,
+          "zeta": 0.2
+        }
+      },
+      "true_peaks_hz": [
+        1.157791
+      ]
+    },
+    {
+      "categories": [
+        "temporal_correlation",
+        "non_sdof"
+      ],
+      "coverage_frequency_hz": 2.0,
+      "fundamental_hz": 2.0,
+      "generator": {
+        "episodes": {
+          "sigma_ln": 0.7,
+          "tau_s": 120.0
+        }
+      },
+      "known_source_lines_hz": [],
+      "name": "episodes_lognormal",
+      "transfer": {
+        "kind": "lognormal_peak",
+        "params": {
+          "amplitude": 4.0,
+          "fc": 2.0,
+          "width_decades": 0.1
+        }
+      },
+      "true_peaks_hz": [
+        2.0
+      ]
+    },
+    {
+      "categories": [
+        "machine_tone",
+        "non_sdof"
+      ],
+      "coverage_frequency_hz": 2.0,
+      "fundamental_hz": 2.0,
+      "generator": {
+        "tones": [
+          {
+            "amplitude_rel": 0.5,
+            "components": "NE",
+            "freq_hz": 7.5
+          }
+        ]
+      },
+      "known_source_lines_hz": [
+        7.5
+      ],
+      "name": "machine_tone",
+      "transfer": {
+        "kind": "lognormal_peak",
+        "params": {
+          "amplitude": 3.5,
+          "fc": 2.0,
+          "width_decades": 0.1
+        }
+      },
+      "true_peaks_hz": [
+        2.0
+      ]
+    },
+    {
+      "categories": [
+        "component_mismatch",
+        "sdof_in_model"
+      ],
+      "coverage_frequency_hz": 2.937176,
+      "fundamental_hz": 2.937176,
+      "generator": {
+        "horizontal_gain_mismatch": 1.3
+      },
+      "known_source_lines_hz": [],
+      "name": "component_mismatch",
+      "transfer": {
+        "kind": "sdof",
+        "params": {
+          "fn": 3.0,
+          "zeta": 0.15
+        }
+      },
+      "true_peaks_hz": [
+        2.937176
+      ]
+    },
+    {
+      "categories": [
+        "layered_site_response",
+        "non_sdof"
+      ],
+      "coverage_frequency_hz": 1.990352,
+      "fundamental_hz": 1.990352,
+      "generator": {},
+      "known_source_lines_hz": [],
+      "name": "layered_sh",
+      "transfer": {
+        "kind": "layered_sh",
+        "params": {
+          "halfspace": {
+            "damping": 0.005,
+            "rho": 2200.0,
+            "vs": 800.0
+          },
+          "layers": [
+            {
+              "damping": 0.02,
+              "h": 25.0,
+              "rho": 1800.0,
+              "vs": 200.0
+            }
+          ]
+        }
+      },
+      "true_peaks_hz": [
+        1.990352,
+        5.990044,
+        9.989184,
+        13.990396,
+        17.989952
+      ]
+    }
+  ],
+  "sets": {
+    "dev": {
+      "replicates_per_scenario": 50,
+      "seed_rule": "1000000 + 10000 * scenario_index + i"
+    },
+    "test": {
+      "replicates_per_scenario": 400,
+      "seed_rule": "2000000 + 10000 * scenario_index + i"
+    },
+    "truth": {
+      "replicates_per_scenario": 200,
+      "seed_rule": "3000000 + 10000 * scenario_index + i"
+    }
+  },
+  "targets": [
+    {
+      "alpha": 0.0017857142857142859,
+      "id": "T-COV-STD-flat_white",
+      "kind": "coverage",
+      "method": "standard",
+      "rule": "one-sided exact binomial test of H0: coverage >= 0.95 on replicates whose CI is estimated or limited; FAIL if p < 0.05/28; NOT EVALUABLE (counts as not met) with < 30 such replicates. Over-coverage passes and is reported.",
+      "scenario": "flat_white"
+    },
+    {
+      "alpha": 0.0017857142857142859,
+      "id": "T-COV-STD-flat_colored_episodes",
+      "kind": "coverage",
+      "method": "standard",
+      "rule": "one-sided exact binomial test of H0: coverage >= 0.95 on replicates whose CI is estimated or limited; FAIL if p < 0.05/28; NOT EVALUABLE (counts as not met) with < 30 such replicates. Over-coverage passes and is reported.",
+      "scenario": "flat_colored_episodes"
+    },
+    {
+      "alpha": 0.0017857142857142859,
+      "id": "T-COV-STD-sdof_2hz",
+      "kind": "coverage",
+      "method": "standard",
+      "rule": "one-sided exact binomial test of H0: coverage >= 0.95 on replicates whose CI is estimated or limited; FAIL if p < 0.05/28; NOT EVALUABLE (counts as not met) with < 30 such replicates. Over-coverage passes and is reported.",
+      "scenario": "sdof_2hz"
+    },
+    {
+      "alpha": 0.0017857142857142859,
+      "id": "T-COV-STD-broad_asymmetric_3hz",
+      "kind": "coverage",
+      "method": "standard",
+      "rule": "one-sided exact binomial test of H0: coverage >= 0.95 on replicates whose CI is estimated or limited; FAIL if p < 0.05/28; NOT EVALUABLE (counts as not met) with < 30 such replicates. Over-coverage passes and is reported.",
+      "scenario": "broad_asymmetric_3hz"
+    },
+    {
+      "alpha": 0.0017857142857142859,
+      "id": "T-COV-STD-two_peaks",
+      "kind": "coverage",
+      "method": "standard",
+      "rule": "one-sided exact binomial test of H0: coverage >= 0.95 on replicates whose CI is estimated or limited; FAIL if p < 0.05/28; NOT EVALUABLE (counts as not met) with < 30 such replicates. Over-coverage passes and is reported.",
+      "scenario": "two_peaks"
+    },
+    {
+      "alpha": 0.0017857142857142859,
+      "id": "T-COV-STD-weak_fundamental",
+      "kind": "coverage",
+      "method": "standard",
+      "rule": "one-sided exact binomial test of H0: coverage >= 0.95 on replicates whose CI is estimated or limited; FAIL if p < 0.05/28; NOT EVALUABLE (counts as not met) with < 30 such replicates. Over-coverage passes and is reported.",
+      "scenario": "weak_fundamental"
+    },
+    {
+      "alpha": 0.0017857142857142859,
+      "id": "T-COV-STD-regime_switching",
+      "kind": "coverage",
+      "method": "standard",
+      "rule": "one-sided exact binomial test of H0: coverage >= 0.95 on replicates whose CI is estimated or limited; FAIL if p < 0.05/28; NOT EVALUABLE (counts as not met) with < 30 such replicates. Over-coverage passes and is reported.",
+      "scenario": "regime_switching"
+    },
+    {
+      "alpha": 0.0017857142857142859,
+      "id": "T-COV-STD-colored_sdof",
+      "kind": "coverage",
+      "method": "standard",
+      "rule": "one-sided exact binomial test of H0: coverage >= 0.95 on replicates whose CI is estimated or limited; FAIL if p < 0.05/28; NOT EVALUABLE (counts as not met) with < 30 such replicates. Over-coverage passes and is reported.",
+      "scenario": "colored_sdof"
+    },
+    {
+      "alpha": 0.0017857142857142859,
+      "id": "T-COV-STD-transients",
+      "kind": "coverage",
+      "method": "standard",
+      "rule": "one-sided exact binomial test of H0: coverage >= 0.95 on replicates whose CI is estimated or limited; FAIL if p < 0.05/28; NOT EVALUABLE (counts as not met) with < 30 such replicates. Over-coverage passes and is reported.",
+      "scenario": "transients"
+    },
+    {
+      "alpha": 0.0017857142857142859,
+      "id": "T-COV-STD-colored_mild_sdof",
+      "kind": "coverage",
+      "method": "standard",
+      "rule": "one-sided exact binomial test of H0: coverage >= 0.95 on replicates whose CI is estimated or limited; FAIL if p < 0.05/28; NOT EVALUABLE (counts as not met) with < 30 such replicates. Over-coverage passes and is reported.",
+      "scenario": "colored_mild_sdof"
+    },
+    {
+      "alpha": 0.0017857142857142859,
+      "id": "T-COV-STD-episodes_lognormal",
+      "kind": "coverage",
+      "method": "standard",
+      "rule": "one-sided exact binomial test of H0: coverage >= 0.95 on replicates whose CI is estimated or limited; FAIL if p < 0.05/28; NOT EVALUABLE (counts as not met) with < 30 such replicates. Over-coverage passes and is reported.",
+      "scenario": "episodes_lognormal"
+    },
+    {
+      "alpha": 0.0017857142857142859,
+      "id": "T-COV-STD-machine_tone",
+      "kind": "coverage",
+      "method": "standard",
+      "rule": "one-sided exact binomial test of H0: coverage >= 0.95 on replicates whose CI is estimated or limited; FAIL if p < 0.05/28; NOT EVALUABLE (counts as not met) with < 30 such replicates. Over-coverage passes and is reported.",
+      "scenario": "machine_tone"
+    },
+    {
+      "alpha": 0.0017857142857142859,
+      "id": "T-COV-STD-component_mismatch",
+      "kind": "coverage",
+      "method": "standard",
+      "rule": "one-sided exact binomial test of H0: coverage >= 0.95 on replicates whose CI is estimated or limited; FAIL if p < 0.05/28; NOT EVALUABLE (counts as not met) with < 30 such replicates. Over-coverage passes and is reported.",
+      "scenario": "component_mismatch"
+    },
+    {
+      "alpha": 0.0017857142857142859,
+      "id": "T-COV-STD-layered_sh",
+      "kind": "coverage",
+      "method": "standard",
+      "rule": "one-sided exact binomial test of H0: coverage >= 0.95 on replicates whose CI is estimated or limited; FAIL if p < 0.05/28; NOT EVALUABLE (counts as not met) with < 30 such replicates. Over-coverage passes and is reported.",
+      "scenario": "layered_sh"
+    },
+    {
+      "alpha": 0.0017857142857142859,
+      "id": "T-COV-SDOF-sdof_2hz",
+      "kind": "coverage",
+      "method": "sdof",
+      "rule": "one-sided exact binomial test of H0: coverage >= 0.95 on replicates whose CI is estimated or limited; FAIL if p < 0.05/28; NOT EVALUABLE (counts as not met) with < 30 such replicates. Over-coverage passes and is reported.",
+      "scenario": "sdof_2hz"
+    },
+    {
+      "alpha": 0.0017857142857142859,
+      "id": "T-COV-SDOF-broad_asymmetric_3hz",
+      "kind": "coverage",
+      "method": "sdof",
+      "rule": "one-sided exact binomial test of H0: coverage >= 0.95 on replicates whose CI is estimated or limited; FAIL if p < 0.05/28; NOT EVALUABLE (counts as not met) with < 30 such replicates. Over-coverage passes and is reported.",
+      "scenario": "broad_asymmetric_3hz"
+    },
+    {
+      "alpha": 0.0017857142857142859,
+      "id": "T-COV-SDOF-two_peaks",
+      "kind": "coverage",
+      "method": "sdof",
+      "rule": "one-sided exact binomial test of H0: coverage >= 0.95 on replicates whose CI is estimated or limited; FAIL if p < 0.05/28; NOT EVALUABLE (counts as not met) with < 30 such replicates. Over-coverage passes and is reported.",
+      "scenario": "two_peaks"
+    },
+    {
+      "alpha": 0.0017857142857142859,
+      "id": "T-COV-SDOF-weak_fundamental",
+      "kind": "coverage",
+      "method": "sdof",
+      "rule": "one-sided exact binomial test of H0: coverage >= 0.95 on replicates whose CI is estimated or limited; FAIL if p < 0.05/28; NOT EVALUABLE (counts as not met) with < 30 such replicates. Over-coverage passes and is reported.",
+      "scenario": "weak_fundamental"
+    },
+    {
+      "alpha": 0.0017857142857142859,
+      "id": "T-COV-SDOF-regime_switching",
+      "kind": "coverage",
+      "method": "sdof",
+      "rule": "one-sided exact binomial test of H0: coverage >= 0.95 on replicates whose CI is estimated or limited; FAIL if p < 0.05/28; NOT EVALUABLE (counts as not met) with < 30 such replicates. Over-coverage passes and is reported.",
+      "scenario": "regime_switching"
+    },
+    {
+      "alpha": 0.0017857142857142859,
+      "id": "T-COV-SDOF-colored_sdof",
+      "kind": "coverage",
+      "method": "sdof",
+      "rule": "one-sided exact binomial test of H0: coverage >= 0.95 on replicates whose CI is estimated or limited; FAIL if p < 0.05/28; NOT EVALUABLE (counts as not met) with < 30 such replicates. Over-coverage passes and is reported.",
+      "scenario": "colored_sdof"
+    },
+    {
+      "alpha": 0.0017857142857142859,
+      "id": "T-COV-SDOF-transients",
+      "kind": "coverage",
+      "method": "sdof",
+      "rule": "one-sided exact binomial test of H0: coverage >= 0.95 on replicates whose CI is estimated or limited; FAIL if p < 0.05/28; NOT EVALUABLE (counts as not met) with < 30 such replicates. Over-coverage passes and is reported.",
+      "scenario": "transients"
+    },
+    {
+      "alpha": 0.0017857142857142859,
+      "id": "T-COV-SDOF-colored_mild_sdof",
+      "kind": "coverage",
+      "method": "sdof",
+      "rule": "one-sided exact binomial test of H0: coverage >= 0.95 on replicates whose CI is estimated or limited; FAIL if p < 0.05/28; NOT EVALUABLE (counts as not met) with < 30 such replicates. Over-coverage passes and is reported.",
+      "scenario": "colored_mild_sdof"
+    },
+    {
+      "alpha": 0.0017857142857142859,
+      "id": "T-COV-SDOF-episodes_lognormal",
+      "kind": "coverage",
+      "method": "sdof",
+      "rule": "one-sided exact binomial test of H0: coverage >= 0.95 on replicates whose CI is estimated or limited; FAIL if p < 0.05/28; NOT EVALUABLE (counts as not met) with < 30 such replicates. Over-coverage passes and is reported.",
+      "scenario": "episodes_lognormal"
+    },
+    {
+      "alpha": 0.0017857142857142859,
+      "id": "T-COV-SDOF-machine_tone",
+      "kind": "coverage",
+      "method": "sdof",
+      "rule": "one-sided exact binomial test of H0: coverage >= 0.95 on replicates whose CI is estimated or limited; FAIL if p < 0.05/28; NOT EVALUABLE (counts as not met) with < 30 such replicates. Over-coverage passes and is reported.",
+      "scenario": "machine_tone"
+    },
+    {
+      "alpha": 0.0017857142857142859,
+      "id": "T-COV-SDOF-component_mismatch",
+      "kind": "coverage",
+      "method": "sdof",
+      "rule": "one-sided exact binomial test of H0: coverage >= 0.95 on replicates whose CI is estimated or limited; FAIL if p < 0.05/28; NOT EVALUABLE (counts as not met) with < 30 such replicates. Over-coverage passes and is reported.",
+      "scenario": "component_mismatch"
+    },
+    {
+      "alpha": 0.0017857142857142859,
+      "id": "T-COV-SDOF-layered_sh",
+      "kind": "coverage",
+      "method": "sdof",
+      "rule": "one-sided exact binomial test of H0: coverage >= 0.95 on replicates whose CI is estimated or limited; FAIL if p < 0.05/28; NOT EVALUABLE (counts as not met) with < 30 such replicates. Over-coverage passes and is reported.",
+      "scenario": "layered_sh"
+    },
+    {
+      "alpha": 0.0017857142857142859,
+      "id": "T-FALSEPEAK-flat_white",
+      "kind": "null_false_peak",
+      "method": "discovery",
+      "rule": "one-sided exact binomial test of H0: false-peak rate <= 0.1; FAIL if p < 0.05/28.",
+      "scenario": "flat_white"
+    },
+    {
+      "alpha": 0.0017857142857142859,
+      "id": "T-FALSEPEAK-flat_colored_episodes",
+      "kind": "null_false_peak",
+      "method": "discovery",
+      "rule": "one-sided exact binomial test of H0: false-peak rate <= 0.1; FAIL if p < 0.05/28.",
+      "scenario": "flat_colored_episodes"
+    }
+  ]
+}

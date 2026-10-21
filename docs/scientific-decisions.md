@@ -205,6 +205,15 @@ family, at the global maximum of the search band), the mean ln(H/V) over [fp/2, 
 are dropped from the dependence assessment (recorded); with no usable feature the CI is
 `ci_not_estimable`.
 
+**D-052 (temporal-block-bootstrap-v2; Stage 5 development set, before the protocol lock).** The band
+uses expanded percentile levels (Hesterberg 2015, *The American Statistician* 69:371-386): with k
+informative blocks, q = Phi(-sqrt(k/(k-1)) * t_{0.975, k-1}), and the band is the [q, 1-q] replicate
+quantiles (k = 18 gives q = 1.5 %). Reason: a plain percentile bootstrap over k resampling units
+ignores both the (k-1)/k variance shrinkage and the t-distribution of the studentized mean. Its
+expected coverage is about 92.6 % for k = 18 iid units. On the development set (never the test
+set), the null scenario showed 43/49 = 88 % with plain percentiles. The correction is the textbook
+form, has no tunable parameter, and only widens the band; it vanishes as k grows.
+
 Peak replicates (peak-replicate-v1): each replicate mean curve is searched for a strict local maximum
 inside the family band, with no realignment. The fractions with a peak in the family, with no peak, and
 with the search-band global maximum in another listed family are all reported. The 2.5-97.5 %
