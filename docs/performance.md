@@ -1,6 +1,6 @@
 # Performance report
 
-Generated 2026-10-21T04:17:44Z by `scripts/profile_runs.py` (software 0.1.0, commit `7109358f15b9a8ee21c26f0cc71919a8d4be0201` with uncommitted changes). Regenerate with `uv run python scripts/profile_runs.py`.
+Generated 2026-10-21T04:41:47Z by `scripts/profile_runs.py` (software 0.1.0, commit `6dad8a0ee6e0413191e04dc45caf2a607b76823c`). Regenerate with `uv run python scripts/profile_runs.py`.
 
 ## Declared hardware
 
@@ -52,12 +52,12 @@ job process.
 
 | Case | Submit wall / CPU | Submit peak | Cold job wall | Cold CPU | Cold peak | Warm job wall | Warm CPU | Warm peak | Warm reused science |
 |---|---|---|---|---|---|---|---|---|---|
-| small | 0.2 s / 0.2 s | 115 MB | 2.3 s | 2.1 s | 211 MB | 2.0 s | 1.7 s | 206 MB | yes |
-| medium | 0.7 s / 0.6 s | 144 MB | 4.3 s | 4.1 s | 283 MB | 2.5 s | 2.3 s | 216 MB | yes |
-| large | 2.6 s / 2.6 s | 291 MB | 8.8 s | 8.6 s | 551 MB | 4.4 s | 4.2 s | 336 MB | yes |
-| large_wide | 5.5 s / 5.5 s | 353 MB | 11.4 s | 11.1 s | 551 MB | 7.0 s | 6.8 s | 435 MB | yes |
-| eight_hours | 2.7 s / 2.6 s | 297 MB | 11.0 s | 10.7 s | 664 MB | 4.6 s | 4.4 s | 342 MB | yes |
-| long | 12.4 s / 12.4 s | 634 MB | 32.9 s | 32.6 s | 1616 MB | 12.2 s | 11.9 s | 679 MB | yes |
+| small | 0.2 s / 0.2 s | 115 MB | 2.3 s | 2.1 s | 211 MB | 1.9 s | 1.7 s | 206 MB | yes |
+| medium | 0.6 s / 0.6 s | 144 MB | 4.3 s | 4.1 s | 283 MB | 2.6 s | 2.3 s | 215 MB | yes |
+| large | 2.6 s / 2.6 s | 291 MB | 8.7 s | 8.5 s | 551 MB | 4.4 s | 4.2 s | 336 MB | yes |
+| large_wide | 5.6 s / 5.6 s | 353 MB | 12.9 s | 12.7 s | 552 MB | 7.3 s | 7.1 s | 435 MB | yes |
+| eight_hours | 2.8 s / 2.8 s | 297 MB | 11.4 s | 11.1 s | 665 MB | 4.8 s | 4.5 s | 342 MB | yes |
+| long | 13.7 s / 12.3 s | 635 MB | 31.5 s | 31.2 s | 1583 MB | 12.0 s | 11.8 s | 679 MB | yes |
 
 ## Stored bytes
 
@@ -75,17 +75,17 @@ summaries, ledger entries); object bytes live in the object store.
 
 ## Budgets against measurements
 
-- Largest measured cold job: long, 32.6 s CPU, 32.9 s wall, 1616 MB peak.
-- `HVSR_JOB_CPU_TIME_S` = 900 s and `HVSR_JOB_WALL_TIME_S` = 900 s: 28x the largest measured CPU time here,
+- Largest measured cold job: long, 31.2 s CPU, 31.5 s wall, 1583 MB peak.
+- `HVSR_JOB_CPU_TIME_S` = 900 s and `HVSR_JOB_WALL_TIME_S` = 900 s: 29x the largest measured CPU time here,
   which leaves room for slower hosted CPUs. A job that exceeds either limit is stopped and recorded
   as a permanent failure (no retry).
 - `HVSR_JOB_MEMORY_BYTES` = 2048 MB above the job-process baseline (170 MB); the largest measured job peak was
-  1616 MB including the baseline. A worker instance needs at least that much memory per concurrent job.
+  1583 MB including the baseline. A worker instance needs at least that much memory per concurrent job.
 - `HVSR_MAX_CANDIDATE_WINDOWS` = 20,000: the long case (24 h) produced 17,271 candidate windows with the default 50 s windows,
   so the cap admits roughly 28 h with default windows; longer requests are rejected by the cost
   estimate before any computation, even though `HVSR_MAX_DURATION_S` is larger.
 - Uploads are read and parsed in the web process, at most `HVSR_MAX_CONCURRENT_UPLOADS` = 1 at a time
-  (others wait up to `HVSR_UPLOAD_WAIT_S` = 30 s, then receive 503 busy). The largest submission peak was 634 MB
+  (others wait up to `HVSR_UPLOAD_WAIT_S` = 30 s, then receive 503 busy). The largest submission peak was 635 MB
   (long, 4,320,000 samples per channel as CSV). Size the web instance for that many
   of the largest uploads you accept, or lower `HVSR_MAX_REQUEST_BYTES` and `HVSR_MAX_SAMPLES_PER_CHANNEL`.
 - `HVSR_MAX_TEMPLATE_COMPARISONS` = 200,000,000 per family: the shipped SDOF banks hold 9 templates, so comparisons stay far below the cap; it matters for
