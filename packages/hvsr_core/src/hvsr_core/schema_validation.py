@@ -17,6 +17,9 @@ SCHEMA_FILES = {
     "manifest": "manifest.schema.json",
     "template_bank": "template_bank.schema.json",
     "config": "config.schema.json",
+    "window_table": "window_table.schema.json",
+    "plot_recipe": "plot_recipe.schema.json",
+    "data_dictionary": "data_dictionary.schema.json",
 }
 
 

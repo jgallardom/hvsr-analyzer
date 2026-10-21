@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hvsr-analyzer.example/schemas/data-dictionary/1.0.0.json",
+  "title": "HVSR Analyzer data dictionary",
+  "description": "Column-level definitions (type, unit, null semantics) of every CSV export, CSV conventions, and the list of JSON document types.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "schema_version", "export_format", "csv_conventions", "tables", "json_documents",
+               "analysis_units", "categories"],
+  "properties": {
+    "schema_id": {"const": "hvsr-analyzer/data-dictionary"},
+    "schema_version": {"const": "1.0.0"},
+    "export_format": {"type": "string"},
+    "csv_conventions": {"type": "object", "additionalProperties": {"type": ["string", "integer"]}},
+    "tables": {"type": "object", "additionalProperties": {"$ref": "#/$defs/table"}},
+    "json_documents": {"type": "object", "additionalProperties": {"type": "string"}},
+    "analysis_units": {"type": "object", "additionalProperties": {"type": "string"}},
+    "categories": {"type": "object", "additionalProperties": {"type": "string"}}
+  },
+  "$defs": {
+    "table": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "row", "description", "columns"],
+      "properties": {
+        "title": {"type": "string"},
+        "row": {"type": "string"},
+        "description": {"type": "string"},
+        "columns": {"type": "array", "items": {"$ref": "#/$defs/column"}, "minItems": 1},
+        "optional_columns": {"type": "array", "items": {"type": "string"}},
+        "dynamic_columns": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["pattern", "type", "description"],
+            "properties": {
+              "pattern": {"type": "string", "format": "regex"},
+              "type": {"enum": ["number", "integer", "string", "boolean"]},
+              "description": {"type": "string"}
+            }
+          }
+        }
+      }
+    },
+    "column": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type", "unit", "nullable", "description"],
+      "properties": {
+        "name": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+        "type": {"enum": ["number", "integer", "string", "boolean"]},
+        "unit": {"type": ["string", "null"]},
+        "nullable": {"type": "boolean"},
+        "description": {"type": "string"},
+        "enum": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}

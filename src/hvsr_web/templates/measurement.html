@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% from "macros.html" import downloads, kv %}
+{% block content %}
+<h1>{{ page_title }}</h1>
+{% if m.moderation_status == "under_review" %}<p class="notice" role="status">{{ t("measurement.under_review") }}</p>{% endif %}
+<p class="actions">
+  <a class="button" href="/measurements/{{ m.id }}/configure">{{ t("measurement.configure") }}</a>
+  <a href="{{ manifest_url(m.id) }}">{{ t("measurement.manifest") }}</a>
+</p>
+
+<section aria-labelledby="h-orig">
+  <h2 id="h-orig">{{ t("measurement.section.originals") }}</h2>
+  {% if m.original_bytes_retained and not missing %}
+  <p>{{ t("measurement.originals_retained") }}</p>
+  {% else %}
+  <div class="notice" id="original-missing" role="note">
+    {% if m.original_bytes_note %}<p translate="no">{{ m.original_bytes_note }}</p>{% endif %}
+    <ul>
+    {% for a in missing %}<li>{{ t("measurement.original_missing", reason=a.label ~ ": " ~ (a.availability_reason or t("availability." ~ a.availability))) }}</li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+</section>
+
+<section aria-labelledby="h-rec">
+  <h2 id="h-rec">{{ t("measurement.recording") }}</h2>
+  {{ kv([
+    (t("preview.fs"), summary.get("sampling_rate_hz") | num(8)),
+    (t("preview.start"), summary.get("start_utc") or t("value.unknown")),
+    (t("preview.duration"), summary.get("duration_s") | num(8)),
+    (t("preview.samples"), summary.get("samples_per_channel") | num),
+    (t("preview.gaps"), summary.get("gaps") | num),
+    (t("preview.timing"), summary.get("timing_irregular") | num),
+  ]) }}
+</section>
+
+<section aria-labelledby="h-meta">
+  <h2 id="h-meta">{{ t("measurement.section.metadata", revision=revision) }}</h2>
+  {% set s = meta.get("sensor", {}) %}
+  {{ kv([
+    (t("field.latitude"), coord(meta.get("latitude"))),
+    (t("field.longitude"), coord(meta.get("longitude"))),
+    (t("field.context"), t("context." ~ meta.get("measurement_context", "unknown"))),
+    (t("field.wind"), t("level." ~ meta.get("wind", "unknown"))),
+    (t("field.traffic"), t("level." ~ meta.get("traffic", "unknown"))),
+    (t("field.ground_surface"), verbatim(meta.get("ground_surface"), "value.not_set")),
+    (t("field.floor"), verbatim(meta.get("floor_or_height"), "value.not_set")),
+    (t("field.coupling"), verbatim(meta.get("coupling_notes"), "value.not_set")),
+    (t("field.observations"), verbatim(meta.get("observations"), "value.not_set")),
+    (t("field.site_group"), verbatim(meta.get("site_group_id"), "value.not_set")),
+    (t("field.manufacturer"), verbatim(s.get("manufacturer"), "value.not_set")),
+    (t("field.model"), verbatim(s.get("model"), "value.not_set")),
+    (t("field.instrument_id"), verbatim(s.get("instrument_id"), "value.not_set")),
+    (t("field.sensor_type"), verbatim(s.get("sensor_type"), "value.not_set")),
+    (t("field.natural_frequency"), s.get("natural_frequency_hz") | num),
+    (t("field.usable_fmin"), s.get("usable_fmin_hz") | num),
+    (t("field.usable_fmax"), s.get("usable_fmax_hz") | num),
+  ]) }}
+  {% if photos %}
+  <div class="photos">
+    {% for p in photos %}<figure translate="no"><img src="{{ artifact_url(p.id) }}" width="300" height="300" alt="{{ p.label }}" loading="lazy"><figcaption>{{ p.label }}</figcaption></figure>{% endfor %}
+  </div>
+  {% endif %}
+</section>
+
+<section aria-labelledby="h-lic" id="license">
+  <h2 id="h-lic">{{ t("measurement.section.license") }}</h2>
+  {% set lic = m.licensing %}
+  <dl class="kv">
+    <dt>{{ t("license.license") }}</dt><dd><a href="{{ lic.license_url }}" rel="license" translate="no">{{ lic.license_id }}</a></dd>
+    <dt>{{ t("license.attribution") }}</dt><dd class="attribution" translate="no">{{ lic.attribution }}</dd>
+    <dt>{{ t("license.citation") }}</dt><dd>{{ verbatim(lic.source_citation, "value.not_set") }}</dd>
+    <dt>{{ t("license.consent") }}</dt><dd>{{ t("license.consent_value", version=lic.consent_version, utc=lic.consent_utc) }}</dd>
+    <dt>{{ t("license.suggested") }}</dt><dd><cite>{{ citation }}</cite></dd>
+  </dl>
+</section>
+
+<section aria-labelledby="h-dl">
+  <h2 id="h-dl">{{ t("measurement.section.downloads") }}</h2>
+  {% for category, items in groups.items() %}
+  <h3>{{ t("category." ~ category) }}</h3>
+  {{ downloads(items) }}
+  {% endfor %}
+</section>
+
+<section aria-labelledby="h-hist">
+  <h2 id="h-hist">{{ t("measurement.section.history") }}</h2>
+  {% if runs %}
+  <div class="table-scroll">
+  <table class="stack">
+    <thead><tr>
+      <th scope="col">{{ t("history.run") }}</th><th scope="col">{{ t("history.created") }}</th>
+      <th scope="col">{{ t("history.role") }}</th><th scope="col">{{ t("history.revision") }}</th>
+    </tr></thead>
+    <tbody>
+    {% for r in runs %}
+      <tr>
+        <td data-label="{{ t('history.run') }}"><a href="/runs/{{ r.run_id }}" translate="no">{{ r.run_id }}</a></td>
+        <td data-label="{{ t('history.created') }}">{{ r.created_utc }}</td>
+        <td data-label="{{ t('history.role') }}">{{ t("role." ~ r.role) }}</td>
+        <td data-label="{{ t('history.revision') }}">{{ r.metadata_revision }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}<p>{{ t("history.none") }}</p>{% endif %}
+</section>
+
+<section aria-labelledby="h-rep">
+  <h2 id="h-rep">{{ t("measurement.section.report") }}</h2>
+  <form class="report" method="post" action="/api/v1/measurements/{{ m.id }}/reports" data-js="report">
+    <label>{{ t("report.reason") }}<textarea name="reason" required minlength="10" maxlength="2000" rows="3"></textarea></label>
+    <button type="submit">{{ t("report.submit") }}</button>
+    <p class="status" aria-live="polite"></p>
+  </form>
+</section>
+{% endblock %}

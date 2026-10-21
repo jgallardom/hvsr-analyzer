@@ -25,6 +25,7 @@ from hvsr_core.io.stationxml import apply_stationxml, parse_stationxml
 from hvsr_core.jsonutil import canonical_dumps, sha256_bytes
 from hvsr_core.metadata import MeasurementMetadata
 from hvsr_core.model import InputError, ns_to_iso
+from hvsr_core.strings import t
 from hvsr_core.versions import PACKAGE_VERSION
 
 from . import quota
@@ -44,12 +45,6 @@ MIME = {
     "stationxml": "application/xml",
     "json": "application/json",
     "jpeg": "image/jpeg",
-}
-ORIGINAL_LABEL = {
-    "csv": "Original CSV",
-    "csv.gz": "Original CSV.GZ",
-    "miniseed": "Original MiniSEED",
-    "miniseed3": "Original MiniSEED 3",
 }
 
 
@@ -152,7 +147,7 @@ def _parse_waveforms(files: list[UploadFile], opts: WaveformOptions, limits):
     return rec, csv_info, csv_bytes, fmts
 
 
-def _summary(rec) -> dict:
+def summarize_recording(rec) -> dict:
     d = rec.diagnostics
     return {
         "sampling_rate_hz": rec.sampling_rate_hz,
@@ -327,13 +322,13 @@ def submit(
                     art(
                         "original_data",
                         "original_" + fmt.replace(".", "_"),
-                        ORIGINAL_LABEL[fmt] + " (not retained)",
+                        t("artifact.not_retained", label=t(f"artifact.original_{fmt}")),
                         MIME[fmt],
                         size=o.original_size,
                         sha=o.original_sha256,
                         avail="unavailable",
                         filename=f.filename,
-                        reason="Original CSV bytes were not retained (explicit canonical-only policy). The SHA-256 is recorded for reference only; it does not substitute for the discarded file.",
+                        reason=t("artifact.reason.original_not_retained"),
                     )
                 )
                 continue
@@ -349,7 +344,7 @@ def submit(
                 art(
                     "original_data",
                     "original_" + fmt.replace(".", "_"),
-                    ORIGINAL_LABEL[fmt],
+                    t(f"artifact.original_{fmt}"),
                     MIME[fmt],
                     key=key,
                     size=o.original_size,
@@ -375,7 +370,7 @@ def submit(
             art(
                 "canonical_recordings",
                 "canonical_miniseed",
-                "Canonical recording",
+                t("artifact.canonical"),
                 MIME["miniseed"],
                 key=k["mseed"],
                 size=len(canonical.mseed_bytes),
@@ -387,7 +382,7 @@ def submit(
             art(
                 "canonical_recordings",
                 "canonical_sidecar",
-                "Canonical recording sidecar",
+                t("artifact.canonical_sidecar"),
                 MIME["json"],
                 key=k["sidecar"],
                 size=len(canonical.sidecar_bytes),
@@ -400,7 +395,7 @@ def submit(
                 art(
                     "canonical_recordings",
                     "canonical_residual_columns",
-                    "Retained time/extra CSV columns",
+                    t("artifact.residual_columns"),
                     MIME["csv.gz"],
                     key=k["residual"],
                     size=len(canonical.residual_gz),
@@ -412,20 +407,20 @@ def submit(
             art(
                 "canonical_recordings",
                 "reconstructed_csv",
-                "Reconstructed CSV",
+                t("artifact.reconstructed_csv"),
                 MIME["csv"],
                 avail="on_demand",
-                reason="generated from the canonical recording on request; not the original file",
+                reason=t("artifact.reason.reconstructed_on_demand"),
                 refs=refs,
             )
         elif csv_info is not None:
             art(
                 "canonical_recordings",
                 "canonical_miniseed",
-                "Canonical recording",
+                t("artifact.canonical"),
                 MIME["miniseed"],
                 avail="on_demand",
-                reason="generated deterministically from the preserved original CSV on request",
+                reason=t("artifact.reason.canonical_on_demand"),
                 refs=refs,
             )
         else:
@@ -434,7 +429,7 @@ def submit(
                     art(
                         "canonical_recordings",
                         "canonical_miniseed",
-                        "Canonical recording (the original MiniSEED)",
+                        t("artifact.canonical_from_original"),
                         a.mime_type,
                         key=a.blob_key,
                         size=a.byte_size,
@@ -446,10 +441,10 @@ def submit(
         art(
             "canonical_recordings",
             "normalized_csv",
-            "Normalized waveform CSV",
-            MIME["csv"],
+            t("artifact.normalized_csv"),
+            MIME["csv.gz"],
             avail="on_demand",
-            reason="generated from the stored recording on request",
+            reason=t("artifact.reason.normalized_on_demand"),
             refs=refs,
         )
 
@@ -457,7 +452,7 @@ def submit(
         art(
             "sensor_metadata",
             "measurement_metadata",
-            "Measurement metadata (revision 1)",
+            t("artifact.measurement_metadata", revision=1),
             MIME["json"],
             canonical_dumps(meta_doc).encode(),
         )
@@ -465,18 +460,17 @@ def submit(
             art(
                 "sensor_metadata",
                 "original_stationxml",
-                "Original StationXML",
+                t("artifact.stationxml"),
                 MIME["stationxml"],
                 f.data,
                 filename=f.filename,
                 obj_cat="metadata",
             )
         for f, data, _info in photos:
-            label = "Sensor photograph" if f.role == "photo_sensor" else "Area photograph"
             art(
                 "sensor_metadata",
                 f.role,
-                label + " (300 x 300, EXIF removed)",
+                t(f"artifact.{f.role}"),
                 MIME["jpeg"],
                 data,
                 obj_cat="photos",
@@ -485,7 +479,7 @@ def submit(
         art(
             "licensing",
             "license_record",
-            "License, consent, and attribution",
+            t("artifact.license_record"),
             MIME["json"],
             canonical_dumps(public_lic).encode(),
         )
@@ -508,7 +502,7 @@ def submit(
         art(
             "provenance",
             "submission_provenance",
-            "Submission provenance",
+            t("artifact.submission_provenance"),
             MIME["json"],
             canonical_dumps(prov).encode(),
         )
@@ -534,12 +528,12 @@ def submit(
                     original_bytes_retained=not canonical_only,
                     original_bytes_note=None
                     if not canonical_only
-                    else "Original CSV bytes were not retained by explicit canonical-only consent; downloads are the Canonical recording and a Reconstructed CSV.",
+                    else t("artifact.reason.canonical_only_note"),
                     current_revision=1,
                     site_group_id=req.metadata.site_group_id,
                     licensing=lic,
                     parse_options=req.waveform.model_dump(mode="json"),
-                    recording_summary=_summary(rec),
+                    recording_summary=summarize_recording(rec),
                 )
             )
             session.flush()

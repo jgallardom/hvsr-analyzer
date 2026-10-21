@@ -1,0 +1,36 @@
+{% macro downloads(items) %}
+<div class="table-scroll">
+<table class="downloads stack">
+  <thead><tr>
+    <th scope="col">{{ t("download.file") }}</th>
+    <th scope="col">{{ t("download.availability") }}</th>
+    <th scope="col">{{ t("download.size") }}</th>
+    <th scope="col">{{ t("download.checksum") }}</th>
+    <th scope="col">{{ t("download.note") }}</th>
+  </tr></thead>
+  <tbody>
+  {% for a in items %}
+    <tr data-availability="{{ a.availability }}">
+      <td data-label="{{ t('download.file') }}">
+        {% if a.availability in ("available", "on_demand") %}
+        <a href="{{ artifact_url(a.id) }}" translate="no"{% if a.availability == "on_demand" %} data-ondemand{% endif %}>{{ a.label }}</a>
+        {% else %}{{ verbatim(a.label) }}{% endif %}
+      </td>
+      <td data-label="{{ t('download.availability') }}">{{ t("availability." ~ a.availability) }}</td>
+      <td data-label="{{ t('download.size') }}">{{ a.byte_size | size }}</td>
+      <td data-label="{{ t('download.checksum') }}">{% if a.sha256 %}<code class="hash" translate="no">{{ a.sha256 }}</code>{% else %}{{ t("value.none") }}{% endif %}</td>
+      <td data-label="{{ t('download.note') }}">{% if a.availability_reason %}{{ verbatim(a.availability_reason) }}{% endif %}<span class="status" aria-live="polite"></span></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endmacro %}
+
+{% macro kv(rows) %}
+<dl class="kv">
+{% for label, value in rows %}
+  <dt>{{ label }}</dt><dd>{{ value }}</dd>
+{% endfor %}
+</dl>
+{% endmacro %}

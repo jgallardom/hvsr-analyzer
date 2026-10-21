@@ -1,6 +1,6 @@
 # Storage, artifacts, and analysis jobs
 
-Operational design for Stage 7 (spec sections 1, 3, 4, 13.2-13.3, 14). Code: `src/hvsr_web/`.
+Operational design for Stages 7 and 8 (spec sections 1, 3, 4, 13.2-13.3, 14). Code: `src/hvsr_web/`.
 
 ## Components
 
@@ -12,7 +12,12 @@ Operational design for Stage 7 (spec sections 1, 3, 4, 13.2-13.3, 14). Code: `sr
 | Submissions | `submissions.py` | Validate, reserve quota, stage, commit objects, one database commit. |
 | Jobs | `jobs.py`, `analysis_jobs.py` | Durable job table, leases, fencing tokens, idempotent publication. |
 | Manifests | `manifests.py` | Public index of every artifact with stable URLs. |
-| HTTP API | `api.py` | JSON endpoints; the web pages arrive in Stage 8. |
+| HTTP API | `api.py` | JSON endpoints, the web pages, and static files under `/static`. |
+| Web pages | `pages.py`, `templates/`, `static/` | Server-rendered HTML; JavaScript only for upload, polling, and on-request downloads. |
+| Run artifacts | `publication.py` | Analysis JSON, CSV tables, and figures of a run, written once at publication. |
+| On-request generation | `ondemand.py` | Canonical/reconstructed recordings, normalized waveform, per-window spectra. |
+| Read side, cosmetic re-render | `runs.py` | New plot artifacts from the stored analysis JSON; no science is rerun. |
+| Worker | `worker.py` | Separate process (`HVSR_EMBEDDED_WORKER=false`) or a thread in the web process. |
 
 ## Object layout and immutability
 
@@ -55,7 +60,7 @@ because another measurement may share them.
 | CSV | deterministic gzip of the exact bytes | "Original CSV" (downloads decompress and verify to the original SHA-256) |
 | CSV.GZ | the uploaded bytes | "Original CSV.GZ" |
 | MiniSEED | the uploaded bytes | "Original MiniSEED"; "Canonical recording (the original MiniSEED)" points at the same object |
-| CSV, default | original only | "Canonical recording" and "Normalized waveform CSV" are `on_demand` (generated deterministically from the original; no second copy of the samples) |
+| CSV, default | original only | "Canonical recording" and "Normalized waveform CSV.GZ" are `on_demand` (generated deterministically from the original; no second copy of the samples) |
 | CSV, canonical-only (explicit opt-in) | canonical MiniSEED + sidecar + exact residual columns | "Original CSV (not retained)" is `unavailable` with its SHA-256 for reference; "Canonical recording" is available; "Reconstructed CSV" is `on_demand` |
 
 `recording_from_canonical` rebuilds the parsed recording from canonical storage; its
@@ -68,7 +73,43 @@ Manifests list `/api/v1/artifacts/{artifact_id}` for every artifact, never a sig
 request to that endpoint issues a fresh short-lived URL (`HVSR_SIGNED_URL_TTL_S`, default 300 s):
 an HMAC-signed `/api/v1/blobs/...` URL for the local store or an S3 presigned URL (SigV4). An
 expired signed URL returns 403; requesting the stable link again works. Removed measurements return
-410 with the removal notice; `on_demand` artifacts return 409 until Stage 8 adds generation.
+410 with the removal notice.
+
+Responses of the stable artifact URL:
+
+| Availability | Response |
+|---|---|
+| `available` | 307 to a fresh signed URL |
+| `on_demand` | 202 with `Retry-After: 5` and the `job_url` of the single generation job (idempotency key `generate:{artifact_id}`); once the job finishes, the artifact is `available` and served from storage |
+| `on_demand`, generation failed permanently | 503 `{"error": "generation_failed"}` with the reason; the manifest keeps `on_demand` and its reason |
+| `unavailable` (for example an original not retained) | 404 `{"error": "unavailable", "detail", "sha256"}` |
+| `removed` | 410 with the removal notice |
+
+Generation reproduces bytes from stored inputs and checks the recorded hashes. A mismatch is a
+permanent failure, never a substitute. Per-window spectra are bounded by
+`HVSR_MAX_WINDOW_SPECTRA_CELLS` (candidate windows x valid frequencies, default 2,000,000) and
+refused with the reason above that.
+
+## Run artifacts (Stage 8)
+
+Per run and method, written once at publication and content-addressed:
+- the analysis JSON;
+- the mean-spectrum CSV;
+- the per-window table as CSV and JSON (selected and rejected candidates);
+- the figure as PNG, SVG, and a narrow-screen SVG.
+
+Per run, the per-window spectra CSV.GZ is `on_demand`. Per template bank used, the bank manifest and
+data are published. Derived artifacts list the analysis JSON in `source_refs`. Figures store their
+recipe in `generated_by.recipe`, including `series_sha256` of the plotted series, which also
+identifies the same numbers in the CSV and JSON. Each published analysis JSON embeds the immutable
+licensing subset (license, attribution, source citation, record code, manifest URL). The manifest
+holds the current licensing record with its modification history.
+
+`POST /api/v1/runs/{run_id}/plots` (upload token required) renders a cosmetic variant from the
+stored analysis JSON, returning 201 when new and 200 for an identical recipe. Showing individual
+windows needs the per-window spectra; until they are stored the request returns 409
+`window_spectra_not_stored` with that artifact's URL. Variants never replace the published figure.
+They are listed in the manifest's `plots` category with `generated_by.cosmetic_rerender: true`.
 
 Set `HVSR_URL_SIGNING_KEY` in any deployment with more than one process; without it each process
 uses a random key and URLs signed by one process fail in another.

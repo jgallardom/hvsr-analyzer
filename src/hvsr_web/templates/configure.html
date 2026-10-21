@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% macro num_field(label, path, value, step="any", min=none, max=none, optional=false) %}
+<label>{{ label }}
+  <input type="number" step="{{ step }}"{% if min is not none %} min="{{ min }}"{% endif %}{% if max is not none %} max="{{ max }}"{% endif %}
+         data-path="{{ path }}" data-type="{{ 'number_or_null' if optional else 'number' }}" value="{{ value if value is not none else '' }}"{% if not optional %} required{% endif %}>
+</label>
+{% endmacro %}
+{% macro select_field(label, path, value, options, labels) %}
+<label>{{ label }}
+  <select data-path="{{ path }}" data-type="text">
+  {% for o in options %}<option value="{{ o }}"{% if labels[loop.index0] == o %} translate="no"{% endif %}{% if o == value %} selected{% endif %}>{{ labels[loop.index0] }}</option>{% endfor %}
+  </select>
+</label>
+{% endmacro %}
+{% macro check_field(label, path, value) %}
+<label class="inline"><input type="checkbox" data-path="{{ path }}" data-type="bool"{% if value %} checked{% endif %}> {{ label }}</label>
+{% endmacro %}
+{% block content %}
+<h1>{{ t("configure.title") }}</h1>
+<p><a href="/measurements/{{ m.id }}">{{ title }}</a></p>
+<p>{{ t("configure.intro") }}</p>
+<form id="configure" data-js="configure" data-measurement="{{ m.id }}">
+  <script type="application/json" id="request-defaults">{{ defaults | tojson }}</script>
+  <fieldset>
+    <legend>{{ t("configure.section.science") }}</legend>
+    <div class="grid">
+      {{ num_field(t("cfg.lw"), "config.windowing.window_length_s", cfg.windowing.window_length_s, min=1) }}
+      {{ num_field(t("cfg.step"), "config.windowing.step_s", cfg.windowing.step_s, min=0.01) }}
+      {{ num_field(t("cfg.fmin"), "config.peak_search.fmin_hz", cfg.peak_search.fmin_hz, min=0.001) }}
+      {{ num_field(t("cfg.fmax"), "config.peak_search.fmax_hz", cfg.peak_search.fmax_hz, min=0.001) }}
+      {{ num_field(t("cfg.tmin"), "config.windowing.time_range.tmin_s", none, min=0, optional=true) }}
+      {{ num_field(t("cfg.tmax"), "config.windowing.time_range.tmax_s", none, min=0, optional=true) }}
+      {{ num_field(t("cfg.b"), "config.spectral.ko_bandwidth", cfg.spectral.ko_bandwidth, min=1) }}
+      {{ select_field(t("cfg.combination"), "config.spectral.horizontal_combination", cfg.spectral.horizontal_combination,
+           ["rms", "geometric"], [t("option.rms"), t("option.geometric")]) }}
+      {{ select_field(t("cfg.detrend"), "config.preprocessing.detrend", cfg.preprocessing.detrend,
+           ["none", "constant", "linear"], [t("option.none"), t("option.constant"), t("option.linear")]) }}
+      {{ num_field(t("cfg.taper"), "config.preprocessing.taper_alpha", cfg.preprocessing.taper_alpha, min=0, max=1) }}
+      {{ num_field(t("cfg.bandpass_low"), "config.preprocessing.bandpass.low_hz", none, min=0.0001, optional=true) }}
+      {{ num_field(t("cfg.bandpass_high"), "config.preprocessing.bandpass.high_hz", none, min=0.0001, optional=true) }}
+      {{ select_field(t("cfg.response"), "config.preprocessing.response_correction", cfg.preprocessing.response_correction,
+           ["none", "scalar_sensitivity"], [t("option.none"), t("option.scalar_sensitivity")]) }}
+      {{ select_field(t("cfg.fdwra"), "config.standard_selection.frequency_outlier_rejection", cfg.standard_selection.frequency_outlier_rejection,
+           ["none", "fdwra_cox2020"], [t("option.none"), t("option.fdwra_cox2020")]) }}
+      {{ select_field(t("cfg.bank"), "config.sdof.template_bank", cfg.sdof.template_bank,
+           ["auto"] + banks, [t("cfg.bank_auto")] + banks) }}
+      {{ select_field(t("cfg.mode"), "config.sdof.selection_mode", cfg.sdof.selection_mode,
+           ["automatic", "manual_top_n"], [t("cfg.mode_auto"), t("cfg.mode_manual")]) }}
+      {{ num_field(t("cfg.manual_n"), "config.sdof.manual_n", none, step=1, min=1, optional=true) }}
+      {{ num_field(t("cfg.bootstrap"), "config.uncertainty.n_bootstrap", cfg.uncertainty.n_bootstrap, step=1, min=100, max=limits.max_bootstrap_replicates) }}
+      {{ num_field(t("cfg.seed"), "config.uncertainty.seed", cfg.uncertainty.seed, step=1, min=0) }}
+      {{ num_field(t("cfg.min_blocks"), "config.uncertainty.min_informative_blocks", cfg.uncertainty.min_informative_blocks, step=1, min=2) }}
+    </div>
+    {{ check_field(t("cfg.robustness"), "robustness_check", defaults.robustness_check) }}
+  </fieldset>
+  <fieldset>
+    <legend>{{ t("configure.section.report") }}</legend>
+    {{ check_field(t("cfg.sesame"), "report.evaluate_sesame", defaults.report.evaluate_sesame) }}
+  </fieldset>
+  <fieldset>
+    <legend>{{ t("configure.section.display") }}</legend>
+    {{ check_field(t("cfg.show_windows"), "display.show_individual_windows", defaults.display.show_individual_windows) }}
+    {{ check_field(t("cfg.show_alternate"), "display.show_alternate_method", defaults.display.show_alternate_method) }}
+    <div class="grid">
+      {{ num_field(t("cfg.width"), "display.figure_width_in", defaults.display.figure_width_in, min=2.1, max=30) }}
+      {{ num_field(t("cfg.height"), "display.figure_height_in", defaults.display.figure_height_in, min=2.1, max=30) }}
+      {{ num_field(t("cfg.dpi"), "display.dpi", defaults.display.dpi, step=1, min=50, max=600) }}
+    </div>
+  </fieldset>
+  <fieldset>
+    <legend>{{ t("configure.section.limits") }}</legend>
+    <dl class="kv">
+      <dt>{{ t("limit.candidate_windows") }}</dt><dd>{{ limits.max_candidate_windows }}</dd>
+      <dt>{{ t("limit.bootstrap") }}</dt><dd>{{ limits.max_bootstrap_replicates }}</dd>
+      <dt>{{ t("limit.template_comparisons") }}</dt><dd>{{ limits.max_template_comparisons }}</dd>
+      <dt>{{ t("limit.parameter_runs") }}</dt><dd>{{ limits.max_parameter_runs }}</dd>
+    </dl>
+  </fieldset>
+  <label>{{ t("upload.token") }}<input type="password" id="token" autocomplete="off" data-token></label>
+  <p class="muted">{{ t("upload.token_help") }}</p>
+  <button type="submit">{{ t("configure.submit") }}</button>
+  <div class="status" id="configure-status" aria-live="polite"></div>
+</form>
+{% endblock %}

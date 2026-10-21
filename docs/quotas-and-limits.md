@@ -61,10 +61,27 @@ Every ceiling surfaces as `LimitExceeded` with a `*_limit` code before any quota
 | `max_concurrent_jobs` | 1 | live job leases |
 | `job_lease_s`, `job_max_attempts` | 900 s, 3 | lease length and retry bound |
 | `job_wall_time_s`, `job_cpu_time_s` | 900 s | configured; enforced by process isolation in Stage 9 |
+| `max_plot_pixels` | 16,000,000 | PNG width x height in pixels (about 64 MB of RGBA), for published figures and re-renders |
+| `max_window_spectra_cells` | 2,000,000 | candidate windows x valid frequencies in an on-request per-window spectra CSV |
+| `max_plot_variants_per_run` | 50 | stored custom-size cosmetic plot variants per run |
 
 The estimate is an upper bound computed from the stored recording summary before the job is
 queued, and the worker re-checks it against the current settings. An over-budget request is
-refused with the estimate and these options: increase the window step, turn off the robustness
-comparison, reduce bootstrap replicates, process offline with the command-line tool, or request a
-larger compute allowance. Records are never silently shortened to fit. Actual CPU and wall time
-are recorded per job in `compute_usage`.
+refused with the estimate and these options:
+- increase the window step;
+- turn off the robustness comparison;
+- reduce bootstrap replicates or the figure size and resolution;
+- process offline with the command-line tool;
+- request a larger compute allowance.
+
+Records are never silently shortened to fit. Actual CPU and wall time are recorded per job in
+`compute_usage`.
+
+Cosmetic re-renders (`POST /api/v1/runs/{run_id}/plots`) need an upload token and never rerun
+science. Responses when a limit is exceeded:
+- a PNG over `max_plot_pixels` returns 422 `plot_pixels`;
+- a new custom-size variant beyond `max_plot_variants_per_run` returns 429 `plot_variant_limit`.
+
+Variants at the default size and resolution are not capped: there are finitely many (selection x
+overlays x format x layout). The results page only ever creates those. The cap is checked before
+rendering, not atomically, so simultaneous requests can exceed it by the number of such requests.

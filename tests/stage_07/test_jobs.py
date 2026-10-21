@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 
 from hvsr_core.config import AnalysisConfig, AnalysisRequest
-from hvsr_core.jsonutil import strict_loads
+from hvsr_core.jsonutil import sha256_bytes, strict_loads
 from hvsr_core.metadata import MeasurementMetadata
 from hvsr_core.schema_validation import validation_errors
 from hvsr_web import analysis_jobs, jobs
@@ -26,6 +26,12 @@ from stage7_support import artifacts, csv_gz_files, new_contributor, request
 def _submit(ctx, key="job-000001"):
     _, c = new_contributor(ctx)
     return c, submit(ctx, c, request(key), csv_gz_files())
+
+
+# Per run (A and B), for each of the two methods: analysis JSON, mean-spectrum CSV, window table
+# CSV and JSON, PNG, SVG, and narrow-screen SVG (7); plus the run's on-request per-window spectra.
+# Run A also carries the robustness comparison (Stage 8 added everything except the analysis JSON).
+RUN_ARTIFACTS = 2 * (2 * 7 + 1) + 1
 
 
 def _counts(ctx) -> tuple[int, int, int]:
@@ -136,23 +142,30 @@ def test_crash_inside_publication_leaves_nothing_and_the_retry_publishes_once(ct
 
     out = jobs.run_once(ctx, "worker-2", analysis_jobs.HANDLERS)
     assert out["state"] == "succeeded" and out["result"]["science_cached"]  # immutable science reused
-    assert _counts(ctx) == (2, 5, 1)  # run A + run B; 2 + 2 analysis JSON + 1 comparison
+    assert _counts(ctx) == (2, RUN_ARTIFACTS, 1)  # run A + run B, one compute-usage record
     assert jobs.run_once(ctx, "worker-3", analysis_jobs.HANDLERS) is None
 
     # the same request again: same job, nothing new
     again = analysis_jobs.request_analysis(ctx, r.measurement_id, AnalysisRequest(), c.id)
-    assert again["state"] == "succeeded" and _counts(ctx)[:2] == (2, 5)
+    assert again["state"] == "succeeded" and _counts(ctx)[:2] == (2, RUN_ARTIFACTS)
 
     with ctx.sessions() as session:
         manifest = build_manifest(session, r.measurement_id)
     assert validation_errors(manifest, "manifest") == []
-    assert len(manifest["categories"]["analysis_runs"]) == 4
+    kinds = [e["kind"] for e in manifest["categories"]["analysis_runs"]]
+    assert sorted(set(kinds)) == ["analysis_json", "window_table_csv", "window_table_json"]
+    assert all(kinds.count(k) == 4 for k in set(kinds))  # 2 runs x 2 methods each
     assert len(manifest["categories"]["quality_evaluation"]) == 1
     for a in artifacts(ctx, r.measurement_id, run=True):
-        doc = _doc(ctx, a)
-        if a.kind == "analysis_json":
-            assert validation_errors(doc, "analysis") == [] and doc["run_id"] == a.run_id
-            assert doc["record"]["record_code"] == r.record_code
+        if a.availability == "on_demand":  # per-window spectra: no object until requested
+            assert a.blob_key is None and a.kind == "window_spectra"
+            continue
+        assert sha256_bytes(ctx.store.get(a.blob_key)) == a.stored_sha256  # complete objects only
+        if a.mime_type == "application/json":
+            doc = _doc(ctx, a)
+            if a.kind == "analysis_json":
+                assert validation_errors(doc, "analysis") == [] and doc["run_id"] == a.run_id
+                assert doc["record"]["record_code"] == r.record_code
 
 
 @pytest.mark.acceptance("AC-S7-09")
@@ -174,7 +187,7 @@ def test_stale_worker_cannot_publish_after_its_lease_was_taken_over(ctx, clock, 
     a = jobs.run_once(ctx, "worker-a", analysis_jobs.HANDLERS)
     assert takeover["b"]["state"] == "succeeded"
     assert a["state"] == "lease_lost"  # A's publication transaction was fenced and rolled back
-    assert _counts(ctx) == (2, 5, 1)
+    assert _counts(ctx) == (2, RUN_ARTIFACTS, 1)
     j = _job(ctx, q["job_id"])
     assert (
         j.state == "succeeded" and j.attempts == 2 and j.result["run_id"] == takeover["b"]["result"]["run_id"]
@@ -206,7 +219,9 @@ def test_analysis_references_its_metadata_snapshot(ctx, clock):
         revs = {x.run_id: x.metadata_revision for x in session.scalars(select(AnalysisRun))}
     assert revs == {run1: 1, run2: 2}
     docs = {
-        a.run_id: _doc(ctx, a) for a in artifacts(ctx, r.measurement_id, run=True) if a.method == "standard"
+        a.run_id: _doc(ctx, a)
+        for a in artifacts(ctx, r.measurement_id, run=True)
+        if a.kind == "analysis_json" and a.method == "standard"
     }
     assert docs[run1]["record"]["metadata_revision"] == 1 and docs[run1]["record"]["latitude"] == 19.4326
     assert docs[run2]["record"]["metadata_revision"] == 2 and docs[run2]["record"]["latitude"] == 19.5

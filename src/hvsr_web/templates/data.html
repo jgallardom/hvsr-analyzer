@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ t("data.title") }}</h1>
+<p>{{ t("data.intro") }}</p>
+
+<section aria-labelledby="h-cat">
+  <h2 id="h-cat">{{ t("data.categories") }}</h2>
+  <ul>{% for c in categories %}<li><code translate="no">{{ c }}</code>: {{ t("category." ~ c) }}</li>{% endfor %}</ul>
+  <p>{{ t("data.kinds_note") }}</p>
+</section>
+
+<section aria-labelledby="h-conv">
+  <h2 id="h-conv">{{ t("data.conventions") }}</h2>
+  <dl class="kv">
+  {% for k, v in dictionary.csv_conventions.items() %}<dt><code translate="no">{{ k }}</code></dt><dd translate="no">{{ v }}</dd>{% endfor %}
+  </dl>
+</section>
+
+<section aria-labelledby="h-tab">
+  <h2 id="h-tab">{{ t("data.tables") }}</h2>
+  {% for name, table in dictionary.tables.items() %}
+  <h3 id="table-{{ name }}"><code translate="no">{{ name }}</code></h3>
+  <p translate="no">{{ table.description }}</p>
+  <p>{{ t("data.row") }}: {{ verbatim(table.row) }}</p>
+  <div class="table-scroll">
+  <table class="stack">
+    <thead><tr><th scope="col">{{ t("data.column") }}</th><th scope="col">{{ t("data.type") }}</th><th scope="col">{{ t("data.unit") }}</th>
+      <th scope="col">{{ t("data.nullable") }}</th><th scope="col">{{ t("data.description") }}</th></tr></thead>
+    <tbody>
+    {% for c in table.columns %}
+      <tr><td data-label="{{ t('data.column') }}"><code translate="no">{{ c.name }}</code></td><td data-label="{{ t('data.type') }}">{{ verbatim(c.type) }}</td>
+        <td data-label="{{ t('data.unit') }}">{% if c.unit %}{{ verbatim(c.unit) }}{% endif %}</td><td data-label="{{ t('data.nullable') }}">{{ c.nullable | num }}</td>
+        <td data-label="{{ t('data.description') }}">{{ verbatim(c.description) }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% endfor %}
+</section>
+
+<section aria-labelledby="h-sch">
+  <h2 id="h-sch">{{ t("data.schemas") }}</h2>
+  <ul>{% for s in schemas %}<li><a href="/api/v1/schemas/{{ s }}"><code translate="no">{{ s }}</code></a></li>{% endfor %}</ul>
+</section>
+
+<section aria-labelledby="h-ex">
+  <h2 id="h-ex">{{ t("data.examples") }}</h2>
+  <p>{{ t("data.examples_note") }}</p>
+</section>
+
+<section aria-labelledby="h-cite">
+  <h2 id="h-cite">{{ t("data.citation") }}</h2>
+  <p>{{ t("data.citation_text") }}</p>
+</section>
+
+<section aria-labelledby="h-end">
+  <h2 id="h-end">{{ t("data.endpoints") }}</h2>
+  <ul class="endpoints">
+    <li><code translate="no">GET /api/v1/measurements</code>: {{ t("data.ep.search") }}</li>
+    <li><code translate="no">GET /api/v1/measurements/{id}/manifest</code>: {{ t("data.ep.manifest") }}</li>
+    <li><code translate="no">GET /api/v1/runs/{run_id}</code>: {{ t("data.ep.run") }}</li>
+    <li><code translate="no">GET /api/v1/artifacts/{artifact_id}</code>: {{ t("data.ep.artifact") }}</li>
+    <li><code translate="no">GET /api/v1/comparisons/{comparison_id}</code>: {{ t("data.ep.comparison") }}</li>
+    <li><code translate="no">GET /api/v1/data-dictionary</code>: {{ t("data.ep.dictionary") }}</li>
+    <li><code translate="no">GET /api/v1/schemas/{name}</code>: {{ t("data.ep.schema") }}</li>
+    <li><code translate="no">GET /api/v1/jobs/{job_id}</code>: {{ t("data.ep.job") }}</li>
+  </ul>
+</section>
+{% endblock %}

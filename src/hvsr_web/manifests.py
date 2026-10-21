@@ -11,6 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from hvsr_core.schema_validation import load_schema, validate
+from hvsr_core.strings import t
 from hvsr_core.versions import PACKAGE_VERSION
 
 from .db import AnalysisRun, Artifact, Measurement, MetadataRevision
@@ -29,6 +30,15 @@ LICENSING_FIELDS = (
     "rights_confirmed",
     "modification_history",
     "removal_notice",
+    "third_party_note",
+)
+# Immutable subset embedded in each published analysis JSON; the manifest holds the current record
+# (modification history, moderation state).
+ANALYSIS_LICENSING_FIELDS = (
+    "license_id",
+    "license_url",
+    "attribution",
+    "source_citation",
     "third_party_note",
 )
 
@@ -61,7 +71,30 @@ def artifact_entry(a: Artifact, removed: bool) -> dict:
     }
 
 
-def build_manifest(session: Session, measurement_id: str, moderation_contact: str | None = None) -> dict:
+def measurement_page(measurement_id: str, base_url: str | None = None) -> str:
+    return f"{(base_url or '').rstrip('/')}/measurements/{measurement_id}"
+
+
+def suggested_citation(m: Measurement, base_url: str | None = None) -> str:
+    return t(
+        "license.suggested_text",
+        attribution=m.licensing["attribution"],
+        year=m.created_utc[:4],
+        code=m.record_code,
+        url=measurement_page(m.id, base_url),
+    )
+
+
+def analysis_licensing(m: Measurement) -> dict:
+    return {k: m.licensing.get(k) for k in ANALYSIS_LICENSING_FIELDS} | {
+        "record_code": m.record_code,
+        "manifest_url": manifest_url(m.id),
+    }
+
+
+def build_manifest(
+    session: Session, measurement_id: str, moderation_contact: str | None = None, base_url: str | None = None
+) -> dict:
     m = session.get(Measurement, measurement_id)
     if m is None:
         raise KeyError(measurement_id)
@@ -98,7 +131,8 @@ def build_manifest(session: Session, measurement_id: str, moderation_contact: st
         "original_bytes_retained": m.original_bytes_retained,
         "original_bytes_note": m.original_bytes_note,
         "categories": categories,
-        "licensing": {k: m.licensing[k] for k in LICENSING_FIELDS if k in m.licensing},
+        "licensing": {k: m.licensing[k] for k in LICENSING_FIELDS if k in m.licensing}
+        | {"suggested_citation": suggested_citation(m, base_url)},
         "provenance": {
             "software_version": PACKAGE_VERSION,
             "metadata_revisions": [
@@ -113,6 +147,7 @@ def build_manifest(session: Session, measurement_id: str, moderation_contact: st
             "analysis_runs": [
                 {
                     "run_id": r.run_id,
+                    "run_url": f"/api/v1/runs/{r.run_id}",
                     "role": r.role,
                     "primary_run_id": r.primary_run_id,
                     "metadata_revision": r.metadata_revision,

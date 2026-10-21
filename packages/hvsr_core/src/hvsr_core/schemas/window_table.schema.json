@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hvsr-analyzer.example/schemas/window-table/1.0.0.json",
+  "title": "HVSR Analyzer per-window table (JSON form)",
+  "description": "Every candidate window of one run and method, selected or not, with the same columns and values as the CSV form. Column meanings, units, and null semantics are in the data dictionary; a null number is explained in the row's `reason`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "schema_version", "table", "run_id", "method", "science_key", "record",
+               "export_format", "columns", "units", "ranking_order", "rows"],
+  "properties": {
+    "schema_id": {"const": "hvsr-analyzer/window-table"},
+    "schema_version": {"const": "1.0.0"},
+    "table": {"enum": ["window_table_standard", "window_table_sdof"]},
+    "run_id": {"type": "string", "pattern": "^r[0-9a-f]{24}$"},
+    "method": {"enum": ["standard", "standard_basic_audit", "sdof", "mdof2", "mdof3"]},
+    "science_key": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "record": {"type": "object"},
+    "export_format": {"type": "string"},
+    "columns": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "units": {"type": "object", "additionalProperties": {"type": "string"}},
+    "ranking_order": {"type": ["string", "null"]},
+    "rows": {"type": "array", "items": {"$ref": "#/$defs/row"}}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"table": {"const": "window_table_sdof"}}},
+      "then": {"properties": {"rows": {"items": {"$ref": "#/$defs/sdof_row"}}}},
+      "else": {"properties": {"rows": {"items": {"$ref": "#/$defs/standard_row"}}}}
+    }
+  ],
+  "$defs": {
+    "num": {"type": ["number", "null"]},
+    "int": {"type": ["integer", "null"]},
+    "str": {"type": ["string", "null"]},
+    "row": {
+      "type": "object",
+      "required": ["selection_id", "window_id", "start_sample", "start_s", "end_s", "start_utc",
+                   "segment_index", "qc_passed", "qc_reasons", "outcome", "selection_order", "reason"],
+      "properties": {
+        "selection_id": {"type": "string"},
+        "window_id": {"type": "string", "pattern": "^w[0-9]{10,}$"},
+        "start_sample": {"type": "integer", "minimum": 0},
+        "start_s": {"type": "number", "minimum": 0},
+        "end_s": {"type": "number", "minimum": 0},
+        "start_utc": {"type": ["string", "null"], "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,9})?Z$"},
+        "segment_index": {"type": "integer", "minimum": 0},
+        "qc_passed": {"type": "boolean"},
+        "qc_reasons": {"$ref": "#/$defs/str"},
+        "selection_order": {"type": ["integer", "null"], "minimum": 1},
+        "reason": {"$ref": "#/$defs/str"}
+      }
+    },
+    "standard_row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["peak_family_id", "window_peak_frequency_hz"],
+      "properties": {
+        "selection_id": true, "window_id": true, "start_sample": true, "start_s": true, "end_s": true,
+        "start_utc": true, "segment_index": true, "qc_passed": true, "qc_reasons": true,
+        "selection_order": true, "reason": true,
+        "outcome": {"enum": ["selected", "qc_rejected", "overlap_excluded", "fdwra_rejected"]},
+        "peak_family_id": {"$ref": "#/$defs/str"},
+        "window_peak_frequency_hz": {"type": ["number", "null"], "exclusiveMinimum": 0}
+      }
+    },
+    "sdof_row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["peak_family_id", "eligibility", "window_peak_frequency_hz", "window_peak_amplitude",
+                   "fit_band_lower_hz", "fit_band_upper_hz", "r2_log", "r2_rank", "template_index",
+                   "template_parameters", "flags"],
+      "properties": {
+        "selection_id": true, "window_id": true, "start_sample": true, "start_s": true, "end_s": true,
+        "start_utc": true, "segment_index": true, "qc_passed": true, "qc_reasons": true,
+        "selection_order": true, "reason": true,
+        "peak_family_id": {"type": "string"},
+        "eligibility": {"enum": ["qc_rejected", "eligible", "no_meaningful_match", "no_peak_in_family_band",
+                                 "incomplete_fit_band", "outside_common_band", "insufficient_resolution",
+                                 "undefined_r2"]},
+        "outcome": {"enum": ["selected", "qc_rejected", "not_eligible", "overlap_excluded", "beyond_requested_n"]},
+        "window_peak_frequency_hz": {"type": ["number", "null"], "exclusiveMinimum": 0},
+        "window_peak_amplitude": {"type": ["number", "null"], "exclusiveMinimum": 0},
+        "fit_band_lower_hz": {"$ref": "#/$defs/num"},
+        "fit_band_upper_hz": {"$ref": "#/$defs/num"},
+        "r2_log": {"$ref": "#/$defs/num"},
+        "r2_rank": {"type": ["integer", "null"], "minimum": 1},
+        "template_index": {"type": ["integer", "null"], "minimum": 0},
+        "template_parameters": {"$ref": "#/$defs/str"},
+        "flags": {"$ref": "#/$defs/str"}
+      }
+    }
+  }
+}

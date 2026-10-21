@@ -119,10 +119,11 @@ def purge(ctx, admin: Admin, measurement_id: str, confirm_record_code: str, reas
             )
         }
         science = {
-            f"analyses/science/{k}.json"
+            f"analyses/science/{k}{suffix}.json"
             for (k,) in session.execute(
                 select(AnalysisRun.science_key).where(AnalysisRun.measurement_id == m.id)
             )
+            for suffix in ("", ".supplement")
         }
         doomed = sorted((keys - shared) | science)
         for a in arts:

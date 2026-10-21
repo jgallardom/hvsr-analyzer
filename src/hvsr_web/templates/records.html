@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ page_title }}</h1>
+{% if not searching %}<p>{{ t("records.intro") }}</p>{% endif %}
+<form class="search" method="get" action="/search">
+  <div class="grid">
+    <label>{{ t("search.code") }}<input name="code" value="{{ q.code or '' }}" maxlength="40" autocomplete="off"></label>
+    <label>{{ t("search.lat_min") }}<input name="lat_min" type="number" step="any" min="-90" max="90" value="{{ q.lat_min if q.lat_min is not none else '' }}"></label>
+    <label>{{ t("search.lat_max") }}<input name="lat_max" type="number" step="any" min="-90" max="90" value="{{ q.lat_max if q.lat_max is not none else '' }}"></label>
+    <label>{{ t("search.lon_min") }}<input name="lon_min" type="number" step="any" min="-180" max="180" value="{{ q.lon_min if q.lon_min is not none else '' }}"></label>
+    <label>{{ t("search.lon_max") }}<input name="lon_max" type="number" step="any" min="-180" max="180" value="{{ q.lon_max if q.lon_max is not none else '' }}"></label>
+  </div>
+  <button type="submit">{{ t("search.submit") }}</button>
+</form>
+<p>{{ t("search.count", n=total) }}</p>
+{% if items %}
+<div class="table-scroll">
+<table class="stack records">
+  <thead><tr>
+    <th scope="col">{{ t("table.record_code") }}</th>
+    <th scope="col">{{ t("table.coordinates") }}</th>
+    <th scope="col">{{ t("table.start") }}</th>
+    <th scope="col">{{ t("table.duration") }}</th>
+    <th scope="col">{{ t("table.attribution") }}</th>
+    <th scope="col">{{ t("table.runs") }}</th>
+    <th scope="col">{{ t("table.status") }}</th>
+  </tr></thead>
+  <tbody>
+  {% for it in items %}
+    <tr>
+      <td data-label="{{ t('table.record_code') }}"><a href="{{ it.page_url }}" translate="no">{{ it.record_code }}</a></td>
+      <td data-label="{{ t('table.coordinates') }}">{{ coord(it.latitude) }}, {{ coord(it.longitude) }}</td>
+      <td data-label="{{ t('table.start') }}">{{ it.recording_start_utc or t("value.unknown") }}</td>
+      <td data-label="{{ t('table.duration') }}">{{ it.duration_s | num(6) }}</td>
+      <td data-label="{{ t('table.attribution') }}">{{ verbatim(it.attribution) }} ({{ verbatim(it.license_id) }})</td>
+      <td data-label="{{ t('table.runs') }}">{{ it.analysis_runs }}</td>
+      <td data-label="{{ t('table.status') }}">{{ t("status." ~ it.status) }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% if next_url %}<p><a href="{{ next_url }}">{{ t("search.more") }}</a></p>{% endif %}
+{% else %}
+<p>{{ t("search.none") }}</p>
+{% endif %}
+{% endblock %}

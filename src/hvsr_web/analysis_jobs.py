@@ -15,29 +15,31 @@ import time
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
+from hvsr_core import plots
 from hvsr_core.analysis import RecordInfo, run_analysis
 from hvsr_core.config import AnalysisRequest, robustness_config
 from hvsr_core.io.preservation import reconstruct_original, recording_from_canonical
 from hvsr_core.io.stationxml import apply_stationxml, parse_stationxml
 from hvsr_core.jsonutil import canonical_dumps, canonical_hash, sha256_bytes, strict_loads
 from hvsr_core.metadata import MeasurementMetadata, apply_sensor_metadata, evaluate_instrument
+from hvsr_core.strings import t
 from hvsr_core.templates import resolve_sdof_bank
 from hvsr_core.versions import PACKAGE_VERSION
 from hvsr_core.windows import sample_counts
 
-from . import jobs
+from . import jobs, publication
 from .context import AppContext
 from .db import AnalysisRun, Artifact, ComputeUsage, Measurement, MetadataRevision, utc_iso
 from .quota import period_of
-from .storage import ImmutableObjectError, blob_key
+from .storage import ImmutableObjectError
 from .submissions import UploadFile, WaveformOptions, parse_waveforms
 
 ADVICE = (
     "Options: increase the window step, turn off the 1.5 x Lw robustness comparison, reduce the "
-    "bootstrap replicates, process the recording offline with the command-line tool, or ask an "
-    "administrator for a larger compute allowance. Records are never silently shortened to fit."
+    "bootstrap replicates or the figure size and resolution, process the recording offline with the "
+    "command-line tool, or ask an administrator for a larger compute allowance. Records are never "
+    "silently shortened to fit."
 )
-METHOD_LABEL = {"standard": "Standard H/V analysis (JSON)", "sdof": "SDOF-selected H/V analysis (JSON)"}
 
 
 class ComputeBudgetExceeded(jobs.PermanentJobError):
@@ -86,6 +88,7 @@ def estimate_cost(summary: dict, request: AnalysisRequest) -> dict:
         "max_candidate_windows": max(r["candidate_windows"] for r in runs),
         "template_comparisons_per_family": sum(r["template_comparisons_per_family"] for r in runs),
         "bootstrap_replicates": max(r["bootstrap_replicates"] for r in runs),
+        "plot_pixels": plots.raster_pixels(request.display.model_dump(mode="json")),
         "basis": "upper bounds from the stored recording summary (gaps only reduce them); template "
         "comparisons are counted per plausible peak family",
     }
@@ -98,10 +101,11 @@ def check_budget(estimate: dict, settings) -> None:
         ("template_comparisons_per_family", "max_template_comparisons", "template comparisons per family"),
         ("bootstrap_replicates", "max_bootstrap_replicates", "bootstrap replicates"),
         ("parameter_runs", "max_parameter_runs", "parameter runs"),
+        ("plot_pixels", "max_plot_pixels", "pixels in the PNG figure"),
     )
     for field, limit_name, what in checks:
         limit = getattr(settings, limit_name)
-        if estimate[field] > limit:
+        if estimate.get(field, 0) > limit:
             problems.append(f"{estimate[field]} {what} exceed the limit of {limit}")
     if problems:
         raise ComputeBudgetExceeded(problems, estimate)
@@ -144,17 +148,33 @@ class StoreScienceCache:
     def key(science_key: str) -> str:
         return f"analyses/science/{science_key}.json"
 
-    def get(self, science_key: str) -> dict | None:
+    @staticmethod
+    def supplement_key(science_key: str) -> str:
+        return f"analyses/science/{science_key}.supplement.json"
+
+    def _read(self, key: str) -> dict | None:
         try:
-            return strict_loads(self.store.get(self.key(science_key)))
+            return strict_loads(self.store.get(key))
         except KeyError:
             return None
 
-    def put(self, science_key: str, docs: dict) -> None:
+    def _write(self, key: str, doc: dict) -> None:
         try:
-            self.store.put(self.key(science_key), canonical_dumps(docs).encode(), "application/json")
+            self.store.put(key, canonical_dumps(doc).encode(), "application/json")
         except ImmutableObjectError:
             pass
+
+    def get(self, science_key: str) -> dict | None:
+        return self._read(self.key(science_key))
+
+    def put(self, science_key: str, docs: dict) -> None:
+        self._write(self.key(science_key), docs)
+
+    def get_supplement(self, science_key: str) -> dict | None:
+        return self._read(self.supplement_key(science_key))
+
+    def put_supplement(self, science_key: str, supplement: dict) -> None:
+        self._write(self.supplement_key(science_key), supplement)
 
 
 def load_recording(ctx: AppContext, m: Measurement, arts: list[Artifact]):
@@ -197,26 +217,9 @@ def load_recording(ctx: AppContext, m: Measurement, arts: list[Artifact]):
     return rec, sources, response_sha
 
 
-# ------------------------------------------------------------------------------------ job handler
-def _artifact_id(*parts) -> str:
-    return "art_" + canonical_hash(list(parts))[:24]
-
-
-def handle_analysis(ctx: AppContext, claim: jobs.Claim) -> dict:
-    t_wall, t_cpu = time.perf_counter(), time.process_time()
-    p = claim.payload
-    request = AnalysisRequest.model_validate(p["request"])
-    check_budget(p["estimate"], ctx.settings)
-    with ctx.sessions() as session:
-        m = session.get(Measurement, p["measurement_id"])
-        if m is None or m.moderation_status != "public":
-            raise MeasurementUnavailable(f"measurement {p['measurement_id']} is not available")
-        snap = session.get(MetadataRevision, (m.id, p["metadata_revision"]))
-        arts = list(
-            session.scalars(
-                select(Artifact).where(Artifact.measurement_id == m.id, Artifact.run_id.is_(None))
-            )
-        )
+def analysis_inputs(ctx: AppContext, m: Measurement, arts: list[Artifact], snap: MetadataRevision, config):
+    """Recording with the snapshot's sensor metadata applied, its sources, and the RecordInfo that
+    enters the science key."""
     rec, sources, response_sha = load_recording(ctx, m, arts)
     meta = MeasurementMetadata.model_validate(snap.metadata_doc)
     rec = apply_sensor_metadata(rec, meta.sensor)
@@ -232,8 +235,28 @@ def handle_analysis(ctx: AppContext, claim: jobs.Claim) -> dict:
             "metadata_snapshot": canonical_hash(snap.metadata_doc),
         },
         response_sha256=response_sha,
-        instrument=evaluate_instrument(rec, meta.sensor, request.config.preprocessing.response_correction),
+        instrument=evaluate_instrument(rec, meta.sensor, config.preprocessing.response_correction),
     )
+    return rec, sources, info
+
+
+# ------------------------------------------------------------------------------------ job handler
+def handle_analysis(ctx: AppContext, claim: jobs.Claim) -> dict:
+    t_wall, t_cpu = time.perf_counter(), time.process_time()
+    p = claim.payload
+    request = AnalysisRequest.model_validate(p["request"])
+    check_budget(p["estimate"], ctx.settings)
+    with ctx.sessions() as session:
+        m = session.get(Measurement, p["measurement_id"])
+        if m is None or m.moderation_status != "public":
+            raise MeasurementUnavailable(f"measurement {p['measurement_id']} is not available")
+        snap = session.get(MetadataRevision, (m.id, p["metadata_revision"]))
+        arts = list(
+            session.scalars(
+                select(Artifact).where(Artifact.measurement_id == m.id, Artifact.run_id.is_(None))
+            )
+        )
+    rec, sources, info = analysis_inputs(ctx, m, arts, snap, request.config)
     if not jobs.heartbeat(ctx, claim):
         raise jobs.LeaseLost(claim.job_id)
 
@@ -246,45 +269,8 @@ def handle_analysis(ctx: AppContext, claim: jobs.Claim) -> dict:
     report_tag = canonical_hash(request.report.model_dump(mode="json"))[:16]
     refs = [a.id for a in sources]
     generated = {"software": "hvsr-analyzer", "version": PACKAGE_VERSION, "job_id": claim.job_id}
-    new_arts: list[Artifact] = []
-
-    def add_json(run_id, category, kind, label, method, doc):
-        data = canonical_dumps(doc).encode()
-        key = blob_key("analyses", sha256_bytes(data))
-        ctx.store.put(key, data, "application/json")
-        if sha256_bytes(ctx.store.get(key)) != sha256_bytes(data):
-            raise RuntimeError(f"stored object {key} failed read-back verification")
-        new_arts.append(
-            Artifact(
-                id=_artifact_id(run_id, kind, method, report_tag),
-                measurement_id=m.id,
-                run_id=run_id,
-                category=category,
-                kind=kind,
-                label=label,
-                filename=None,
-                blob_key=key,
-                mime_type="application/json",
-                byte_size=len(data),
-                sha256=sha256_bytes(data),
-                stored_sha256=sha256_bytes(data),
-                stored_encoding="identity",
-                availability="available",
-                availability_reason=None,
-                generated_by=dict(
-                    generated, run_id=run_id, report_options=request.report.model_dump(mode="json")
-                ),
-                source_refs=refs,
-                method=method,
-                created_utc=stamp,
-            )
-        )
-
-    sesame_note = "" if request.report.evaluate_sesame else " - SESAME not requested"
-    for method, doc in res.published.items():
-        add_json(
-            res.run_id, "analysis_runs", "analysis_json", METHOD_LABEL[method] + sesame_note, method, doc
-        )
+    common = {"refs": refs, "generated": generated, "stamp": stamp, "report_tag": report_tag}
+    new_arts = publication.run_artifacts(ctx, m, res, request, suffix="", **common)
     runs = [
         AnalysisRun(
             run_id=res.run_id,
@@ -301,19 +287,29 @@ def handle_analysis(ctx: AppContext, claim: jobs.Claim) -> dict:
         )
     ]
     if res.robustness is not None:
-        add_json(
-            res.run_id,
-            "quality_evaluation",
-            "robustness_comparison",
-            "Robustness comparison (Lw and 1.5 x Lw)",
-            None,
-            res.robustness,
+        new_arts.append(
+            publication.stored_artifact(
+                ctx,
+                art_id=publication.artifact_id(res.run_id, "robustness_comparison", None, report_tag),
+                measurement_id=m.id,
+                run_id=res.run_id,
+                category="quality_evaluation",
+                kind="robustness_comparison",
+                label=t("artifact.robustness"),
+                method=None,
+                data=canonical_dumps(res.robustness).encode(),
+                mime="application/json",
+                obj_category="analyses",
+                generated_by=dict(generated, run_id=res.run_id),
+                source_refs=refs,
+                stamp=stamp,
+            )
         )
     if res.run_b is not None:
         cfg_b = robustness_config(request.config, rec.sampling_rate_hz)
-        for method, doc in res.run_b.published.items():
-            label = METHOD_LABEL[method].replace("(JSON)", "- run B, 1.5 x Lw (JSON)") + sesame_note
-            add_json(res.run_b.run_id, "analysis_runs", "analysis_json", label, method, doc)
+        new_arts += publication.run_artifacts(
+            ctx, m, res.run_b, request, suffix=t("artifact.run_b_suffix"), **common
+        )
         runs.append(
             AnalysisRun(
                 run_id=res.run_b.run_id,
@@ -331,6 +327,8 @@ def handle_analysis(ctx: AppContext, claim: jobs.Claim) -> dict:
                 job_id=claim.job_id,
             )
         )
+    new_arts += publication.template_artifacts(ctx, m, res.published, generated=generated, stamp=stamp)
+    new_arts = list({a.id: a for a in new_arts}.values())
     result = {
         "run_id": res.run_id,
         "run_b_id": res.run_b.run_id if res.run_b else None,

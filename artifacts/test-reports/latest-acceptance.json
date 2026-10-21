@@ -1128,6 +1128,10 @@
    [
     "tests.stage_07.test_quota::test_input_ceilings_come_from_environment_and_are_enforced",
     "passed"
+   ],
+   [
+    "tests.stage_08.test_exports::test_figure_size_and_custom_variants_are_bounded",
+    "passed"
    ]
   ],
   "AC-S7-16": [
@@ -1161,7 +1165,181 @@
     "tests.stage_07.test_jobs::test_retries_are_bounded_and_permanent_errors_are_not_retried",
     "passed"
    ]
+  ],
+  "AC-S8-01": [
+   [
+    "tests.stage_08.test_flow::test_upload_configure_analyze_and_read_results_over_http",
+    "passed"
+   ],
+   [
+    "tests.stage_08.test_flow::test_public_search_filters_and_paginates",
+    "passed"
+   ]
+  ],
+  "AC-S8-02": [
+   [
+    "tests.stage_08.test_exports::test_plot_csv_and_json_carry_identical_numbers[short]",
+    "passed"
+   ],
+   [
+    "tests.stage_08.test_exports::test_plot_csv_and_json_carry_identical_numbers[long]",
+    "passed"
+   ],
+   [
+    "tests.stage_08.test_exports::test_cosmetic_rerender_is_a_new_plot_of_the_same_numbers",
+    "passed"
+   ]
+  ],
+  "AC-S8-03": [
+   [
+    "tests.stage_08.test_downloads::test_original_canonical_numerical_and_plot_downloads_are_separate",
+    "passed"
+   ]
+  ],
+  "AC-S8-04": [
+   [
+    "tests.stage_08.test_downloads::test_normalized_waveform_csv_from_miniseed_matches_an_independent_decode",
+    "passed"
+   ],
+   [
+    "tests.stage_08.test_exports::test_on_request_csvs_validate",
+    "passed"
+   ]
+  ],
+  "AC-S8-05": [
+   [
+    "tests.stage_08.test_downloads::test_missing_originals_are_disclosed_with_an_explicit_state",
+    "passed"
+   ],
+   [
+    "tests.stage_08.test_downloads::test_retained_originals_page_says_so",
+    "passed"
+   ]
+  ],
+  "AC-S8-06": [
+   [
+    "tests.stage_08.test_figures::test_plot_footer_carries_the_required_provenance[short]",
+    "passed"
+   ],
+   [
+    "tests.stage_08.test_figures::test_plot_footer_carries_the_required_provenance[long]",
+    "passed"
+   ],
+   [
+    "tests.stage_08.test_figures::test_figures_contain_no_sesame_explanations",
+    "passed"
+   ]
+  ],
+  "AC-S8-07": [
+   [
+    "tests.stage_08.test_figures::test_page_serves_the_layout_matching_the_viewport",
+    "passed"
+   ],
+   [
+    "tests.stage_08.test_figures::test_figure_text_is_at_least_9_css_px_on_every_viewport",
+    "passed"
+   ],
+   [
+    "tests.stage_08.test_figures::test_figure_elements_never_overlap_or_clip",
+    "passed"
+   ],
+   [
+    "tests.stage_08.test_figures::test_pages_are_responsive",
+    "passed"
+   ]
+  ],
+  "AC-S8-08": [
+   [
+    "tests.stage_08.test_public::test_license_and_attribution_on_every_public_page",
+    "passed"
+   ],
+   [
+    "tests.stage_08.test_public::test_removed_measurement_page_keeps_license_and_explains_removal",
+    "passed"
+   ]
+  ],
+  "AC-S8-09": [
+   [
+    "tests.stage_08.test_downloads::test_every_manifest_link_resolves_or_has_an_explicit_state",
+    "passed"
+   ],
+   [
+    "tests.stage_08.test_downloads::test_failed_generation_is_an_explicit_state_not_a_broken_link",
+    "passed"
+   ]
+  ],
+  "AC-S8-10": [
+   [
+    "tests.stage_08.test_examples::test_example_exports_validate_and_are_unedited_downloads",
+    "passed"
+   ],
+   [
+    "tests.stage_08.test_examples::test_example_numbers_equal_a_fresh_analysis_of_the_same_recording",
+    "passed"
+   ],
+   [
+    "tests.stage_08.test_exports::test_real_exports_validate_against_published_schemas",
+    "passed"
+   ]
+  ],
+  "AC-S8-11": [
+   [
+    "tests.stage_08.test_figures::test_results_title_is_record_code_with_coordinates",
+    "passed"
+   ],
+   [
+    "tests.stage_08.test_figures::test_one_band_labeled_exactly_when_estimable",
+    "passed"
+   ],
+   [
+    "tests.stage_08.test_figures::test_no_band_when_not_estimable_and_the_reason_is_shown",
+    "passed"
+   ]
+  ],
+  "AC-S8-12": [
+   [
+    "tests.stage_08.test_public::test_every_key_used_exists_and_dynamic_keys_are_enumerated",
+    "passed"
+   ],
+   [
+    "tests.stage_08.test_public::test_templates_contain_no_literal_interface_text",
+    "passed"
+   ],
+   [
+    "tests.stage_08.test_public::test_javascript_has_no_literal_interface_text",
+    "passed"
+   ],
+   [
+    "tests.stage_08.test_public::test_the_interface_text_check_is_sensitive",
+    "passed"
+   ],
+   [
+    "tests.stage_08.test_public::test_pages_render_every_interface_string_from_the_catalog",
+    "passed"
+   ],
+   [
+    "tests.stage_08.test_public::test_figure_text_comes_from_the_catalog",
+    "passed"
+   ]
+  ],
+  "AC-S8-13": [
+   [
+    "tests.stage_08.test_examples::test_data_dictionary_document_is_current",
+    "passed"
+   ],
+   [
+    "tests.stage_08.test_exports::test_numeric_csvs_follow_the_dictionary_contract",
+    "passed"
+   ],
+   [
+    "tests.stage_08.test_exports::test_unavailable_numbers_are_blank_with_a_reason_never_zero",
+    "passed"
+   ],
+   [
+    "tests.stage_08.test_exports::test_on_request_csvs_validate",
+    "passed"
+   ]
   ]
  },
- "updated_utc": "2026-10-21T01:00:27Z"
+ "updated_utc": "2026-10-21T02:08:59Z"
 }

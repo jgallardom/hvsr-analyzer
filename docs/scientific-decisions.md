@@ -273,3 +273,83 @@ synthetic signals (AC-S6-06/07), not SESAME rules.
 No 0-100 summary score is computed (`summary_score: null`, with a note). An optional score would need
 an explicit formula, weights, inputs, version and limitations; none has been validated. A flat curve
 and a Standard/SDOF disagreement are not penalized as poor recording quality.
+
+## Stage 8 - presentation and exports (no scientific change)
+
+None of these decisions changes a computed number. The Stage 5 fingerprinted files are untouched.
+
+**D-080 (figure readability criterion, project decision).** "Readable" (spec 13.1) is defined as:
+every text element of a served figure renders at >= 9 CSS px.
+- Scope: viewports from 340 to 2560 CSS px, with and without a 17 px classic scrollbar.
+- Layouts: pages serve a narrow-screen SVG (3.6 x 6.4 in, 9 pt text, 7.5 pt footer and legend)
+  at <= 900 px, and the desktop SVG above that.
+- Measurement: the rendered width comes from the stylesheet rules
+  (`tests/stage_08/test_figures.py::rendered_width`), and font sizes are read from the served SVGs.
+- Worst cases: 9.35 CSS px for the narrow figure at a 340 px viewport with a scrollbar; 9.84 CSS px
+  for the desktop figure at 901 px with a scrollbar.
+- Log-axis ticks: labeled as plain numbers (`0.1`, `1`, `10`) with no math-text superscripts.
+  Superscript exponents rendered at 6.65 pt and 5.95 pt, below the criterion.
+- Math text is off for all figure text, so record-derived strings (record codes, attributions) are
+  drawn literally.
+- Verification: a geometry check covers 16 layout configurations and confirms that no text
+  overlaps or is clipped. Browser screenshots at 340 px and desktop width are in
+  `docs/evidence/stage8/`.
+
+**D-081 (localization boundary).** Every interface string comes from the English catalog
+(`hvsr_core/locales/en.json`) through `t()`. Text that is data and must not be translated is
+rendered inside `translate="no"` elements:
+- identifiers, statuses, and enum values;
+- user metadata, attributions, and stored artifact labels;
+- diagnostic sentences produced by the scientific core;
+- data-dictionary text;
+- the consent wording. It is versioned and hashed (`consent-v1`), so it is legal text shown exactly
+  as agreed, marked `lang="en"`.
+
+API `detail` fields are English diagnostics next to machine-readable `error` codes. The boundary is
+machine-checked: a pseudo-locale wraps every catalog value, and a test fails on any letters outside
+the catalog or a `translate="no"` element.
+
+**D-082 (cosmetic re-renders).** A figure variant is a new plot artifact derived from the stored
+analysis JSON. Its identity is the hash of its recipe, so identical requests share one artifact. It
+lists the analysis JSON (and per-window spectra when windows are drawn) in `source_refs`. It never
+replaces the published figure.
+- Bounded set: variants at the default size and resolution are finite (selection x overlays x
+  format x layout). They are created on demand by the results page without a token.
+- Custom size or dpi: requires an upload token and is capped per run
+  (`HVSR_MAX_PLOT_VARIANTS_PER_RUN`).
+- PNG size: every PNG, published or re-rendered, is bounded by `HVSR_MAX_PLOT_PIXELS`.
+- Verification: the tests replace the FFT, the core run, and the bootstrap with failing stubs while
+  re-rendering. A control shows that the same stubs do stop a real analysis.
+
+**D-083 (exports).** Mean-spectrum and per-window CSVs are exact projections of the analysis
+JSON:
+- Floats are written in shortest round-trip form, so CSV and JSON values agree bit for bit.
+- The figure recipe records `series_sha256` over the same arrays.
+- Per-window spectra are not stored for every run. They are regenerated on request from the stored
+  recording and run configuration, bounded by `HVSR_MAX_WINDOW_SPECTRA_CELLS`, and the science key
+  is re-checked first.
+
+A Reconstructed CSV (canonical-only storage, Stage 1 design) keeps its leading `#` disclosure line.
+It is a waveform file, not a numeric table, so the tables' "no comment lines" rule does not apply to
+it. The data dictionary states this.
+
+**D-084 (licensing inside analysis documents).** Each published analysis JSON embeds the fixed part
+of its measurement's licensing: license ID and URL, attribution, source citation, third-party note,
+record code, and manifest URL. The manifest remains the current record, with modification history
+and moderation state. Those can change, so they are not copied into immutable documents.
+
+**D-085 (external reference URLs).** Analysis documents and `docs/sesame-implementation.md` link
+the SESAME guidelines as `http://sesame.geopsy.org/Papers/HV_User_Guidelines.pdf`. The
+specification lists the `https://` form; the address is otherwise the same. The CC BY 4.0 link is
+`https://creativecommons.org/licenses/by/4.0/`. These are the only external links in published
+documents (the manifest-link test keeps an explicit allowlist). The tests do not fetch them, and
+their availability has not been checked.
+
+**D-086 (example exports).** `docs/examples/` holds unedited downloads of one real analysis: a
+synthetic SDOF response (fn = 2 Hz, damping 0.2, 1800 s at 50 Hz, seed 21). A synthetic recording
+is used because it can be regenerated and redistributed. The files are tested to:
+- match their manifest checksums;
+- validate against the published schemas;
+- equal a fresh analysis of the same recording (CSV bytes and the JSON `grid` and `selections`).
+
+The per-window spectra (about 1.8 MB compressed) and the normalized waveform are left out for size.

@@ -37,4 +37,10 @@ SCHEMA_VERSIONS: dict[str, str] = {
     "template_bank": "1.0.0",
     "sesame_report": "1.0.0",
     "robustness": "1.0.0",
+    "window_table": "1.0.0",
+    "plot_recipe": "1.0.0",
+    "data_dictionary": "1.0.0",
 }
+
+# Layout of the CSV/JSON export tables (column sets, reason texts). Exports never change numbers.
+EXPORT_FORMAT_VERSION = "tables-v1"

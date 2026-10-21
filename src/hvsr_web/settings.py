@@ -59,6 +59,18 @@ class Settings(BaseModel):
     job_wall_time_s: int = Field(900, ge=1)
     job_cpu_time_s: int = Field(900, ge=1)
     staging_ttl_s: int = Field(86_400, ge=60)
+    max_window_spectra_cells: int = Field(
+        2_000_000, gt=0, description="Candidate windows x valid frequencies for an on-request per-window CSV."
+    )
+    max_plot_pixels: int = Field(
+        16_000_000, gt=0, description="Largest PNG figure (width x height pixels), published or re-rendered."
+    )
+    max_plot_variants_per_run: int = Field(50, ge=0, description="Stored cosmetic plot variants per run.")
+
+    # serving
+    public_base_url: str | None = Field(None, description="Absolute site URL used in citations.")
+    embedded_worker: bool = Field(False, description="Run a job worker inside the web process.")
+    worker_poll_s: float = Field(2.0, gt=0)
 
     @classmethod
     def from_env(cls, environ: dict[str, str] | None = None) -> Settings:

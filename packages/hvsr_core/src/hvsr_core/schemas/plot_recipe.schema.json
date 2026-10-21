@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hvsr-analyzer.example/schemas/plot-recipe/1.0.0.json",
+  "title": "HVSR Analyzer figure recipe",
+  "description": "Everything needed to re-render a figure from an existing analysis run without recomputing it. Stored with every plot artifact (manifest `generated_by.recipe`).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "schema_version", "rendering_version", "renderer", "run_id", "method",
+               "selection_id", "peak_family_id", "source_analysis_sha256", "format", "layout", "width_in",
+               "height_in", "dpi", "font_pt", "footer_pt", "x_scale", "y_scale", "x_range_hz", "title",
+               "band", "show_alternate_method", "alternate_method", "show_individual_windows",
+               "individual_windows_rendered", "individual_windows_note", "footer", "series_sha256"],
+  "properties": {
+    "schema_id": {"const": "hvsr-analyzer/plot-recipe"},
+    "schema_version": {"const": "1.0.0"},
+    "rendering_version": {"type": "string"},
+    "renderer": {
+      "type": "object",
+      "required": ["software", "matplotlib"],
+      "properties": {"software": {"type": "string"}, "matplotlib": {"type": "string"}}
+    },
+    "run_id": {"type": "string", "pattern": "^r[0-9a-f]{24}$"},
+    "method": {"enum": ["standard", "standard_basic_audit", "sdof", "mdof2", "mdof3"]},
+    "selection_id": {"type": "string"},
+    "peak_family_id": {"type": ["string", "null"]},
+    "source_analysis_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+    "format": {"enum": ["png", "svg"]},
+    "layout": {"enum": ["desktop", "compact"]},
+    "width_in": {"type": "number", "exclusiveMinimum": 2, "maximum": 30},
+    "height_in": {"type": "number", "exclusiveMinimum": 2, "maximum": 30},
+    "dpi": {"type": "integer", "minimum": 50, "maximum": 600},
+    "font_pt": {"type": "number", "exclusiveMinimum": 0},
+    "footer_pt": {"type": "number", "exclusiveMinimum": 0},
+    "x_scale": {"const": "linear"},
+    "y_scale": {"const": "log"},
+    "x_range_hz": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "number", "minimum": 0}},
+    "title": {"type": "string", "minLength": 1},
+    "band": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "drawn", "status", "reason"],
+      "properties": {
+        "label": {"const": "Estimated 95% pointwise CI for the selected-window mean"},
+        "drawn": {"type": "boolean"},
+        "status": {"type": ["string", "null"]},
+        "reason": {"type": ["string", "null"]}
+      }
+    },
+    "show_alternate_method": {"type": "boolean"},
+    "alternate_method": {"type": ["string", "null"]},
+    "show_individual_windows": {"type": "boolean"},
+    "individual_windows_rendered": {"type": "boolean"},
+    "individual_windows_note": {"type": ["string", "null"]},
+    "footer": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "series_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

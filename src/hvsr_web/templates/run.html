@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% from "macros.html" import downloads, kv %}
+{% block content %}
+<h1 id="results-title">{{ page_title }}</h1>
+<p class="muted">{{ t("results.run", run_id=run.run_id) }} - {{ t("role." ~ run.role) }} -
+  <a href="/measurements/{{ m.id }}">{{ t("results.measurement") }}</a></p>
+<p id="attribution">{{ t("results.attribution", attribution=m.licensing.attribution, license=m.licensing.license_id) }}
+  <a href="/measurements/{{ m.id }}#license">{{ t("results.citation_link") }}</a></p>
+{% if m.moderation_status == "under_review" %}<p class="notice" role="status">{{ t("measurement.under_review") }}</p>{% endif %}
+
+<nav class="toggles" aria-label="{{ t('results.method') }}">
+  <span>{{ t("results.method") }}:</span>
+  {% for mt in methods %}
+  <a href="/runs/{{ run.run_id }}?method={{ mt }}"{% if mt == method %} aria-current="page"{% endif %}>{{ t("method." ~ mt) }}</a>
+  {% endfor %}
+</nav>
+{% if selection_ids | length > 1 %}
+<nav class="toggles" aria-label="{{ t('peak.family') }}">
+  <span>{{ t("peak.family") }}:</span>
+  {% for sid in selection_ids %}
+  <a href="/runs/{{ run.run_id }}?method={{ method }}&amp;sel={{ sid | urlencode }}" translate="no"{% if sid == selection.selection_id %} aria-current="page"{% endif %}>{{ sid }}</a>
+  {% endfor %}
+</nav>
+{% endif %}
+<form class="toggles" method="get" action="/runs/{{ run.run_id }}">
+  <input type="hidden" name="method" value="{{ method }}">
+  {% if sel %}<input type="hidden" name="sel" value="{{ sel }}">{% endif %}
+  {% if has_alternate %}<label class="inline"><input type="checkbox" name="alt" value="true"{% if alt %} checked{% endif %}> {{ t("cfg.show_alternate") }}</label>{% endif %}
+  <label class="inline"><input type="checkbox" name="windows" value="true"{% if windows %} checked{% endif %}> {{ t("cfg.show_windows") }}</label>
+  <button type="submit">{{ t("results.apply") }}</button>
+</form>
+{% if note %}
+<p class="notice" role="status">{{ note }}
+  {% if windows_artifact %}<a href="{{ artifact_url(windows_artifact.id) }}" translate="no" data-ondemand>{{ windows_artifact.label }}</a><span class="status" aria-live="polite"></span>{% endif %}</p>
+{% endif %}
+
+<figure class="hv-figure">
+  {% if figure.desktop %}
+  <picture>
+    {% if figure.compact %}<source media="(max-width: {{ breakpoint }}px)" srcset="{{ artifact_url(figure.compact.id) }}" type="image/svg+xml">{% endif %}
+    <img id="hv-plot" src="{{ artifact_url(figure.desktop.id) }}" width="{{ (figure.desktop.generated_by.recipe.width_in * 96) | int }}" height="{{ (figure.desktop.generated_by.recipe.height_in * 96) | int }}"
+         alt="{{ t('results.figure_alt', title=page_title, method=t('method.' ~ method)) }}">
+  </picture>
+  {% endif %}
+  <figcaption id="ci-note">
+    {% if drawn %}{{ t("results.ci_note", label=doc.ci_label, method=unc.get("method"), calibration=t("calibration." ~ doc.calibration.status)) }}
+    {% else %}{{ t("results.no_band", status=unc.get("status"), reason=unc.get("status_reason") or t("value.none")) }}{% endif %}
+  </figcaption>
+</figure>
+
+{% if doc.instrument.status != "verified_common_quantity" %}
+<div class="notice" role="note" id="instrument-warning">
+  <p>{{ t("results.instrument_warning", status=t("instrument." ~ doc.instrument.status)) }}</p>
+  <ul>{% for r in doc.instrument.reasons %}<li translate="no">{{ r }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+{% if doc.quality_dimensions.usability.warnings %}
+<div class="notice" role="note" id="quality-warnings">
+  <p>{{ t("results.quality_warnings") }}</p>
+  <ul>{% for w in doc.quality_dimensions.usability.warnings %}<li translate="no">{{ w }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<section aria-labelledby="h-peak">
+  <h2 id="h-peak">{{ t("results.section.peak") }}</h2>
+  <p>{{ t("results.selection_rule") }}: {{ verbatim(selection.selection_rule) }}</p>
+  <div class="table-scroll">
+  <table class="stack" id="peak-table">
+    <thead><tr>
+      <th scope="col">{{ t("peak.family") }}</th><th scope="col">{{ t("peak.status") }}</th>
+      <th scope="col">{{ t("peak.frequency") }}</th><th scope="col">{{ t("peak.amplitude") }}</th>
+      <th scope="col">{{ t("peak.windows") }}</th><th scope="col">{{ t("peak.window_dispersion") }}</th>
+      <th scope="col">{{ t("peak.bootstrap") }}</th>
+    </tr></thead>
+    <tbody>
+    {% for p in selection.peaks %}
+      {% set wp = p.get("window_peak_frequency_hz") or {} %}
+      {% set bs = p.get("bootstrap") or {} %}
+      <tr>
+        <td data-label="{{ t('peak.family') }}">{{ verbatim(p.peak_family_id) }}</td>
+        <td data-label="{{ t('peak.status') }}">{{ verbatim(p.status) }}</td>
+        <td data-label="{{ t('peak.frequency') }}">{{ p.get("observed_peak_frequency_hz") | num(5) }}</td>
+        <td data-label="{{ t('peak.amplitude') }}">{{ p.get("observed_peak_amplitude") | num(4) }}</td>
+        <td data-label="{{ t('peak.windows') }}">{{ selection.n_selected }}</td>
+        <td data-label="{{ t('peak.window_dispersion') }}">{{ wp.get("geometric_mean") | num(5) }}, {{ wp.get("log_std") | num(3) }}</td>
+        <td data-label="{{ t('peak.bootstrap') }}">{{ verbatim(bs.get("status")) }}{% if bs.get("median_hz") is not none %}: {{ t("value.hz", value=bs.median_hz | num(5)) }}{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <p>{{ t("peak.maximum") }}: {{ selection.maximum.maximum_frequency_hz | num(5) }}</p>
+</section>
+
+<section aria-labelledby="h-int">
+  <h2 id="h-int">{{ t("results.section.interpretation") }}</h2>
+  <p class="muted">{{ t("results.interpretation_note") }}</p>
+  {% set it = doc.interpretation %}
+  {{ kv([
+    (t("interp.status"), verbatim(it.status)),
+    (t("interp.fundamental"), it.get("fundamental_frequency_candidate_hz") | num(5)),
+    (t("interp.flags"), verbatim(it.flags | join(", "))),
+  ]) }}
+  <h3>{{ t("interp.evidence") }}</h3>
+  <ul>{% for e in it.evidence %}<li translate="no">{{ e }}</li>{% endfor %}</ul>
+</section>
+
+<section aria-labelledby="h-qual">
+  <h2 id="h-qual">{{ t("results.section.quality") }}</h2>
+  {% set q = doc.quality_dimensions %}
+  <h3>{{ t("quality.usability") }}</h3>
+  {{ kv([
+    (t("quality.candidate_windows"), q.usability.candidate_windows),
+    (t("quality.qc_passed_fraction"), q.usability.qc_passed_fraction | num(3)),
+    (t("quality.non_overlapping_windows"), q.usability.non_overlapping_windows),
+    (t("quality.temporal_groups"), q.usability.temporal_groups),
+  ]) }}
+  <h3>{{ t("quality.identifiability") }}</h3>
+  <div class="table-scroll">
+  <table class="stack">
+    <thead><tr>
+      <th scope="col">{{ t("peak.family") }}</th><th scope="col">{{ t("quality.plausible") }}</th>
+      <th scope="col">{{ t("quality.recurrence") }}</th><th scope="col">{{ t("quality.prominence") }}</th>
+    </tr></thead>
+    <tbody>
+    {% for f in q.peak_identifiability.families %}
+      <tr>
+        <td data-label="{{ t('peak.family') }}">{{ verbatim(f.family_id) }}</td>
+        <td data-label="{{ t('quality.plausible') }}">{{ f.plausible | num }}</td>
+        <td data-label="{{ t('quality.recurrence') }}">{{ f.recurrence | num(3) }}</td>
+        <td data-label="{{ t('quality.prominence') }}">{{ f.mean_curve_prominence_ratio | num(3) }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <h3>{{ t("quality.calibration") }}</h3>
+  <p>{{ t("calibration." ~ doc.calibration.status) }}. {{ verbatim(doc.calibration.note) }}</p>
+</section>
+
+<section aria-labelledby="h-ses" id="sesame">
+  <h2 id="h-ses">{{ t("results.section.sesame") }}</h2>
+  {% set ses = selection.sesame %}
+  {% if doc.sesame_requested and ses.status == "evaluated" %}
+  {% for sp in ses.peaks %}
+  <h3>{{ t("results.sesame_peak", family=sp.peak_family_id or t("value.none"), f=sp.f0_hz | num(5)) }}</h3>
+  <div class="table-scroll">
+  <table class="stack">
+    <thead><tr><th scope="col">{{ t("sesame.id") }}</th><th scope="col">{{ t("sesame.criterion") }}</th>
+      <th scope="col">{{ t("sesame.status") }}</th><th scope="col">{{ t("sesame.measured") }}</th><th scope="col">{{ t("sesame.threshold") }}</th></tr></thead>
+    <tbody>
+    {% for c in sp.reliability.checks + sp.clarity.checks %}
+      <tr><td data-label="{{ t('sesame.id') }}">{{ verbatim(c.id) }}</td><td data-label="{{ t('sesame.criterion') }}">{{ verbatim(c.criterion) }}</td>
+        <td data-label="{{ t('sesame.status') }}">{{ verbatim(c.status) }}</td><td data-label="{{ t('sesame.measured') }}">{{ c.get("measured") | num(4) }}</td>
+        <td data-label="{{ t('sesame.threshold') }}">{{ c.get("threshold") | num(4) }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <p>{{ t("sesame.summary", reliability=sp.reliability.status, clarity=sp.clarity.status) }}</p>
+  {% endfor %}
+  <p class="muted" translate="no">{{ ses.note }}</p>
+  {% else %}
+  <p>{{ t("results.sesame_off") }}</p>
+  {% endif %}
+</section>
+
+{% if doc.robustness_comparison_url %}
+<section aria-labelledby="h-rob">
+  <h2 id="h-rob">{{ t("results.section.robustness") }}</h2>
+  <p><a href="{{ doc.robustness_comparison_url }}">{{ t("artifact.robustness") }}</a></p>
+</section>
+{% endif %}
+
+<section aria-labelledby="h-dl">
+  <h2 id="h-dl">{{ t("results.section.downloads") }}</h2>
+  {{ downloads(files) }}
+</section>
+
+<section aria-labelledby="h-prov">
+  <h2 id="h-prov">{{ t("results.section.provenance") }}</h2>
+  {% set pv = doc.provenance %}
+  {{ kv([
+    (t("prov.software"), verbatim(pv.software_version)),
+    (t("prov.science_key"), verbatim(pv.science_key)),
+    (t("prov.config_hash"), verbatim(pv.config_hash)),
+    (t("prov.generated"), doc.generated_utc),
+    (t("prov.revision"), doc.record.metadata_revision),
+    (t("prov.bank"), verbatim(pv.template_bank.bank_id if pv.template_bank else none)),
+    (t("prov.instrument"), t("instrument." ~ doc.instrument.status)),
+  ]) }}
+  <p><a href="/api/v1/runs/{{ run.run_id }}">{{ t("results.run_json") }}</a></p>
+</section>
+{% endblock %}

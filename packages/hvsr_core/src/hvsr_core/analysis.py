@@ -29,6 +29,7 @@ from . import sesame
 from .config import AnalysisConfig, AnalysisRequest, ReportOptions, robustness_config
 from .core import CoreRun, run_core
 from .curves import MeanCurve, geometric_mean_curve
+from .exports import science_supplement
 from .jsonutil import canonical_dumps, canonical_hash, strict_loads, to_jsonable
 from .matching import FamilySelection, sdof_for_families
 from .model import Recording, ns_to_iso
@@ -697,31 +698,44 @@ def _sesame_for_selection(doc: dict, sel: dict) -> dict:
 
 # --------------------------------------------------------------------------------------- cache/replay
 class AnalysisCache:
-    """Immutable scientific documents keyed by science key; optional directory persistence (JSON only)."""
+    """Immutable scientific documents and their export supplement keyed by science key; optional
+    directory persistence (JSON only)."""
 
     def __init__(self, directory: Path | None = None):
         self.directory = Path(directory) if directory else None
         self._mem: dict[str, dict] = {}
 
-    def get(self, key: str) -> dict | None:
-        if key in self._mem:
-            return self._mem[key]
+    def _read(self, name: str) -> dict | None:
+        if name in self._mem:
+            return self._mem[name]
         if self.directory is not None:
-            p = self.directory / f"{key}.json"
+            p = self.directory / f"{name}.json"
             if p.exists():
-                self._mem[key] = strict_loads(p.read_text())
-                return self._mem[key]
+                self._mem[name] = strict_loads(p.read_text())
+                return self._mem[name]
         return None
 
-    def put(self, key: str, docs: dict) -> None:
-        if key in self._mem or (self.directory is not None and (self.directory / f"{key}.json").exists()):
+    def _write(self, name: str, doc: dict) -> None:
+        if name in self._mem or (self.directory is not None and (self.directory / f"{name}.json").exists()):
             return  # immutable: first result wins
-        self._mem[key] = docs
+        self._mem[name] = doc
         if self.directory is not None:
             self.directory.mkdir(parents=True, exist_ok=True)
-            tmp = self.directory / f".{key}.tmp"
-            tmp.write_text(canonical_dumps(docs))
-            tmp.replace(self.directory / f"{key}.json")
+            tmp = self.directory / f".{name}.tmp"
+            tmp.write_text(canonical_dumps(doc))
+            tmp.replace(self.directory / f"{name}.json")
+
+    def get(self, key: str) -> dict | None:
+        return self._read(key)
+
+    def put(self, key: str, docs: dict) -> None:
+        self._write(key, docs)
+
+    def get_supplement(self, key: str) -> dict | None:
+        return self._read(f"{key}.supplement")
+
+    def put_supplement(self, key: str, supplement: dict) -> None:
+        self._write(f"{key}.supplement", supplement)
 
 
 @dataclass
@@ -733,22 +747,26 @@ class AnalysisResult:
     cached: bool
     robustness: dict | None = None
     run_b: AnalysisResult | None = None
+    supplement: dict | None = None
 
 
 def _science_or_cache(
     rec: Recording, config: AnalysisConfig, info: RecordInfo, cache: AnalysisCache | None
-) -> tuple[str, dict, bool]:
+) -> tuple[str, dict, dict, bool]:
     key = science_key(rec, config, info)
     if cache is not None:
-        hit = cache.get(key)
-        if hit is not None:
-            return key, hit, True
+        hit, sup = cache.get(key), cache.get_supplement(key)
+        if hit is not None and sup is not None:
+            return key, hit, sup, True
     sci = compute_science(rec, config, info)
-    docs = to_jsonable(science_docs(sci))
-    docs = strict_loads(canonical_dumps(docs))
+    docs = strict_loads(canonical_dumps(to_jsonable(science_docs(sci))))
+    sup = strict_loads(canonical_dumps(to_jsonable(science_supplement(sci))))
     if cache is not None:
         cache.put(key, docs)
-    return key, docs, False
+        cache.put_supplement(key, sup)
+        docs = cache.get(key)  # first stored documents win (generated_utc differs between computations)
+        sup = cache.get_supplement(key)
+    return key, docs, sup, False
 
 
 def run_analysis(
@@ -760,22 +778,27 @@ def run_analysis(
     from .robustness import compare_runs
 
     info = info or RecordInfo()
-    key, docs, cached = _science_or_cache(rec, request.config, info, cache)
+    key, docs, sup, cached = _science_or_cache(rec, request.config, info, cache)
     comparison = run_b = None
     url = None
     if request.robustness_check:
         cfg_b = robustness_config(request.config, rec.sampling_rate_hz)
         try:
-            key_b, docs_b, cached_b = _science_or_cache(rec, cfg_b, info, cache)
+            key_b, docs_b, sup_b, cached_b = _science_or_cache(rec, cfg_b, info, cache)
             run_b = AnalysisResult(
-                key_b, docs_b["standard"]["run_id"], docs_b, apply_report(docs_b, request.report), cached_b
+                key_b,
+                docs_b["standard"]["run_id"],
+                docs_b,
+                apply_report(docs_b, request.report),
+                cached_b,
+                supplement=sup_b,
             )
             comparison = compare_runs(docs, docs_b)
         except ValueError as exc:  # e.g. no 1.5 x Lw window fits
             comparison = compare_runs(docs, None, str(exc), cfg_b.windowing.window_length_s)
         url = f"/api/v1/comparisons/{comparison['comparison_id']}"
     published = apply_report(docs, request.report, comparison, url)
-    return AnalysisResult(key, docs["standard"]["run_id"], docs, published, cached, comparison, run_b)
+    return AnalysisResult(key, docs["standard"]["run_id"], docs, published, cached, comparison, run_b, sup)
 
 
 def _walk_compare(a, b, path: str, out: list, rtol: float, atol: float) -> None:
@@ -824,7 +847,7 @@ def verify_replay(
     environment identity) is compared exactly and reported separately.
     """
     info = info or RecordInfo()
-    _, fresh, _ = _science_or_cache(rec, request.config, info, None)
+    _, fresh, _, _ = _science_or_cache(rec, request.config, info, None)
 
     def split(docs: dict) -> tuple[dict, dict]:
         science = {m: {k: v for k, v in d.items() if k != "provenance"} for m, d in docs.items()}

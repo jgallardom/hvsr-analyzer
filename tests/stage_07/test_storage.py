@@ -142,7 +142,7 @@ def test_original_canonical_and_reconstructed_labels_survive_storage(ctx):
     assert labels["Original CSV.GZ"].availability == "available"
     assert labels["Original CSV.GZ"].sha256 == sha256_bytes(fixture_bytes(CSV_GZ))
     assert labels["Canonical recording"].availability == "on_demand"
-    assert labels["Normalized waveform CSV"].availability == "on_demand"
+    assert labels["Normalized waveform CSV.GZ"].availability == "on_demand"
     assert "Reconstructed CSV" not in labels
 
     plain_bytes = fixture_bytes(CSV_PLAIN)

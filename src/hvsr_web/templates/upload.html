@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ t("upload.title") }}</h1>
+<p>{{ t("upload.intro") }}</p>
+<form id="upload" data-js="upload" enctype="multipart/form-data">
+  <fieldset>
+    <legend>{{ t("upload.token") }}</legend>
+    <label>{{ t("upload.token") }}<input type="password" id="token" autocomplete="off" data-token></label>
+    <p class="muted">{{ t("upload.token_help") }} {{ t("upload.quota_note") }}</p>
+    <button type="button" data-js="forget-token">{{ t("upload.token_forget") }}</button>
+  </fieldset>
+
+  <fieldset>
+    <legend>{{ t("upload.section.recording") }}</legend>
+    <label>{{ t("upload.waveform") }}<input type="file" name="waveform" multiple required accept=".csv,.gz,.mseed,.miniseed,.ms"></label>
+    <label>{{ t("upload.layout") }}
+      <select name="csv_layout">
+        {% for l in layouts %}<option value="{{ l }}">{{ t("layout." ~ l) }}</option>{% endfor %}
+      </select>
+    </label>
+    <div class="grid">
+      <label>{{ t("upload.rate") }}<input name="csv_sampling_rate_hz" type="number" step="any" min="0"></label>
+      <label>{{ t("upload.start") }}<input name="csv_start_time_utc" type="text" inputmode="numeric" pattern="\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z" autocomplete="off"></label>
+    </div>
+    <label class="inline"><input type="checkbox" name="csv_timestamps_declared_utc"> {{ t("upload.timestamps_utc") }}</label>
+    <p>{{ t("upload.columns") }}</p>
+    <div class="grid">
+      <label>{{ t("upload.col_n") }}<input name="col_N" autocomplete="off"></label>
+      <label>{{ t("upload.col_e") }}<input name="col_E" autocomplete="off"></label>
+      <label>{{ t("upload.col_z") }}<input name="col_Z" autocomplete="off"></label>
+    </div>
+    <p>{{ t("upload.mseed_map") }}</p>
+    <div class="grid">
+      <label>{{ t("upload.col_n") }}<input name="ms_N" autocomplete="off"></label>
+      <label>{{ t("upload.col_e") }}<input name="ms_E" autocomplete="off"></label>
+      <label>{{ t("upload.col_z") }}<input name="ms_Z" autocomplete="off"></label>
+    </div>
+    <label class="inline"><input type="checkbox" name="canonical_only"> {{ t("upload.canonical_only") }}</label>
+    <label>{{ t("upload.stationxml") }}<input type="file" name="stationxml" accept=".xml"></label>
+    <button type="button" data-js="preview">{{ t("upload.validate") }}</button>
+    <div id="preview" class="status" aria-live="polite"></div>
+  </fieldset>
+
+  <fieldset>
+    <legend>{{ t("upload.section.site") }}</legend>
+    <div class="grid">
+      <label>{{ t("field.latitude") }}<input name="latitude" type="number" step="any" min="-90" max="90" required></label>
+      <label>{{ t("field.longitude") }}<input name="longitude" type="number" step="any" min="-180" max="180" required></label>
+      <label>{{ t("field.wind") }}<select name="wind">{% for v in levels %}<option value="{{ v }}">{{ t("level." ~ v) }}</option>{% endfor %}</select></label>
+      <label>{{ t("field.traffic") }}<select name="traffic">{% for v in levels %}<option value="{{ v }}">{{ t("level." ~ v) }}</option>{% endfor %}</select></label>
+      <label>{{ t("field.context") }}<select name="measurement_context">{% for v in contexts %}<option value="{{ v }}"{% if v == "unknown" %} selected{% endif %}>{{ t("context." ~ v) }}</option>{% endfor %}</select></label>
+      <label>{{ t("field.ground_surface") }}<input name="ground_surface" maxlength="200"></label>
+      <label>{{ t("field.floor") }}<input name="floor_or_height" maxlength="200"></label>
+      <label>{{ t("field.site_group") }}<input name="site_group_id" maxlength="64"></label>
+    </div>
+    <label>{{ t("field.coupling") }}<textarea name="coupling_notes" rows="2" maxlength="2000"></textarea></label>
+    <label>{{ t("field.observations") }}<textarea name="observations" rows="2" maxlength="2000"></textarea></label>
+    <label>{{ t("upload.photo_sensor") }}<input type="file" name="photo_sensor" accept="image/jpeg,image/png"></label>
+    <label>{{ t("upload.photo_area") }}<input type="file" name="photo_area" accept="image/jpeg,image/png"></label>
+  </fieldset>
+
+  <fieldset>
+    <legend>{{ t("upload.section.sensor") }}</legend>
+    <div class="grid">
+      <label>{{ t("field.manufacturer") }}<input name="manufacturer" maxlength="200"></label>
+      <label>{{ t("field.model") }}<input name="model" maxlength="200"></label>
+      <label>{{ t("field.instrument_id") }}<input name="instrument_id" maxlength="200"></label>
+      <label>{{ t("field.sensor_type") }}<input name="sensor_type" maxlength="200"></label>
+      <label>{{ t("field.quantity") }}<select name="quantity">{% for v in quantities %}<option value="{{ v }}"{% if v == "unknown" %} selected{% endif %}>{{ t("quantity." ~ v) }}</option>{% endfor %}</select></label>
+      <label>{{ t("field.units") }}<input name="units" maxlength="50"></label>
+      <label>{{ t("field.natural_frequency") }}<input name="natural_frequency_hz" type="number" step="any" min="0"></label>
+      <label>{{ t("field.usable_fmin") }}<input name="usable_fmin_hz" type="number" step="any" min="0"></label>
+      <label>{{ t("field.usable_fmax") }}<input name="usable_fmax_hz" type="number" step="any" min="0"></label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>{{ t("upload.section.consent") }}</legend>
+    <div class="consent" lang="en" translate="no"><p>{{ consent_text }}</p><p class="muted">{{ consent_version }}</p></div>
+    <label class="inline"><input type="checkbox" name="consent_checked" required> {{ t("upload.consent_check") }}</label>
+    <label class="inline"><input type="checkbox" name="rights_confirmed" required> {{ t("upload.rights_check") }}</label>
+    <label>{{ t("field.attribution") }}<input name="attribution" required maxlength="200"></label>
+    <label>{{ t("field.citation") }}<input name="source_citation" maxlength="1000"></label>
+    <input type="hidden" name="consent_version" value="{{ consent_version }}">
+  </fieldset>
+  <button type="submit">{{ t("upload.submit") }}</button>
+  <div id="submit-status" class="status" aria-live="polite"></div>
+</form>
+{% endblock %}
