@@ -1,0 +1,54 @@
+{
+  "retrieved_utc": "2026-10-21",
+  "note": "Copied by hand from the official pages below on the retrieval date. Prices change; re-read the sources before deploying. USD unless marked EUR; Hetzner prices exclude VAT.",
+  "sources": {
+    "render_pricing": "https://render.com/pricing",
+    "render_free": "https://render.com/docs/free",
+    "render_compute_plans": "https://render.com/docs/compute-plans",
+    "render_bandwidth": "https://render.com/docs/outbound-bandwidth",
+    "render_postgres_storage": "https://render.com/docs/postgresql-creating-connecting",
+    "cloudflare_r2": "https://developers.cloudflare.com/r2/pricing/",
+    "backblaze_b2": "https://www.backblaze.com/cloud-storage/pricing",
+    "hetzner_object_storage": "https://www.hetzner.com/storage/object-storage/"
+  },
+  "render": {
+    "workspace_month": {"hobby": 0, "pro": 25},
+    "service_month": {"free": 0, "0.5c-512mb": 7, "1c-2g": 25, "2c-4g": 85},
+    "postgres_month": {"free": 0, "0.1c-256mb": 6, "0.5c-1g": 19, "1c-2g": 40},
+    "postgres_storage_included_gb": 1,
+    "postgres_storage_gb_month": 0.30,
+    "postgres_disk_sizes_note": "1 GB or a multiple of 5 GB; autoscaling adds 50% at 90% full, rounded up to a multiple of 5 GB",
+    "bandwidth_included_gb": {"hobby": 5, "pro": 25},
+    "bandwidth_gb": 0.15,
+    "bandwidth_note": "Service-initiated traffic to the public internet is billed, including uploads to object storage outside Render; only same-region Amazon S3 or Google Cloud Storage traffic is exempt. Inbound traffic is free.",
+    "free_plan_limits": "Free web services spin down after 15 minutes idle and lose local files; free Postgres expires 30 days after creation and has no backups."
+  },
+  "cloudflare_r2": {
+    "storage_gb_month": 0.015,
+    "class_a_per_million": 4.50,
+    "class_b_per_million": 0.36,
+    "egress_gb": 0,
+    "free_storage_gb_month": 10,
+    "free_class_a": 1000000,
+    "free_class_b": 10000000,
+    "rounding": "usage rounded up to the next billing unit (GB-month, million requests)"
+  },
+  "backblaze_b2": {
+    "storage_tb_month": 6.95,
+    "free_storage_gb": 10,
+    "free_egress_multiple_of_stored": 3,
+    "egress_gb_beyond_free": 0.01,
+    "class_a_b_c_requests": 0,
+    "class_d_per_10000": 0.004,
+    "class_d_free_per_day": 2500
+  },
+  "hetzner_object_storage_eur": {
+    "base_month": 6.49,
+    "included_storage_tb": 1,
+    "included_egress_tb": 1,
+    "storage_tb_hour": 0.0087,
+    "egress_tb": 1.00,
+    "requests": 0,
+    "minimum_billed_object_kb": 64
+  }
+}

@@ -8,6 +8,7 @@ seconds; human-facing timestamps are UTC ISO 8601 strings.
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
 import os
 import uuid
 from pathlib import Path
@@ -23,6 +24,7 @@ from sqlalchemy import (
     UniqueConstraint,
     create_engine,
     event,
+    text,
 )
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
@@ -222,6 +224,34 @@ class ModerationEvent(Base):
     notice: Mapped[str | None] = mapped_column(Text)
 
 
+class TemplateBankRecord(Base):
+    """An administrator-uploaded template bank. Versions are immutable and never deleted (replay)."""
+
+    __tablename__ = "template_banks"
+    bank_id: Mapped[str] = mapped_column(String(82), primary_key=True)
+    family: Mapped[str] = mapped_column(String(8))
+    bank_version: Mapped[str] = mapped_column(String(64))
+    n_templates: Mapped[int] = mapped_column(Integer)
+    license: Mapped[str] = mapped_column(Text)
+    data_sha256: Mapped[str] = mapped_column(String(64))
+    data_bytes: Mapped[int] = mapped_column(Integer)
+    manifest_sha256: Mapped[str] = mapped_column(String(64))
+    manifest_key: Mapped[str] = mapped_column(String(300))
+    data_key: Mapped[str] = mapped_column(String(300))
+    active: Mapped[bool] = mapped_column(Boolean, default=False)
+    uploaded_by: Mapped[str] = mapped_column(ForeignKey("admins.id"))
+    uploaded_utc: Mapped[str] = mapped_column(String(20))
+
+
+class BankEvent(Base):
+    __tablename__ = "bank_events"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    bank_id: Mapped[str] = mapped_column(ForeignKey("template_banks.bank_id"), index=True)
+    action: Mapped[str] = mapped_column(String(16))  # upload | activate | deactivate
+    actor: Mapped[str] = mapped_column(String(64))
+    created_utc: Mapped[str] = mapped_column(String(20))
+
+
 def _sqlite_immediate(engine: Engine) -> None:
     """SQLite: serialize writers with BEGIN IMMEDIATE so conditional updates are atomic and
     concurrent read-then-write transactions cannot fail with an upgrade deadlock."""
@@ -239,7 +269,39 @@ def _sqlite_immediate(engine: Engine) -> None:
         conn.exec_driver_sql("BEGIN IMMEDIATE")
 
 
+# PostgreSQL advisory-lock keys (transaction scoped; see `serialize`).
+MIGRATION_LOCK = 0x48565301
+CLAIM_LOCK = 0x48565302
+QUOTA_LOCK = 0x48565303
+
+
+def lock_key(namespace: int, name: str) -> int:
+    """A 64-bit advisory-lock key for one named resource (e.g. a contributor's quota)."""
+    return (namespace << 32) | int.from_bytes(hashlib.sha256(name.encode()).digest()[:4], "big")
+
+
+def serialize(session_or_conn, key: int) -> None:
+    """Run the rest of this transaction one at a time across processes for `key`.
+
+    SQLite already serializes writers (BEGIN IMMEDIATE). PostgreSQL's READ COMMITTED does not, so a
+    count-then-update (the job concurrency ceiling, concurrent startup migrations) takes a
+    transaction-scoped advisory lock there."""
+    bind = session_or_conn.get_bind() if hasattr(session_or_conn, "get_bind") else session_or_conn
+    if bind.dialect.name == "postgresql":
+        session_or_conn.execute(text("SELECT pg_advisory_xact_lock(:k)"), {"k": key})
+
+
+def driver_url(url: str) -> str:
+    """Hosted providers hand out `postgres://` or `postgresql://` URLs; SQLAlchemy maps those to
+    psycopg2, but the installed driver is psycopg 3."""
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            return "postgresql+psycopg://" + url[len(prefix) :]
+    return url
+
+
 def make_engine(url: str) -> Engine:
+    url = driver_url(url)
     if url.startswith("sqlite"):
         path = url.split("///", 1)[-1]
         if path and path != ":memory:":

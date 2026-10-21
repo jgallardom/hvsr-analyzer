@@ -27,6 +27,7 @@ from .db import (
     Admin,
     AnalysisRun,
     Artifact,
+    BankEvent,
     ComputeUsage,
     Contributor,
     Job,
@@ -37,6 +38,7 @@ from .db import (
     QuotaPeriod,
     RecordCodeCounter,
     StagedUpload,
+    TemplateBankRecord,
     utc_iso,
 )
 from .storage import STAGING_PREFIX, check_key
@@ -56,6 +58,8 @@ TABLES = [
     Job,
     StagedUpload,
     ModerationEvent,
+    TemplateBankRecord,
+    BankEvent,
 ]
 
 
@@ -64,9 +68,12 @@ class BackupError(RuntimeError):
 
 
 def _rows(session, model) -> list[dict]:
+    """Rows in primary-key order, sorted here (code-point order, as SQLite) so a checksum taken on
+    one database verifies on another whatever its text collation."""
     table = model.__table__
-    pk = list(table.primary_key.columns)
-    return [dict(r) for r in session.execute(select(table).order_by(*pk)).mappings()]
+    pk = [c.name for c in table.primary_key.columns]
+    rows = [dict(r) for r in session.execute(select(table)).mappings()]
+    return sorted(rows, key=lambda r: tuple(r[c] for c in pk))
 
 
 def _schema_revision(session) -> str | None:

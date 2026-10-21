@@ -27,7 +27,7 @@ from hvsr_core.templates import resolve_sdof_bank
 from hvsr_core.versions import PACKAGE_VERSION
 from hvsr_core.windows import sample_counts
 
-from . import jobs, publication
+from . import banks, jobs, publication
 from .context import AppContext
 from .db import AnalysisRun, Artifact, ComputeUsage, Measurement, MetadataRevision, utc_iso
 from .quota import period_of
@@ -123,6 +123,8 @@ def request_analysis(
         if m.moderation_status != "public":
             raise MeasurementUnavailable(f"measurement {m.record_code} is {m.moderation_status}")
         revision, summary = m.current_revision, m.recording_summary
+    banks.check_selectable(ctx, [request.config.sdof.template_bank, *request.config.sdof.extra_banks])
+    banks.materialize(ctx)
     estimate = estimate_cost(summary, request)
     check_budget(estimate, ctx.settings)
     req = request.model_dump(mode="json")
@@ -246,6 +248,7 @@ def handle_analysis(ctx: AppContext, claim: jobs.Claim) -> dict:
     p = claim.payload
     request = AnalysisRequest.model_validate(p["request"])
     check_budget(p["estimate"], ctx.settings)
+    banks.materialize(ctx)
     with ctx.sessions() as session:
         m = session.get(Measurement, p["measurement_id"])
         if m is None or m.moderation_status != "public":

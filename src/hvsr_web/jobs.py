@@ -17,7 +17,7 @@ from sqlalchemy import and_, func, or_, select, update
 from sqlalchemy.exc import IntegrityError
 
 from .context import AppContext
-from .db import Job
+from .db import CLAIM_LOCK, Job, serialize
 
 
 @dataclass(frozen=True)
@@ -64,6 +64,7 @@ def claim(ctx: AppContext, worker_id: str) -> Claim | None:
     now = ctx.clock().timestamp()
     lease = ctx.settings.job_lease_s
     with ctx.sessions() as session, session.begin():
+        serialize(session, CLAIM_LOCK)
         live = session.scalar(
             select(func.count()).select_from(Job).where(Job.state == "running", Job.lease_expires_at > now)
         )
@@ -179,17 +180,25 @@ COMPLETED = "_completed_in_transaction"
 
 
 def run_once(ctx: AppContext, worker_id: str, handlers: dict[str, Handler]) -> dict | None:
-    """Claim and run one job. Handlers that publish call complete_in() in their publication
-    transaction and return {COMPLETED: True, ...}; others are completed here."""
+    """Claim and run one job in this process (see `isolation` for the per-job child process)."""
     c = claim(ctx, worker_id)
     if c is None:
         return None
+    return run_claimed(ctx, c, handlers)
+
+
+def run_claimed(ctx: AppContext, c: Claim, handlers: dict[str, Handler]) -> dict:
+    """Run a claimed job. Handlers that publish call complete_in() in their publication
+    transaction and return {COMPLETED: True, ...}; others are completed here."""
     try:
         result = handlers[c.kind](ctx, c)
     except LeaseLost:
         return {"job_id": c.job_id, "state": "lease_lost"}
     except PermanentJobError as exc:
         return {"job_id": c.job_id, "state": fail(ctx, c, f"{exc}", retryable=False)}
+    except MemoryError:
+        state = fail(ctx, c, "memory limit exceeded (HVSR_JOB_MEMORY_BYTES)", retryable=False)
+        return {"job_id": c.job_id, "state": state, "limit": "memory"}
     except Exception as exc:  # noqa: BLE001 - recorded on the job, retried
         return {"job_id": c.job_id, "state": fail(ctx, c, "".join(traceback.format_exception(exc)))}
     if result.pop(COMPLETED, False):

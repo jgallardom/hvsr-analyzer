@@ -16,7 +16,7 @@ from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from .db import Contributor, QuotaEntry, QuotaPeriod, utc_iso
+from .db import QUOTA_LOCK, Contributor, QuotaEntry, QuotaPeriod, lock_key, serialize, utc_iso
 
 ADVICE = (
     "Options: wait for the next UTC month, split the submission across months, or ask an administrator "
@@ -73,6 +73,7 @@ def reserve(
     now: dt.datetime,
 ) -> Reservation:
     """Atomically reserve bytes for one submission. The caller commits the session."""
+    serialize(session, lock_key(QUOTA_LOCK, contributor.id))  # concurrent retries of one key
     existing = session.scalar(
         select(QuotaEntry).where(
             QuotaEntry.contributor_id == contributor.id, QuotaEntry.idempotency_key == idempotency_key
@@ -124,9 +125,10 @@ def reserve(
 
 def commit(
     session: Session, entry: QuotaEntry, stored_bytes: int, transfer_bytes: int, now: dt.datetime
-) -> None:
+) -> bool:
+    """Charge a reservation; False if it was already charged."""
     if entry.state == "committed":
-        return
+        return False
     if entry.state != "reserved":
         raise RuntimeError(f"cannot commit a {entry.state} reservation")
     session.execute(
@@ -144,6 +146,7 @@ def commit(
         utc_iso(now),
     )
     session.flush()
+    return True
 
 
 def release(session: Session, entry: QuotaEntry, now: dt.datetime, note: str) -> None:

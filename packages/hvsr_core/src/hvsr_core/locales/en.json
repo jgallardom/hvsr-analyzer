@@ -317,6 +317,7 @@
   "results.figure_alt": "H/V curve for {title}, {method} method",
   "results.ci_note": "The shaded band is the {label}. It is selection-conditional (it describes the windows chosen by the stated rule), computed with {method}, and its coverage is {calibration}.",
   "results.no_band": "No band is drawn: {status} ({reason}).",
+  "results.no_selection": "{method}: no window selection, so there is no curve or figure. Status: {status} ({reason}).",
   "results.section.peak": "Peak",
   "results.section.interpretation": "Algorithmic interpretation",
   "results.interpretation_note": "Produced by the algorithm from the evidence listed; it is not a human interpretation.",

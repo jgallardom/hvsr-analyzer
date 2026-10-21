@@ -1,0 +1,87 @@
+# Continuous integration. The acceptance gate is the same single command used locally
+# (`uv run python scripts/gate.py --all`): every stage's tests, the acceptance matrix, and the
+# Docker image smoke test (AC-S9-09) where Docker is available, as on GitHub's Ubuntu runners.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 5 * * 1" # weekly: newly published vulnerabilities in locked dependencies
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UV_VERSION: "0.13.1"
+  MPLCONFIGDIR: /tmp/mpl
+  NUMBA_CACHE_DIR: /tmp/numba
+
+jobs:
+  gate:
+    name: Lint and acceptance gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      HVSR_TEST_POSTGRES_URL: postgresql://postgres@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - name: Install the locked environment
+        run: uv sync --frozen
+      - name: Lint
+        run: uv run ruff check .
+      - name: Formatting
+        run: uv run ruff format --check .
+      - name: Acceptance gate (all stages)
+        run: uv run python scripts/gate.py --all
+      - name: Keep test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-reports
+          path: |
+            artifacts/test-reports/
+            docs/acceptance-matrix.md
+
+  security:
+    name: Dependency and static security scans
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - name: Install the locked environment
+        run: uv sync --frozen
+      - name: pip-audit (PyPI and OSV) and bandit
+        run: uv run python scripts/security_scan.py
+      - name: Keep scan reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-scans
+          path: docs/evidence/stage9/

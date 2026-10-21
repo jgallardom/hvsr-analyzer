@@ -1,6 +1,6 @@
 # Storage, artifacts, and analysis jobs
 
-Operational design for Stages 7 and 8 (spec sections 1, 3, 4, 13.2-13.3, 14). Code: `src/hvsr_web/`.
+Operational design for Stages 7 to 9 (spec sections 1, 3, 4, 13.2-13.3, 14). Code: `src/hvsr_web/`.
 
 ## Components
 
@@ -17,7 +17,9 @@ Operational design for Stages 7 and 8 (spec sections 1, 3, 4, 13.2-13.3, 14). Co
 | Run artifacts | `publication.py` | Analysis JSON, CSV tables, and figures of a run, written once at publication. |
 | On-request generation | `ondemand.py` | Canonical/reconstructed recordings, normalized waveform, per-window spectra. |
 | Read side, cosmetic re-render | `runs.py` | New plot artifacts from the stored analysis JSON; no science is rerun. |
-| Worker | `worker.py` | Separate process (`HVSR_EMBEDDED_WORKER=false`) or a thread in the web process. |
+| Worker | `worker.py`, `isolation.py` | Separate process (`HVSR_EMBEDDED_WORKER=false`) or a thread in the web process; each job in its own limited child process. |
+| Template banks | `banks.py` | Administrator upload, activation, and materialization of data-only banks. |
+| Operator commands | `admin.py` | Migrations, tokens, backups, banks, staging sweep. |
 
 ## Object layout and immutability
 
@@ -133,5 +135,55 @@ uses a random key and URLs signed by one process fail in another.
   correction, produce distinct runs whose documents carry the right record.
 - Reporting-only changes (SESAME on or off) reuse the run and add report-variant artifacts.
 
-Per-job CPU and wall-time ceilings (`HVSR_JOB_CPU_TIME_S`, `HVSR_JOB_WALL_TIME_S`) are configured
-here; process isolation that enforces them is Stage 9 work.
+## Job isolation and limits (Stage 9)
+
+With `HVSR_JOB_ISOLATION=process` (the default) each job runs in a fresh spawned child process
+(`isolation.py`):
+
+1. The child pins every numerical thread pool to `HVSR_NUMERIC_THREADS` and claims one job.
+2. It reports the claim to the parent, then sets `RLIMIT_CPU` and `RLIMIT_AS` relative to its own
+   baseline after imports, and runs the handler.
+3. The parent renews the lease while the child runs and kills the child at `HVSR_JOB_WALL_TIME_S`.
+
+| Outcome | Job state |
+|---|---|
+| CPU, memory, or wall-time limit exceeded | failed permanently, with the limit named |
+| other abnormal exit (crash, signal) | retried, up to `HVSR_JOB_MAX_ATTEMPTS`, then `dead` |
+| the parent itself dies | the lease expires; another worker re-claims the job |
+
+Publication is one fenced transaction inside the child, so a killed job never leaves a partially
+published run. `inline` mode runs jobs in the worker process without these limits (tests and
+debugging only).
+
+## PostgreSQL serialization
+
+SQLite serializes writers (`BEGIN IMMEDIATE`). PostgreSQL's READ COMMITTED does not, so three
+count-then-write steps take a transaction-scoped advisory lock (`db.serialize`):
+
+- startup migrations (web and worker may both migrate at once; the second waits and finds nothing
+  to do);
+- job claims (the `HVSR_MAX_CONCURRENT_JOBS` ceiling);
+- quota reservations, per contributor (concurrent retries of one idempotency key).
+
+These races were found by running the PostgreSQL tests (`tests/stage_09/test_postgres.py`, a
+throwaway PostgreSQL 16 server from `pgserver`, or `HVSR_TEST_POSTGRES_URL`); the SQLite tests
+could not show them. Hosted `postgres://` and `postgresql://` URLs are mapped to the installed
+psycopg 3 driver.
+
+## Worker topology and shutdown
+
+- One service (the Render blueprint): `HVSR_EMBEDDED_WORKER=true` runs the worker loop as a
+  thread of the web process; each job still runs in its own child process.
+- Separate worker: `HVSR_EMBEDDED_WORKER=false` on the web service and
+  `python -m hvsr_web.worker` as a second process with the same environment. Add one only when
+  profiling or deployment constraints justify it.
+- On SIGTERM the standalone worker lets the current job finish and then exits. The web server
+  stops its embedded worker during shutdown. No new job is claimed, and a running job's process
+  ends normally or at its wall-time limit before the server process exits.
+- A job cut off by a forced kill is re-claimed after its lease expires (`HVSR_JOB_LEASE_S`).
+  Render force-stops after `maxShutdownDelaySeconds`, which is 120 s in the blueprint.
+
+## Template banks
+
+Administrator-uploaded banks are stored in the object store and recorded in `template_banks`, and
+copied into `HVSR_BANK_DIR` (a cache) before each analysis. See `docs/template-banks.md`.

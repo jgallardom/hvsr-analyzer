@@ -20,12 +20,28 @@ _UNIT_QUANTITY = {
 }
 
 
+def _reject_dtd(data: bytes) -> None:
+    """Reject any DTD whatever the declared encoding (the byte scan above only sees ASCII-compatible
+    text). Entities are never expanded and nothing is loaded while checking."""
+    from lxml import etree
+
+    parser = etree.XMLParser(resolve_entities=False, load_dtd=False, no_network=True, huge_tree=False)
+    try:
+        root = etree.fromstring(data, parser)
+    except etree.XMLSyntaxError as exc:
+        raise InputError("stationxml_invalid", f"unreadable StationXML (XMLSyntaxError: {exc})") from None
+    info = root.getroottree().docinfo
+    if info.doctype or info.internalDTD is not None or info.externalDTD is not None:
+        raise InputError("stationxml_unsafe", "StationXML with DOCTYPE/ENTITY declarations is rejected")
+
+
 def parse_stationxml(data: bytes, max_bytes: int = 20 * 1024 * 1024):
     if len(data) > max_bytes:
         raise InputError("stationxml_size", "StationXML exceeds the size limit")
     head = data[:4096].upper()
     if b"<!DOCTYPE" in head or b"<!ENTITY" in data.upper():
         raise InputError("stationxml_unsafe", "StationXML with DOCTYPE/ENTITY declarations is rejected")
+    _reject_dtd(data)
     from obspy import read_inventory
 
     try:

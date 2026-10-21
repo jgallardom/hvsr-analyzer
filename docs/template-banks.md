@@ -129,3 +129,50 @@ oversized arrays (64 MiB total), wrong grid or shapes, non-finite values, templa
 q = 1 or not peaked there, and inadmissible modal data. Optional HMAC-SHA256 manifest signatures
 (`sign_manifest` / `verify_signature`) can be required for administrator-activated banks. Additional
 bank directories come from `HVSR_BANK_DIRS`. Old versions remain loadable for replay.
+
+## Building, uploading, and activating a bank (Stage 9)
+
+Banks are generated offline and uploaded as data. The service never runs bank-generation code and
+never unpickles anything.
+
+1. Build and check it offline with the `hvsr` command (no server, database, or credentials):
+
+   ```bash
+   uv run hvsr banks build --family sdof --conditioning ko:40 --damping 0.05,0.1,0.2,0.3 \
+       --bank-id sdof-ko40-lab-v2 --license "CC-BY-4.0 Example Lab" --out banks/
+   uv run hvsr banks validate banks/sdof-ko40-lab-v2.json
+   ```
+
+   `validate` runs the same loader as the service (all the rejections listed above) and exits 1
+   with the reason on failure. `--sign-key-env VAR` signs the manifest with the HMAC key in that
+   environment variable; `validate --hmac-key-env VAR --require-signature` checks it.
+
+2. Upload it as an administrator. It is stored inactive:
+
+   ```bash
+   export HVSR_ADMIN_TOKEN=hva_...            # from `python -m hvsr_web.admin issue-admin-token`
+   python -m hvsr_web.admin banks upload banks/sdof-ko40-lab-v2.json   # data file found next to it
+   # or over HTTP: POST /api/v1/admin/banks (multipart fields `manifest` and `data`, Bearer admin token)
+   ```
+
+   The upload is checked again on the server. Further rules there:
+   - the license must start with an accepted SPDX ID (`HVSR_BANK_LICENSES`);
+   - the data file must fit `HVSR_MAX_BANK_BYTES`;
+   - the ID must not be a shipped bank ID.
+
+   A rejection is HTTP 422 `bank_rejected` with the reason. Upload tokens cannot upload or activate
+   banks.
+
+3. Activate it: `python -m hvsr_web.admin banks activate sdof-ko40-lab-v2` (or
+   `POST /api/v1/admin/banks/{bank_id}/activate`). From then on, new analysis requests can select it.
+   `deactivate` hides it from new requests.
+
+Bank versions are immutable. An ID is uploaded once (identical bytes again are a no-op; different
+bytes under the same ID are rejected), and records are never deleted. Runs that used a later
+deactivated bank therefore stay replayable. Every upload, activation, and deactivation is logged in
+`bank_events` with the administrator.
+
+The manifest and data live in the object store; the database holds the bank record. Before each
+analysis the service copies the banks it knows about into `HVSR_BANK_DIR` and verifies their
+SHA-256. That directory is a cache that can be lost (it is on the container's ephemeral disk on
+Render).

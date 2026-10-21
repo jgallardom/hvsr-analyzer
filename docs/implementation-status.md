@@ -402,17 +402,168 @@ are clean. The Stage 5 fingerprinted files are unchanged (`git diff` is empty fo
 
 ---
 
+## Stage 9 - Efficiency, security, and deployment handoff
+
+Goal:
+- Profile cached and uncached processing and both parameter runs on declared hardware.
+- Bound concurrency, numerical threads, uploads, CPU and wall time, and memory per job.
+- Reject malformed inputs and malformed banks; administrator bank upload and activation.
+- Dependency and static security scans.
+- The `hvsr` CLI for offline work.
+- Dockerfile, Render blueprint, and CI calling the same gate.
+- Cost assumptions, backup and restore procedure, and startup smoke tests.
+
+IDs: AC-S9-01 ... AC-S9-14. AC-S9-13 (offline CLI) and AC-S9-14 (PostgreSQL) were added during this
+stage: the specification's deliverables include the CLI and a hosted PostgreSQL deployment, and
+neither had an acceptance test.
+
+Delivered:
+- Job isolation (`src/hvsr_web/isolation.py`, D-090):
+  - each job runs in a spawned child process with CPU, memory, and wall-time limits, and pinned
+    numerical threads;
+  - exhausting a limit is a permanent failure; other crashes are retried durably; the lease is
+    renewed while the job runs.
+- Uploads are parsed in the thread pool, at most `HVSR_MAX_CONCURRENT_UPLOADS` at a time; a further
+  upload gets 503 busy (D-091).
+- PostgreSQL:
+  - advisory locks serialize migrations, job claims, and quota reservations (D-092);
+  - hosted `postgres://` URLs use the installed psycopg 3 driver;
+  - tests run on a throwaway PostgreSQL 16 server (`pgserver`), or on `HVSR_TEST_POSTGRES_URL`.
+- Template banks (`banks.py`, D-096):
+  - administrator-only upload, activation, and deactivation, over the API and `hvsr_web.admin`;
+  - data-only validation; immutable versions;
+  - migration `0002_template_banks` (additive);
+  - details in `docs/template-banks.md`.
+- `hvsr` CLI (`hvsr_core/cli.py`, `replay.py`): `analyze`, `replay`, `banks build|validate|list`,
+  `mc`, `docs`, and `schema`. It runs without the web stack.
+- Operator CLI (`hvsr_web/admin.py`): `migrate`, tokens, `backup create|verify|restore`, banks,
+  `sweep-staging`.
+- Malformed input:
+  - fuzzed readers raise only input errors;
+  - a StationXML DOCTYPE is rejected in any encoding;
+  - CSV is streamed with packed samples (D-094);
+  - malformed uploads and requests get clear 4xx responses and store nothing.
+- Performance (`scripts/profile_runs.py`, `docs/performance.md`): six cases from 15 min to 24 h,
+  measured both at the defaults and at the Render blueprint's limits.
+- Security (`scripts/security_scan.py`, `docs/security-scans.md`): pip-audit against PyPI and OSV,
+  and bandit.
+- Deployment:
+  - `Dockerfile`, `scripts/docker-entrypoint.sh`, `.dockerignore`, `render.yaml`, `.env.example`;
+  - `.github/workflows/ci.yml`;
+  - `scripts/smoke.py` (local, clean install, Docker, URL);
+  - `docs/deployment.md`.
+- Costs (`scripts/cost_model.py`, `docs/costs.md`): 100, 1,000, and 10,000 measurements per month.
+  Prices were copied from the official Render, Cloudflare R2, Backblaze B2, and Hetzner pages on
+  2026-10-21 (`docs/evidence/stage9/prices.json`).
+- Documentation:
+  - new: `README.md` (rewritten), `docs/deployment.md`, `docs/costs.md`, `docs/performance.md`,
+    `docs/security-scans.md`;
+  - updated: `docs/backup-restore.md`, `docs/quotas-and-limits.md`, `docs/storage-and-jobs.md`,
+    `docs/template-banks.md`, and `AGENTS.md` (including the validation lock);
+  - decisions D-090 to D-099.
+
+Measured (development machine, one numerical thread; `docs/performance.md`):
+- Cold job for both runs:
+
+  | Case | Wall time | Peak memory |
+  |---|---|---|
+  | 1 h at 100 Hz | 4.3 s | 283 MB |
+  | 2 h at 200 Hz | 8.8 s | 551 MB |
+  | 24 h at 50 Hz | 32.9 s | 1,616 MB |
+
+- Warm requests reuse the stored science and run no analysis (AC-S9-05).
+- At the blueprint limits, the worst admitted case (8 h at 50 Hz, 5,751 candidate windows) peaks
+  at 664 MiB per job.
+- Security scans on 2026-10-21:
+  - pip-audit: no known vulnerabilities in 128 audited packages, from either source;
+  - bandit: 0 high, 0 medium, and 23 low findings, all justified in `docs/security-scans.md`.
+
+Defects found and fixed during this stage:
+- **Event-loop stall.** Async upload handlers parsed synchronously, so one large upload blocked
+  health checks and every other request (D-091).
+- **PostgreSQL races, hidden by SQLite:**
+  - concurrent startup migrations;
+  - the job concurrency ceiling;
+  - concurrent retries of one submission key (D-092).
+- **Backup checksums depended on the database's text collation.** A PostgreSQL backup did not
+  verify on SQLite. Rows are now sorted by the application.
+- **Hosted `postgres://` URLs** selected psycopg2, which is not installed.
+- **StationXML DTD guard bypass** with UTF-16 or a long prolog: medium severity, entity-expansion
+  exhaustion.
+- **CSV parsing memory.** About 760 MB for a 2 h, 200 Hz upload; now about 290 MB.
+- **HTTP 500 responses** for an over-long CSV field and for non-UTF-8 JSON bodies; both now 422.
+- **A method with no window selection broke publication and the results page.** The run now
+  publishes and the page states why there is no curve (D-095).
+- **Process management:**
+  - the standalone worker ignored SIGTERM; it now finishes the current job and exits;
+  - uvicorn honours `WEB_CONCURRENCY`, which would start several workers; the entry point pins one.
+- **Provenance recorded no commit in containers** (no git); `HVSR_GIT_COMMIT` is now set from the
+  build or Render.
+- **Empty `HVSR_*` variables from a copied `.env` were taken literally**, for example an empty S3
+  endpoint. They now count as unset (D-098).
+- **`hvsr schema` with an unknown name printed a traceback**; it now gives a usage error with
+  exit code 2.
+- **bandit B314** in `scripts/gate.py`: the JUnit XML is now parsed with defusedxml.
+
+Changes to earlier-stage code and tests (no assertion weakened, no fingerprinted file touched):
+- `tests/stage_07/test_backup.py` compared the backup's schema revision with the literal `"0001"`.
+  It now compares with the Alembic head, because this stage adds migration `0002`.
+- `hvsr_core/plots.py`: `main_selection` raises a clear error for a method with no selection.
+  `io/csv_reader.py` and `io/preservation.py` stream lines. Old and new readers agree on values and
+  errors.
+- `scripts/gate.py`:
+  - a BLOCKED requirement whose tagged tests ran and passed is reported as PASS for that run
+    (D-099);
+  - the JUnit XML is parsed with defusedxml.
+
+Command: `uv run python scripts/gate.py --all` (stage 9 includes every earlier stage). It exited 0
+in 144 s:
+- 329 tests passed, 1 skipped (the Docker smoke test);
+- 142 PASS, 3 BLOCKED (AC-S2-05, AC-S5-07, AC-S9-09), 1 UNVALIDATED (AC-S5-06).
+
+`ruff check .` and `ruff format --check .` are clean. The 15 Stage 5 fingerprinted files and the
+shipped banks are unchanged (`git diff` is empty). The gate was run outside the agent sandbox,
+because it needs subprocess resource limits, local servers, PostgreSQL, and `uv sync`.
+
+Known limits and what was not verified:
+- **Docker image never built** (AC-S9-09 BLOCKED). The Docker smoke test runs in CI, but CI has not
+  run: the repository has not been pushed to GitHub. No credentials were used, and nothing was
+  pushed or deployed.
+- **Render blueprint** validated against Render's published JSON Schema (vendored), not by Render.
+- **S3 adapter** tested against moto only. R2, B2, and Hetzner behaviour (conditional writes,
+  SHA-256 checksums) is untested.
+- **Hosted CPU speed** not measured. The cost model's capacity check assumes hosted CPUs are 2x
+  slower.
+- **Cost model:**
+  - its workload (page views, downloads, object writes) is an assumption;
+  - prices were copied by hand and will change;
+  - the 10,000-per-month database plan was not load-tested.
+- **Upload slots** are per web process. A separate worker or several web processes multiply them.
+- **Idempotency keys** do not compare file contents (D-093).
+- **obspy warning.** For some corrupted MiniSEED input, obspy's libmseed log callback raises an
+  ignored `UnicodeDecodeError` (a pytest warning). Our readers still raise only input errors.
+
+---
+
 ## Next action
 
-Stage 9 - efficiency, security, and deployment handoff (AC-S9-*):
-- Profile cached and uncached processing and both parameter runs on declared hardware.
-- Enforce per-job CPU and wall-time limits by process isolation.
-- Run `pip-audit` and `bandit`.
-- Administrator template-bank upload and activation, with validation and no pickle.
-- The `hvsr` CLI (`hvsr_core/cli.py`): docs, banks, replay.
-- Dockerfile, `render.yaml`, `.env.example`, and CI that calls `scripts/gate.py` plus
-  `ruff format --check`.
-- Cost assumptions and the README.
+All nine stages are implemented and the gate passes. What remains needs credentials, external
+software, or new science:
 
-AC-S9-09 (Docker) is expected to be BLOCKED: Docker is not available in this environment. Record it
-in `requirements.toml` if so.
+1. **Push and run CI** (needs the owner's GitHub credentials). Create the repository, push, and let
+   `.github/workflows/ci.yml` run. If the Docker smoke test passes there, the gate reports AC-S9-09
+   as PASS for that run; then remove its BLOCKED status in `docs/acceptance/requirements.toml`.
+2. **Deploy** (needs Render and bucket accounts). Follow `docs/deployment.md`, then:
+   - run `scripts/smoke.py url <site> --blueprint-limits`;
+   - check one real submission end to end;
+   - rerun `scripts/profile_runs.py` on the hosted instance.
+3. **Recheck prices** in `docs/evidence/stage9/prices.json` before deploying, then rerun
+   `scripts/cost_model.py`.
+4. **Scientific validation (AC-S5-06).** A new protocol version (v2) with fresh locked seeds, after:
+   - a dependence-detection method with power for minute-scale regime changes;
+   - a QC anti-trigger that works for low-frequency-dominated records.
+
+   Do not rerun the v1 test seeds.
+5. **External references:**
+   - Geopsy outputs for the synthetic fixtures (AC-S2-05);
+   - a licensed layered-site benchmark (AC-S5-07).

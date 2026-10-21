@@ -141,6 +141,8 @@ def run_artifacts(ctx, m, run, request, *, refs, generated, stamp, suffix, repor
                 canonical_dumps(exports.window_table_doc(doc, wrows)).encode(), "json",
                 category="analysis_runs", obj_category="analyses", source_refs=src,
                 extra={"table": table})  # fmt: skip
+        if not doc["selections"]:
+            continue  # nothing to draw; the analysis JSON states the method status and reason
         alt = _alternate(docs, method)
         for kind, fmt, layout in PLOT_KINDS:
             recipe = plots.make_recipe(

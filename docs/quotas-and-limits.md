@@ -21,7 +21,9 @@ one is an environment variable (`HVSR_` + upper-case name, see `src/hvsr_web/set
 - The ledger is atomic: a reservation is a single conditional `UPDATE` (`reserved + committed +
   n <= limit`), so concurrent submissions cannot exceed the budget. The charge becomes committed in
   the same transaction that publishes the measurement.
-- Retries with the same idempotency key return the accepted measurement and are not charged again.
+- Retries with the same idempotency key return the accepted measurement and are not charged again,
+  whatever files they carry (contents are not compared; use a new key for each distinct submission,
+  D-093).
   A failed submission releases its reservation; a crashed one is released by the sweeper.
 - Removing or purging a measurement does not refund the allowance.
 - When the budget is exhausted (HTTP 429) the response says how many bytes remain and suggests
@@ -58,9 +60,13 @@ Every ceiling surfaces as `LimitExceeded` with a `*_limit` code before any quota
 | `max_template_comparisons` | 2e8 | candidate windows x templates, summed over runs, per plausible peak family |
 | `max_bootstrap_replicates` | 2,000 | per run |
 | `max_parameter_runs` | 2 | run A plus robustness run B |
-| `max_concurrent_jobs` | 1 | live job leases |
-| `job_lease_s`, `job_max_attempts` | 900 s, 3 | lease length and retry bound |
-| `job_wall_time_s`, `job_cpu_time_s` | 900 s | configured; enforced by process isolation in Stage 9 |
+| `max_concurrent_jobs` | 1 | live job leases across all workers (PostgreSQL: claims are serialized by an advisory lock) |
+| `max_concurrent_uploads`, `upload_wait_s` | 1, 30 s | uploads read and parsed at once per web process; a further upload waits, then gets 503 `busy` with `Retry-After: 10` |
+| `job_lease_s`, `job_max_attempts` | 900 s, 3 | lease length (renewed while the job runs) and retry bound |
+| `job_wall_time_s`, `job_cpu_time_s` | 900 s | per job; the job's child process is killed and the job fails permanently |
+| `job_memory_bytes` | 2 GiB | address space a job may add to its child process's baseline (`RLIMIT_AS`, Linux); exceeding it fails the job permanently |
+| `job_isolation` | `process` | each job runs in a fresh child process; `inline` (tests, debugging) enforces no CPU, memory, or wall-time limit |
+| `numeric_threads` | 1 | threads per numerical library (BLAS, OpenMP, numba) in web and job processes |
 | `max_plot_pixels` | 16,000,000 | PNG width x height in pixels (about 64 MB of RGBA), for published figures and re-renders |
 | `max_window_spectra_cells` | 2,000,000 | candidate windows x valid frequencies in an on-request per-window spectra CSV |
 | `max_plot_variants_per_run` | 50 | stored custom-size cosmetic plot variants per run |
@@ -76,6 +82,29 @@ refused with the estimate and these options:
 
 Records are never silently shortened to fit. Actual CPU and wall time are recorded per job in
 `compute_usage`.
+
+A job that exceeds its CPU, wall-time, or memory limit fails permanently with the limit named, because
+the same input would exceed it again. Any other abnormal exit of the job process is retried up to
+`job_max_attempts`. If the worker itself dies, its lease expires and another worker takes the job
+over.
+
+## Hosted values (render.yaml)
+
+The defaults above suit a large machine. The Render blueprint sets tighter values so that one web
+process and one job process fit the `1c-2g` instance (2 GB). The budget is derived from measurements
+in `docs/performance.md` and checked by `tests/stage_09/test_deploy.py`:
+
+| Setting | Hosted | Why |
+|---|---|---|
+| `max_request_bytes` | 48 MiB | upload memory grows with the compressed and decoded size |
+| `max_decoded_bytes` | 128 MiB | bounds the decoded CSV text held while parsing |
+| `max_samples_per_channel` | 1,440,000 | 8 h at 50 Hz or 2 h at 200 Hz |
+| `max_candidate_windows` | 6,000 | job memory grows with candidate windows; long low-rate records are refused before computing |
+| `job_memory_bytes` | 1 GiB | worst admitted case measured at 664 MiB peak |
+| `max_concurrent_jobs`, `max_concurrent_uploads`, `numeric_threads` | 1 | one CPU |
+
+Measured peaks at these limits are in `docs/evidence/stage9/performance-render-limits.json`. Larger
+recordings are refused with the reason and can be processed offline with `hvsr analyze`.
 
 Cosmetic re-renders (`POST /api/v1/runs/{run_id}/plots`) need an upload token and never rerun
 science. Responses when a limit is exceeded:

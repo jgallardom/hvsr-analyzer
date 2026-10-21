@@ -24,7 +24,7 @@ import numpy as np
 from ..jsonutil import canonical_dumps, sha256_bytes
 from ..model import ChannelMeta, InputError, Recording, RecordingDiagnostics, Segment, ns_to_iso
 from ..versions import ALGORITHM_VERSIONS, PACKAGE_VERSION
-from .csv_reader import CSVParseInfo
+from .csv_reader import CSVParseInfo, iter_lines
 from .limits import InputLimits, is_gzip, safe_gunzip
 from .mseed_reader import detect_miniseed_version, read_miniseed
 
@@ -341,18 +341,17 @@ def extract_residual_columns(csv_bytes: bytes, info: CSVParseInfo) -> tuple[byte
         return None, []
     raw = gzip.decompress(csv_bytes) if is_gzip(csv_bytes) else csv_bytes
     text = raw.decode("utf-8-sig")
-    lines = text.splitlines()
-    idx = 0
-    while idx < len(lines) and (lines[idx].startswith("#") or not lines[idx].strip()):
-        idx += 1
-    header = [h.strip() for h in next(csv.reader([lines[idx]], delimiter=info.delimiter))]
+    del raw
+    lines = iter_lines(text)
+    header_line = next(ln for ln in lines if not (ln.startswith("#") or not ln.strip()))
+    header = [h.strip() for h in next(csv.reader([header_line], delimiter=info.delimiter))]
     pos = [header.index(c) for c in cols]
     out = io.StringIO()
     w = csv.writer(out, lineterminator="\n")
     for c in info.comment_lines:
         w.writerow(["#comment", c])
     w.writerow(["#columns", *cols])
-    for row in csv.reader(lines[idx + 1 :], delimiter=info.delimiter):
+    for row in csv.reader(lines, delimiter=info.delimiter):
         if not row or row[0].startswith("#") or (len(row) == 1 and not row[0].strip()):
             continue
         w.writerow([row[p] for p in pos])

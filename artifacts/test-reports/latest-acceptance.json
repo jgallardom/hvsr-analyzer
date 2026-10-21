@@ -1174,6 +1174,10 @@
    [
     "tests.stage_08.test_flow::test_public_search_filters_and_paginates",
     "passed"
+   ],
+   [
+    "tests.stage_09.test_edge_runs::test_a_method_without_selections_publishes_and_renders",
+    "passed"
    ]
   ],
   "AC-S8-02": [
@@ -1339,7 +1343,247 @@
     "tests.stage_08.test_exports::test_on_request_csvs_validate",
     "passed"
    ]
+  ],
+  "AC-S9-01": [
+   [
+    "tests.stage_09.test_perf::test_report_is_complete_and_matches_markdown_and_limits",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_perf::test_profiling_small_case_again_reproduces_the_deterministic_counts",
+    "passed"
+   ]
+  ],
+  "AC-S9-02": [
+   [
+    "tests.stage_09.test_admin::test_bank_commands_need_an_admin_token_from_the_environment",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_banks::test_malformed_banks_are_rejected_with_a_reason_and_never_executed",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_banks::test_only_administrators_upload_or_activate",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_banks::test_bank_lifecycle_upload_activate_use_deactivate_replay",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_banks::test_bank_migration_is_additive_and_models_match_migrations",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_malformed::test_readers_raise_only_input_errors_on_corrupted_bytes",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_malformed::test_stationxml_dtd_is_rejected_in_any_encoding",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_malformed::test_streaming_csv_lines_match_splitlines_and_elapsed_fuzz_only_raises_input_errors",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_malformed::test_malformed_uploads_are_rejected_clearly_and_store_nothing",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_malformed::test_malformed_requests_are_rejected_clearly",
+    "passed"
+   ]
+  ],
+  "AC-S9-03": [
+   [
+    "tests.stage_09.test_security::test_recorded_dependency_scan_is_current_and_clean",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_security::test_static_scan_has_no_serious_findings_and_low_findings_are_justified",
+    "passed"
+   ]
+  ],
+  "AC-S9-04": [
+   [
+    "tests.stage_09.test_limits::test_cpu_time_limit_kills_the_job_and_records_a_permanent_failure",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_limits::test_wall_time_limit_kills_a_stalled_job",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_limits::test_memory_limit_is_a_clear_permanent_failure",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_limits::test_crashed_job_processes_are_retried_durably_then_abandoned",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_limits::test_a_real_analysis_runs_in_an_isolated_process_and_publishes",
+    "passed"
+   ]
+  ],
+  "AC-S9-05": [
+   [
+    "tests.stage_09.test_cache::test_warm_cache_requests_do_not_rerun_science",
+    "passed"
+   ]
+  ],
+  "AC-S9-06": [
+   [
+    "tests.stage_09.test_deploy::test_ci_runs_the_same_single_gate_command_with_postgres_and_scans",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_deploy::test_gate_counts_a_blocked_requirement_only_where_its_tests_ran_and_passed",
+    "passed"
+   ]
+  ],
+  "AC-S9-07": [
+   [
+    "tests.stage_09.test_costs::test_cost_document_renders_measured_sizes_and_recorded_prices",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_costs::test_cost_model_charges_what_grows_and_respects_free_allowances",
+    "passed"
+   ]
+  ],
+  "AC-S9-08": [
+   [
+    "tests.stage_09.test_admin::test_backup_and_restore_through_the_operator_commands",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_postgres::test_analysis_pages_and_backup_restore_across_postgres_and_sqlite",
+    "passed"
+   ]
+  ],
+  "AC-S9-09": [
+   [
+    "tests.stage_09.test_deploy::test_docker_image_builds_and_passes_the_smoke_test",
+    "skipped"
+   ]
+  ],
+  "AC-S9-10": [
+   [
+    "tests.stage_09.test_deploy::test_blueprint_validates_against_renders_published_schema",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_deploy::test_blueprint_takes_secrets_only_from_the_environment",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_deploy::test_blueprint_settings_are_real_and_valid",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_deploy::test_blueprint_plan_fits_the_measured_memory_budget",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_deploy::test_env_example_lists_every_setting_with_its_default_and_no_secret_values",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_deploy::test_container_image_installs_only_locked_runtime_dependencies",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_deploy::test_entrypoint_runs_one_server_process_and_records_the_commit",
+    "passed"
+   ]
+  ],
+  "AC-S9-11": [
+   [
+    "tests.stage_09.test_deploy::test_fresh_runtime_install_starts_serves_and_analyzes",
+    "passed"
+   ]
+  ],
+  "AC-S9-12": [
+   [
+    "tests.stage_09.test_limits::test_job_processes_pin_numerical_threads",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_limits::test_web_process_pins_numerical_threads",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_limits::test_uploads_are_parsed_off_the_event_loop_within_a_slot_limit",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_limits::test_concurrent_workers_respect_the_job_ceiling",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_postgres::test_racing_workers_respect_the_concurrency_ceiling[postgresql]",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_postgres::test_racing_workers_respect_the_concurrency_ceiling[sqlite]",
+    "passed"
+   ]
+  ],
+  "AC-S9-13": [
+   [
+    "tests.stage_09.test_cli::test_analyze_writes_a_complete_run_without_the_web_stack",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_cli::test_replay_reproduces_the_published_example_and_detects_a_change",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_cli::test_banks_build_validate_and_reject_tampering",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_cli::test_monte_carlo_development_run_is_labelled_exploratory",
+    "passed"
+   ]
+  ],
+  "AC-S9-14": [
+   [
+    "tests.stage_09.test_postgres::test_hosted_postgres_urls_use_the_installed_driver",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_postgres::test_migrations_match_models_and_refuse_downgrade_on_postgres",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_postgres::test_concurrent_startup_migrations_on_postgres",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_postgres::test_racing_workers_respect_the_concurrency_ceiling[postgresql]",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_postgres::test_racing_workers_respect_the_concurrency_ceiling[sqlite]",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_postgres::test_concurrent_identical_submissions_store_and_charge_once[postgresql]",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_postgres::test_concurrent_identical_submissions_store_and_charge_once[sqlite]",
+    "passed"
+   ],
+   [
+    "tests.stage_09.test_postgres::test_analysis_pages_and_backup_restore_across_postgres_and_sqlite",
+    "passed"
+   ]
   ]
  },
- "updated_utc": "2026-10-21T02:08:59Z"
+ "updated_utc": "2026-10-21T04:36:35Z"
 }

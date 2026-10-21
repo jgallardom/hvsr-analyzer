@@ -1,0 +1,179 @@
+{
+ "tool": "bandit 1.9.4",
+ "targets": [
+  "src",
+  "packages/hvsr_core/src",
+  "scripts"
+ ],
+ "lines_scanned": 15591,
+ "nosec": 0,
+ "by_severity": {
+  "HIGH": 0,
+  "MEDIUM": 0,
+  "LOW": 23
+ },
+ "findings": [
+  {
+   "severity": "LOW",
+   "confidence": "HIGH",
+   "test_id": "B112",
+   "file": "src/hvsr_web/submissions.py",
+   "line": 592
+  },
+  {
+   "severity": "LOW",
+   "confidence": "HIGH",
+   "test_id": "B404",
+   "file": "packages/hvsr_core/src/hvsr_core/analysis.py",
+   "line": 20
+  },
+  {
+   "severity": "LOW",
+   "confidence": "HIGH",
+   "test_id": "B404",
+   "file": "packages/hvsr_core/src/hvsr_core/research/validation_protocol.py",
+   "line": 9
+  },
+  {
+   "severity": "LOW",
+   "confidence": "HIGH",
+   "test_id": "B404",
+   "file": "scripts/gate.py",
+   "line": 25
+  },
+  {
+   "severity": "LOW",
+   "confidence": "HIGH",
+   "test_id": "B404",
+   "file": "scripts/security_scan.py",
+   "line": 19
+  },
+  {
+   "severity": "LOW",
+   "confidence": "HIGH",
+   "test_id": "B404",
+   "file": "scripts/smoke.py",
+   "line": 27
+  },
+  {
+   "severity": "LOW",
+   "confidence": "HIGH",
+   "test_id": "B603",
+   "file": "packages/hvsr_core/src/hvsr_core/analysis.py",
+   "line": 149
+  },
+  {
+   "severity": "LOW",
+   "confidence": "HIGH",
+   "test_id": "B603",
+   "file": "packages/hvsr_core/src/hvsr_core/analysis.py",
+   "line": 150
+  },
+  {
+   "severity": "LOW",
+   "confidence": "HIGH",
+   "test_id": "B603",
+   "file": "packages/hvsr_core/src/hvsr_core/research/validation_protocol.py",
+   "line": 164
+  },
+  {
+   "severity": "LOW",
+   "confidence": "HIGH",
+   "test_id": "B603",
+   "file": "scripts/gate.py",
+   "line": 55
+  },
+  {
+   "severity": "LOW",
+   "confidence": "HIGH",
+   "test_id": "B603",
+   "file": "scripts/gate.py",
+   "line": 198
+  },
+  {
+   "severity": "LOW",
+   "confidence": "HIGH",
+   "test_id": "B603",
+   "file": "scripts/security_scan.py",
+   "line": 32
+  },
+  {
+   "severity": "LOW",
+   "confidence": "HIGH",
+   "test_id": "B603",
+   "file": "scripts/smoke.py",
+   "line": 198
+  },
+  {
+   "severity": "LOW",
+   "confidence": "HIGH",
+   "test_id": "B603",
+   "file": "scripts/smoke.py",
+   "line": 209
+  },
+  {
+   "severity": "LOW",
+   "confidence": "HIGH",
+   "test_id": "B603",
+   "file": "scripts/smoke.py",
+   "line": 226
+  },
+  {
+   "severity": "LOW",
+   "confidence": "HIGH",
+   "test_id": "B603",
+   "file": "scripts/smoke.py",
+   "line": 238
+  },
+  {
+   "severity": "LOW",
+   "confidence": "HIGH",
+   "test_id": "B603",
+   "file": "scripts/smoke.py",
+   "line": 269
+  },
+  {
+   "severity": "LOW",
+   "confidence": "HIGH",
+   "test_id": "B603",
+   "file": "scripts/smoke.py",
+   "line": 278
+  },
+  {
+   "severity": "LOW",
+   "confidence": "HIGH",
+   "test_id": "B603",
+   "file": "scripts/smoke.py",
+   "line": 284
+  },
+  {
+   "severity": "LOW",
+   "confidence": "HIGH",
+   "test_id": "B603",
+   "file": "scripts/smoke.py",
+   "line": 285
+  },
+  {
+   "severity": "LOW",
+   "confidence": "HIGH",
+   "test_id": "B603",
+   "file": "scripts/smoke.py",
+   "line": 288
+  },
+  {
+   "severity": "LOW",
+   "confidence": "HIGH",
+   "test_id": "B603",
+   "file": "scripts/smoke.py",
+   "line": 294
+  },
+  {
+   "severity": "LOW",
+   "confidence": "HIGH",
+   "test_id": "B607",
+   "file": "scripts/gate.py",
+   "line": 55
+  }
+ ],
+ "errors": []
+}

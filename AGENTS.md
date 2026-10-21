@@ -18,6 +18,17 @@ prompt, code comment, or habit, the specification wins.
 | `docs/examples/` | Real example exports from `scripts/export_examples.py`; regenerate after changing an export format. |
 | `artifacts/test-reports/` | JUnit XML and gate summaries written by `scripts/gate.py`. |
 | `tests/stage_NN/` | Acceptance tests for stage NN. `tests/regression/` holds cross-stage regression tests. |
+| `docs/evidence/stageN/` | Recorded evidence (profiles, scans, prices, screenshots). Tests check docs against it. |
+| `Dockerfile`, `render.yaml`, `.github/workflows/ci.yml` | Deployment and CI; see `docs/deployment.md`. |
+
+Generated documents and the scripts that write them (tests fail when they are stale):
+
+| Document | Script |
+|---|---|
+| `docs/performance.md`, `docs/evidence/stage9/performance*.json` | `scripts/profile_runs.py` (machine-specific; rerun all cases together) |
+| `docs/costs.md` | `scripts/cost_model.py` (prices in `docs/evidence/stage9/prices.json`, copied by hand with a date) |
+| `docs/evidence/stage9/security-scan.json`, `bandit.json`, `pip-audit-*.json` | `scripts/security_scan.py` (rerun after any `uv.lock` change; justify new low findings in `docs/security-scans.md`) |
+| `docs/configuration.md`, `docs/data-dictionary.md` | `scripts/gen_docs.py` |
 
 ## Mandatory protocol (spec section 15.1)
 
@@ -58,6 +69,28 @@ stage folder has a `conftest.py`, and the import silently resolves to whichever 
 - Tests set `NUMBA_CACHE_DIR` and `MPLCONFIGDIR` to temporary directories (hvsrpy uses numba).
 - Numerical threads are pinned (`OMP_NUM_THREADS=1` etc.) by the web worker to avoid
   oversubscription; the CLI respects whatever the user sets.
+- The gate does more than run Python in-process. Sandboxed agents must allow all of these:
+  - it spawns job processes with resource limits, kills them, and sends signals;
+  - it starts uvicorn servers on free localhost ports (never 8765, which belongs to another app on
+    the development machine);
+  - it starts a throwaway PostgreSQL 16 server (`pgserver`), unless `HVSR_TEST_POSTGRES_URL` is set;
+  - it runs `uv sync` into a temporary environment (the clean-install smoke test).
+- `scripts/security_scan.py` needs network access for pip-audit; `--offline` runs bandit only.
+- The Docker smoke test (AC-S9-09) skips where `docker` is missing; GitHub's runners have it.
+
+## Validation lock (Stage 5)
+
+The locked Monte Carlo test set (`docs/validation/`, protocol `hvsr-mc-validation-v1`) is bound to a
+fingerprint of the scientific code: `FINGERPRINT_FILES` in
+`hvsr_core/research/validation_protocol.py` and the shipped SDOF bank manifests. Do not edit those
+files as a side effect of other work. A scientific change to them needs:
+- a decision entry;
+- a new protocol version with fresh seeds;
+- a new locked run.
+
+Never rerun the v1 test seeds after changing the method. Files outside the fingerprint (`io/`,
+`plots.py`, `analysis.py`, `exports.py`, `cli.py`, `replay.py`) may change when the change does not
+alter computed results; the regression and replay tests check this.
 
 ## Non-negotiable scientific rules (short form)
 

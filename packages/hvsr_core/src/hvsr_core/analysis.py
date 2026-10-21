@@ -139,7 +139,7 @@ def science_key(rec: Recording, config: AnalysisConfig, info: RecordInfo) -> str
 
 
 def _git() -> dict:
-    commit = os.environ.get("HVSR_GIT_COMMIT")
+    commit = os.environ.get("HVSR_GIT_COMMIT") or None
     dirty = None
     exe = shutil.which("git")
     if commit is None and exe is not None:

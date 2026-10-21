@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from alembic import context
 
-from hvsr_web.db import Base, make_engine
+from hvsr_web.db import MIGRATION_LOCK, Base, make_engine, serialize
 
 config = context.config
 target_metadata = Base.metadata
@@ -29,6 +29,8 @@ def run_migrations_online() -> None:
             render_as_batch=connection.dialect.name == "sqlite",
         )
         with context.begin_transaction():
+            # web and worker both migrate at startup; the second waits, then finds nothing to do
+            serialize(connection, MIGRATION_LOCK)
             context.run_migrations()
 
 

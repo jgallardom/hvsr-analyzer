@@ -19,6 +19,8 @@ import csv
 import io
 import math
 import re
+from array import array
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 from typing import Literal
 
@@ -148,6 +150,32 @@ def map_components(
     return {c: found[c][0] for c in ("N", "E", "Z")}, {c: "NEZ" for c in ("N", "E", "Z")}
 
 
+_LINE_BREAK = re.compile("\r\n|[\n\r\x0b\x0c\x1c\x1d\x1e\x85\u2028\u2029]")
+
+
+def iter_lines(text: str) -> Iterator[str]:
+    """Lazy ``text.splitlines()``: same line boundaries, without holding every line in memory."""
+    pos = 0
+    for m in _LINE_BREAK.finditer(text):
+        yield text[pos : m.start()]
+        pos = m.end()
+    if pos < len(text):
+        yield text[pos:]
+
+
+def _checked_rows(lines: Iterable[str], delim: str, offset: int):
+    """csv rows; a csv-module error (e.g. an oversized field) becomes an InputError with its line."""
+    reader = csv.reader(lines, delimiter=delim)
+    while True:
+        try:
+            row = next(reader)
+        except StopIteration:
+            return
+        except csv.Error as exc:
+            raise InputError("csv_syntax", f"line {offset + reader.line_num}: {exc}") from None
+        yield row
+
+
 def read_csv(
     data: bytes, options: CSVOptions, limits: InputLimits | None = None, filename: str = "upload.csv"
 ) -> tuple[Recording, CSVParseInfo]:
@@ -165,16 +193,22 @@ def read_csv(
             "csv_encoding", f"CSV must be UTF-8 text ({exc.reason} at byte {exc.start})"
         ) from exc
 
-    lines = text.splitlines()
+    del raw
+    lines = iter_lines(text)
     comments: list[str] = []
     idx = 0
-    while idx < len(lines) and (lines[idx].startswith("#") or not lines[idx].strip()):
-        comments.append(lines[idx])
-        idx += 1
-    if idx >= len(lines):
+    header_line = None
+    for line in lines:
+        if line.startswith("#") or not line.strip():
+            comments.append(line)
+            idx += 1
+            continue
+        header_line = line
+        break
+    if header_line is None:
         raise InputError("csv_empty", "CSV has no header row")
-    delim = _detect_delimiter(lines[idx], options.delimiter)
-    header = next(csv.reader([lines[idx]], delimiter=delim))
+    delim = _detect_delimiter(header_line, options.delimiter)
+    header = next(_checked_rows([header_line], delim, idx))
     header = [h.strip() for h in header]
     if len(set(header)) != len(header):
         raise InputError("csv_header", "duplicate column names in header")
@@ -208,10 +242,12 @@ def read_csv(
         if unit:
             header_units[comp] = unit
 
-    body = lines[idx + 1 :]
-    reader = csv.reader(body, delimiter=delim)
-    comp_vals: dict[str, list[float]] = {"N": [], "E": [], "Z": []}
+    reader = _checked_rows(lines, delim, idx + 1)
+    comp_vals = {c: array("d") for c in ("N", "E", "Z")}
+    elapsed = options.layout == "elapsed_time"
     time_text: list[str] = []
+    time_vals = array("d")
+    time_error: ValueError | None = None
     integer = True
     max_digits = 0
     rows = 0
@@ -252,14 +288,23 @@ def read_csv(
             if len(s) > 15:
                 max_digits = max(max_digits, _sig_digits(s))
             comp_vals[comp].append(v)
-        if ti is not None:
+        if ti is not None and elapsed:
+            # A parse failure is reported after all rows, as for timestamps (first failure wins).
+            try:
+                time_vals.append(float(row[ti].strip()))
+            except ValueError as exc:
+                time_error = time_error or exc
+                time_vals.append(math.nan)
+        elif ti is not None:
             time_text.append(row[ti].strip())
+    del text, lines, reader
     if rows < 2:
         raise InputError("csv_too_short", "CSV must contain at least two samples")
     if max_digits == 0:
         max_digits = 15  # upper bound: no component value text is longer than 15 characters
 
-    data_arr = np.vstack([np.asarray(comp_vals[c], dtype=np.float64) for c in ("N", "E", "Z")])
+    data_arr = np.vstack([np.frombuffer(comp_vals[c], dtype=np.float64) for c in ("N", "E", "Z")])
+    del comp_vals
     info = CSVParseInfo(
         header=header,
         delimiter=delim,
@@ -282,7 +327,7 @@ def read_csv(
         fs_source = "declared"
         t0_source = "declared" if t0 is not None else "unknown"
     else:
-        t_ns = _time_ns(time_text, options)
+        t_ns = _elapsed_ns(time_vals, time_error) if elapsed else _time_ns(time_text, options)
         fs, fs_source, segments, t0_rel = _segment_by_time(t_ns, data_arr, options, diag, info)
         if options.layout == "utc_timestamps":
             t0, t0_source = int(t_ns[0]), "data"
@@ -326,16 +371,17 @@ def read_csv(
     return rec, info
 
 
+def _elapsed_ns(values: array, parse_error: ValueError | None) -> np.ndarray:
+    if parse_error is not None:
+        raise InputError("time_parse", f"non-numeric elapsed time: {parse_error}") from parse_error
+    t = np.frombuffer(values, dtype=np.float64)
+    if not np.all(np.isfinite(t)):
+        raise InputError("time_parse", "non-finite elapsed time")
+    return np.rint(t * 1e9).astype(np.int64)
+
+
 def _time_ns(values: list[str], options: CSVOptions) -> np.ndarray:
-    if options.layout == "elapsed_time":
-        try:
-            t = np.asarray([float(v) for v in values], dtype=np.float64)
-        except ValueError as exc:
-            raise InputError("time_parse", f"non-numeric elapsed time: {exc}") from exc
-        if not np.all(np.isfinite(t)):
-            raise InputError("time_parse", "non-finite elapsed time")
-        return np.rint(t * 1e9).astype(np.int64)
-    # UTC timestamps
+    """UTC timestamp text -> int64 ns."""
     suffixes = {
         v[-6:] if (len(v) > 6 and v[-6] in "+-" and v[-3] == ":") else ("Z" if v.endswith(("Z", "z")) else "")
         for v in values

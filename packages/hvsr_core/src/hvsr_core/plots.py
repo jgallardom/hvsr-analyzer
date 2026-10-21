@@ -81,6 +81,8 @@ def _log_ticks(ax) -> None:
 
 def main_selection(doc: dict, selection_id: str | None = None) -> dict:
     sels = doc["selections"]
+    if not sels:
+        raise KeyError(f"{doc['method']} has no selection ({doc['method_status']}): nothing to plot")
     if selection_id is not None:
         return next(s for s in sels if s["selection_id"] == selection_id)
     fam = doc["interpretation"].get("fundamental_family_id")

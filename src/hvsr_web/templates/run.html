@@ -22,6 +22,7 @@
   {% endfor %}
 </nav>
 {% endif %}
+{% if selection %}
 <form class="toggles" method="get" action="/runs/{{ run.run_id }}">
   <input type="hidden" name="method" value="{{ method }}">
   {% if sel %}<input type="hidden" name="sel" value="{{ sel }}">{% endif %}
@@ -29,11 +30,15 @@
   <label class="inline"><input type="checkbox" name="windows" value="true"{% if windows %} checked{% endif %}> {{ t("cfg.show_windows") }}</label>
   <button type="submit">{{ t("results.apply") }}</button>
 </form>
+{% endif %}
 {% if note %}
 <p class="notice" role="status">{{ note }}
   {% if windows_artifact %}<a href="{{ artifact_url(windows_artifact.id) }}" translate="no" data-ondemand>{{ windows_artifact.label }}</a><span class="status" aria-live="polite"></span>{% endif %}</p>
 {% endif %}
 
+{% if not selection %}
+<p class="notice" role="status" id="method-status">{{ t("results.no_selection", method=t("method." ~ method), status=verbatim(doc.method_status), reason=verbatim(doc.method_status_reason or t("value.none"))) }}</p>
+{% else %}
 <figure class="hv-figure">
   {% if figure.desktop %}
   <picture>
@@ -47,6 +52,7 @@
     {% else %}{{ t("results.no_band", status=unc.get("status"), reason=unc.get("status_reason") or t("value.none")) }}{% endif %}
   </figcaption>
 </figure>
+{% endif %}
 
 {% if doc.instrument.status != "verified_common_quantity" %}
 <div class="notice" role="note" id="instrument-warning">
@@ -61,6 +67,7 @@
 </div>
 {% endif %}
 
+{% if selection %}
 <section aria-labelledby="h-peak">
   <h2 id="h-peak">{{ t("results.section.peak") }}</h2>
   <p>{{ t("results.selection_rule") }}: {{ verbatim(selection.selection_rule) }}</p>
@@ -91,6 +98,7 @@
   </div>
   <p>{{ t("peak.maximum") }}: {{ selection.maximum.maximum_frequency_hz | num(5) }}</p>
 </section>
+{% endif %}
 
 <section aria-labelledby="h-int">
   <h2 id="h-int">{{ t("results.section.interpretation") }}</h2>
@@ -140,7 +148,7 @@
 
 <section aria-labelledby="h-ses" id="sesame">
   <h2 id="h-ses">{{ t("results.section.sesame") }}</h2>
-  {% set ses = selection.sesame %}
+  {% set ses = selection.sesame if selection else {"status": "not_evaluable"} %}
   {% if doc.sesame_requested and ses.status == "evaluated" %}
   {% for sp in ses.peaks %}
   <h3>{{ t("results.sesame_peak", family=sp.peak_family_id or t("value.none"), f=sp.f0_hz | num(5)) }}</h3>

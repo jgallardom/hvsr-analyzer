@@ -53,11 +53,24 @@ class Settings(BaseModel):
     max_parameter_runs: int = Field(
         2, ge=1, description="Analysis runs per request (A plus robustness run B)."
     )
+    max_concurrent_uploads: int = Field(
+        1, ge=1, description="Uploads read and parsed at once per web process (previews, submissions, banks)."
+    )
+    upload_wait_s: float = Field(
+        30.0, ge=0, description="How long an upload waits for a free slot before a 503 busy response."
+    )
     max_concurrent_jobs: int = Field(1, ge=1)
     job_lease_s: int = Field(900, ge=10)
     job_max_attempts: int = Field(3, ge=1)
     job_wall_time_s: int = Field(900, ge=1)
     job_cpu_time_s: int = Field(900, ge=1)
+    job_memory_bytes: int = Field(
+        2 * GiB, ge=64 * MiB, description="Address space a job may add to its process baseline (Linux)."
+    )
+    job_isolation: Literal["process", "inline"] = Field(
+        "process", description="Run each job in a fresh child process with CPU, memory, and wall-time limits."
+    )
+    numeric_threads: int = Field(1, ge=1, description="Threads per numerical library (BLAS, OpenMP).")
     staging_ttl_s: int = Field(86_400, ge=60)
     max_window_spectra_cells: int = Field(
         2_000_000, gt=0, description="Candidate windows x valid frequencies for an on-request per-window CSV."
@@ -67,6 +80,14 @@ class Settings(BaseModel):
     )
     max_plot_variants_per_run: int = Field(50, ge=0, description="Stored cosmetic plot variants per run.")
 
+    # administrator-uploaded template banks
+    bank_dir: str = Field("./var/banks", description="Local directory where uploaded banks are materialized.")
+    max_bank_bytes: int = Field(64 * MiB, gt=0, description="Largest uploaded bank data file.")
+    bank_licenses: str = Field(
+        "CC0-1.0,CC-BY-4.0,BSD-3-Clause,MIT,Apache-2.0",
+        description="Comma-separated SPDX license IDs accepted for uploaded banks.",
+    )
+
     # serving
     public_base_url: str | None = Field(None, description="Absolute site URL used in citations.")
     embedded_worker: bool = Field(False, description="Run a job worker inside the web process.")
@@ -74,12 +95,14 @@ class Settings(BaseModel):
 
     @classmethod
     def from_env(cls, environ: dict[str, str] | None = None) -> Settings:
+        """Read `HVSR_<NAME>` variables. An empty variable counts as unset (a blank secret or URL in a
+        copied .env file means "not configured", never an empty key or URL)."""
         env = os.environ if environ is None else environ
         values: dict = {}
         for name in cls.model_fields:
-            key = "HVSR_" + name.upper()
-            if key in env:
-                values[name] = env[key]
+            value = env.get("HVSR_" + name.upper(), "")
+            if value != "":
+                values[name] = value
         return cls.model_validate(values)
 
     def input_limits(self) -> InputLimits:
@@ -96,5 +119,12 @@ class Settings(BaseModel):
     def public_limits(self) -> dict:
         """Limits shown to users and in cost reports (no secrets)."""
         return self.model_dump(
-            exclude={"database_url", "url_signing_key", "s3_bucket", "s3_endpoint_url", "local_store_dir"}
+            exclude={
+                "database_url",
+                "url_signing_key",
+                "s3_bucket",
+                "s3_endpoint_url",
+                "local_store_dir",
+                "bank_dir",
+            }
         )

@@ -26,9 +26,10 @@ import subprocess
 import sys
 import time
 import tomllib
-import xml.etree.ElementTree as ET  # noqa: S405 - parsing our own pytest output
 from collections import defaultdict
 from pathlib import Path
+
+from defusedxml import ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 REQS = ROOT / "docs" / "acceptance" / "requirements.toml"
@@ -67,7 +68,7 @@ def parse_junit(path: Path) -> dict[str, list[tuple[str, str]]]:
     results: dict[str, list[tuple[str, str]]] = defaultdict(list)
     if not path.exists():
         return results
-    tree = ET.parse(path)  # noqa: S314 - trusted local file
+    tree = ET.parse(path)
     for case in tree.iter("testcase"):
         name = f"{case.get('classname')}::{case.get('name')}"
         outcome = "passed"
@@ -108,7 +109,9 @@ def evaluate(reqs: list[dict], results: dict, max_stage: int) -> tuple[list[dict
         override = r.get("status")
         passed = [t for t in tests if t[1] == "passed"]
         failed = [t for t in tests if t[1] != "passed"]
-        if override in ("BLOCKED", "UNVALIDATED"):
+        if override == "BLOCKED" and passed and not failed:
+            state = "PASS"
+        elif override in ("BLOCKED", "UNVALIDATED"):
             state = override
             if failed and override == "UNVALIDATED":
                 state = "UNVALIDATED"

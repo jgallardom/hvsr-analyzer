@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 
 import pytest
+from alembic.script import ScriptDirectory
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
@@ -14,7 +15,7 @@ from hvsr_core.metadata import MeasurementMetadata
 from hvsr_web import analysis_jobs, jobs, moderation
 from hvsr_web.api import create_app
 from hvsr_web.backup import BackupError, create_backup, restore_backup
-from hvsr_web.db import Measurement
+from hvsr_web.db import Measurement, alembic_config
 from hvsr_web.manifests import build_manifest
 from hvsr_web.records import correct_metadata
 from hvsr_web.submissions import UploadFile, submit
@@ -93,4 +94,5 @@ def test_backup_and_restore_cycle(make_ctx, tmp_path, clock):
     with pytest.raises(BackupError, match="checksum mismatch"):
         restore_backup(make_ctx("third"), tmp_path / "backup")
     meta = json.loads((tmp_path / "backup" / "backup.json").read_text())
-    assert meta["format"] == "hvsr-analyzer-backup/1" and meta["schema_revision"] == "0001"
+    head = ScriptDirectory.from_config(alembic_config(str(src.settings.database_url))).get_current_head()
+    assert meta["format"] == "hvsr-analyzer-backup/1" and meta["schema_revision"] == head

@@ -549,7 +549,8 @@ def submit(
             )
             session.add_all(arts)
             entry = session.get(quota.QuotaEntry, entry_id)
-            quota.commit(session, entry, stored, transfer, now)
+            # a concurrent retry of this key may have made the reservation; this acceptance charges it
+            charged = quota.commit(session, entry, stored, transfer, now)
             for su in session.scalars(select(StagedUpload).where(StagedUpload.object_key.in_(staged_keys))):
                 su.state = "committed"
     except IntegrityError:
@@ -570,7 +571,7 @@ def submit(
         _discard(ctx, staged_keys, entry_id, newly, now, f"{type(exc).__name__}: {exc}")
         raise
     _clean_staging(ctx, staged_keys)
-    return SubmissionResult(measurement_id, code, False, newly, logical, stored, transfer, notes)
+    return SubmissionResult(measurement_id, code, False, charged, logical, stored, transfer, notes)
 
 
 def _discard(ctx: AppContext, keys: list[str], entry_id: str, newly: bool, now, note: str) -> None:

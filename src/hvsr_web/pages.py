@@ -24,9 +24,9 @@ from hvsr_core import exports, plots
 from hvsr_core.config import AnalysisConfig, AnalysisRequest, DisplayOptions
 from hvsr_core.schema_validation import SCHEMA_FILES
 from hvsr_core.strings import DEFAULT_LANG, format_coordinate, results_title, t
-from hvsr_core.templates import available_banks
 from hvsr_core.versions import PACKAGE_VERSION
 
+from . import banks as bank_registry
 from . import catalog, runs
 from .context import AppContext
 from .db import AnalysisRun, Artifact, Measurement, MetadataRevision
@@ -299,7 +299,7 @@ def router(ctx: AppContext) -> APIRouter:
             title=results_title(m.record_code, meta.get("latitude"), meta.get("longitude")),
             defaults=AnalysisRequest().model_dump(mode="json"),
             cfg=AnalysisConfig(),
-            banks=[b for b in available_banks() if b.startswith("sdof-")],
+            banks=bank_registry.selectable_ids(ctx, "sdof"),
             limits=ctx.settings.public_limits(),
         )
 
@@ -324,7 +324,7 @@ def router(ctx: AppContext) -> APIRouter:
         analysis, doc = b.docs[method]
         selection_ids = [s["selection_id"] for s in doc["selections"]]
         sel = sel if sel in selection_ids else None
-        selection = plots.main_selection(doc, sel)
+        selection = plots.main_selection(doc, sel) if doc["selections"] else None
         mine = b.by_method(method)
         per_run = b.by_method(None)
         figure = {"desktop": mine.get("plot_svg"), "compact": mine.get("plot_svg_compact")}
@@ -336,16 +336,16 @@ def router(ctx: AppContext) -> APIRouter:
                 lay: runs.rerender_plot(ctx, run_id, method, display, "svg", lay, sel)[0] for lay in figure
             }
 
-        with_windows = windows
-        if windows:
+        with_windows = windows and selection is not None
+        if with_windows:
             try:
                 figure = variant(True)
             except runs.WindowsNotReady as exc:
                 note, windows_artifact, with_windows = t("results.windows_not_ready"), exc.artifact, False
-        if not with_windows and (sel is not None or alt):
+        if selection is not None and not with_windows and (sel is not None or alt):
             figure = variant(False)
-        drawn = plots.band_drawn(plots.plotted_series(doc, selection))
-        unc = selection["uncertainty"]
+        drawn = selection is not None and plots.band_drawn(plots.plotted_series(doc, selection))
+        unc = selection["uncertainty"] if selection is not None else {}
         return page(
             "run.html",
             page_title=results_title(

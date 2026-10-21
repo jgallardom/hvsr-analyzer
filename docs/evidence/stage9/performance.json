@@ -1,0 +1,898 @@
+{
+  "cases": [
+    {
+      "budget_estimate": {
+        "basis": "upper bounds from the stored recording summary (gaps only reduce them); template comparisons are counted per plausible peak family",
+        "bootstrap_replicates": 2000,
+        "max_candidate_windows": 171,
+        "parameter_runs": 2,
+        "plot_pixels": 1215000,
+        "runs": [
+          {
+            "bootstrap_replicates": 2000,
+            "candidate_windows": 171,
+            "run": "A",
+            "step_s": 5.0,
+            "template_comparisons_per_family": 1539,
+            "templates": 9,
+            "window_length_s": 50.0
+          },
+          {
+            "bootstrap_replicates": 2000,
+            "candidate_windows": 166,
+            "run": "B",
+            "step_s": 5.0,
+            "template_comparisons_per_family": 1494,
+            "templates": 9,
+            "window_length_s": 75.0
+          }
+        ],
+        "template_comparisons_per_family": 3033
+      },
+      "case": "small",
+      "cold": {
+        "handler_cpu_s": 1.252,
+        "handler_wall_s": 1.32,
+        "job_wall_s": 2.303,
+        "peak_rss_bytes": 221401088,
+        "process_cpu_s": 2.083,
+        "science_cached": false
+      },
+      "database_growth_bytes": 118784,
+      "recording": {
+        "duration_s": 900,
+        "fs": 100.0,
+        "kind": "synthetic SDOF response, fn 2.0 Hz",
+        "samples_per_channel": 90000,
+        "seed": 101
+      },
+      "runs": {
+        "A": {
+          "artifact_bytes": 1463430,
+          "artifact_bytes_by_category": {
+            "analysis_runs": 568427,
+            "plots": 695130,
+            "quality_evaluation": 5346,
+            "spectra": 194527
+          },
+          "artifacts_stored": 24,
+          "bootstrap_replicates": 0,
+          "bootstrapped_selections": 0,
+          "candidate_windows": 171,
+          "ci_status": {
+            "sdof": [
+              "ci_not_estimable"
+            ],
+            "standard": [
+              "ci_not_estimable"
+            ]
+          },
+          "on_request_artifacts": [
+            "window_spectra"
+          ],
+          "qc_passed_windows": 165,
+          "sdof_windows_matched": 165,
+          "selected_windows": {
+            "sdof": [
+              13
+            ],
+            "standard": [
+              17
+            ]
+          },
+          "template_comparisons": 1485,
+          "templates_in_bank": 9,
+          "window_length_s": 50.0
+        },
+        "B": {
+          "artifact_bytes": 1459879,
+          "artifact_bytes_by_category": {
+            "analysis_runs": 561360,
+            "plots": 701768,
+            "spectra": 196751
+          },
+          "artifacts_stored": 22,
+          "bootstrap_replicates": 0,
+          "bootstrapped_selections": 0,
+          "candidate_windows": 166,
+          "ci_status": {
+            "sdof": [
+              "ci_not_estimable"
+            ],
+            "standard": [
+              "ci_not_estimable"
+            ]
+          },
+          "on_request_artifacts": [
+            "window_spectra"
+          ],
+          "qc_passed_windows": 160,
+          "sdof_windows_matched": 160,
+          "selected_windows": {
+            "sdof": [
+              9
+            ],
+            "standard": [
+              11
+            ]
+          },
+          "template_comparisons": 1440,
+          "templates_in_bank": 9,
+          "window_length_s": 75.0
+        }
+      },
+      "submission": {
+        "cpu_s": 0.162,
+        "decoded_bytes": 3804958,
+        "logical_bytes": 3804958,
+        "peak_rss_bytes": 120217600,
+        "stored_bytes": 1777381,
+        "upload_bytes": 1774829,
+        "wall_s": 0.175
+      },
+      "warm_report_only": {
+        "handler_cpu_s": 0.886,
+        "handler_wall_s": 0.92,
+        "job_wall_s": 1.951,
+        "peak_rss_bytes": 216141824,
+        "process_cpu_s": 1.742,
+        "science_cached": true
+      }
+    },
+    {
+      "budget_estimate": {
+        "basis": "upper bounds from the stored recording summary (gaps only reduce them); template comparisons are counted per plausible peak family",
+        "bootstrap_replicates": 2000,
+        "max_candidate_windows": 711,
+        "parameter_runs": 2,
+        "plot_pixels": 1215000,
+        "runs": [
+          {
+            "bootstrap_replicates": 2000,
+            "candidate_windows": 711,
+            "run": "A",
+            "step_s": 5.0,
+            "template_comparisons_per_family": 6399,
+            "templates": 9,
+            "window_length_s": 50.0
+          },
+          {
+            "bootstrap_replicates": 2000,
+            "candidate_windows": 706,
+            "run": "B",
+            "step_s": 5.0,
+            "template_comparisons_per_family": 6354,
+            "templates": 9,
+            "window_length_s": 75.0
+          }
+        ],
+        "template_comparisons_per_family": 12753
+      },
+      "case": "medium",
+      "cold": {
+        "handler_cpu_s": 3.2,
+        "handler_wall_s": 3.271,
+        "job_wall_s": 4.285,
+        "peak_rss_bytes": 296337408,
+        "process_cpu_s": 4.054,
+        "science_cached": false
+      },
+      "database_growth_bytes": 118784,
+      "recording": {
+        "duration_s": 3600,
+        "fs": 100.0,
+        "kind": "synthetic SDOF response, fn 2.0 Hz",
+        "samples_per_channel": 360000,
+        "seed": 102
+      },
+      "runs": {
+        "A": {
+          "artifact_bytes": 2663500,
+          "artifact_bytes_by_category": {
+            "analysis_runs": 1563088,
+            "plots": 946694,
+            "quality_evaluation": 5318,
+            "spectra": 148400
+          },
+          "artifacts_stored": 24,
+          "bootstrap_replicates": 12000,
+          "bootstrapped_selections": 2,
+          "candidate_windows": 711,
+          "ci_status": {
+            "sdof": [
+              "ci_estimated"
+            ],
+            "standard": [
+              "ci_estimated"
+            ]
+          },
+          "on_request_artifacts": [
+            "window_spectra"
+          ],
+          "qc_passed_windows": 701,
+          "sdof_windows_matched": 697,
+          "selected_windows": {
+            "sdof": [
+              53
+            ],
+            "standard": [
+              71
+            ]
+          },
+          "template_comparisons": 6273,
+          "templates_in_bank": 9,
+          "window_length_s": 50.0
+        },
+        "B": {
+          "artifact_bytes": 2669552,
+          "artifact_bytes_by_category": {
+            "analysis_runs": 1554478,
+            "plots": 967424,
+            "spectra": 147650
+          },
+          "artifacts_stored": 22,
+          "bootstrap_replicates": 12000,
+          "bootstrapped_selections": 2,
+          "candidate_windows": 706,
+          "ci_status": {
+            "sdof": [
+              "ci_estimated"
+            ],
+            "standard": [
+              "ci_estimated"
+            ]
+          },
+          "on_request_artifacts": [
+            "window_spectra"
+          ],
+          "qc_passed_windows": 695,
+          "sdof_windows_matched": 691,
+          "selected_windows": {
+            "sdof": [
+              38
+            ],
+            "standard": [
+              47
+            ]
+          },
+          "template_comparisons": 6219,
+          "templates_in_bank": 9,
+          "window_length_s": 75.0
+        }
+      },
+      "submission": {
+        "cpu_s": 0.635,
+        "decoded_bytes": 15514598,
+        "logical_bytes": 15514598,
+        "peak_rss_bytes": 150503424,
+        "stored_bytes": 7152333,
+        "upload_bytes": 7149780,
+        "wall_s": 0.65
+      },
+      "warm_report_only": {
+        "handler_cpu_s": 1.463,
+        "handler_wall_s": 1.496,
+        "job_wall_s": 2.513,
+        "peak_rss_bytes": 225976320,
+        "process_cpu_s": 2.322,
+        "science_cached": true
+      }
+    },
+    {
+      "budget_estimate": {
+        "basis": "upper bounds from the stored recording summary (gaps only reduce them); template comparisons are counted per plausible peak family",
+        "bootstrap_replicates": 2000,
+        "max_candidate_windows": 1431,
+        "parameter_runs": 2,
+        "plot_pixels": 1215000,
+        "runs": [
+          {
+            "bootstrap_replicates": 2000,
+            "candidate_windows": 1431,
+            "run": "A",
+            "step_s": 5.0,
+            "template_comparisons_per_family": 12879,
+            "templates": 9,
+            "window_length_s": 50.0
+          },
+          {
+            "bootstrap_replicates": 2000,
+            "candidate_windows": 1426,
+            "run": "B",
+            "step_s": 5.0,
+            "template_comparisons_per_family": 12834,
+            "templates": 9,
+            "window_length_s": 75.0
+          }
+        ],
+        "template_comparisons_per_family": 25713
+      },
+      "case": "large",
+      "cold": {
+        "handler_cpu_s": 7.648,
+        "handler_wall_s": 7.727,
+        "job_wall_s": 8.823,
+        "peak_rss_bytes": 577900544,
+        "process_cpu_s": 8.56,
+        "science_cached": false
+      },
+      "database_growth_bytes": 118784,
+      "recording": {
+        "duration_s": 7200,
+        "fs": 200.0,
+        "kind": "synthetic SDOF response, fn 2.0 Hz",
+        "samples_per_channel": 1440000,
+        "seed": 103
+      },
+      "runs": {
+        "A": {
+          "artifact_bytes": 3976279,
+          "artifact_bytes_by_category": {
+            "analysis_runs": 2850030,
+            "plots": 961158,
+            "quality_evaluation": 5316,
+            "spectra": 159775
+          },
+          "artifacts_stored": 24,
+          "bootstrap_replicates": 12000,
+          "bootstrapped_selections": 2,
+          "candidate_windows": 1431,
+          "ci_status": {
+            "sdof": [
+              "ci_estimated"
+            ],
+            "standard": [
+              "ci_estimated"
+            ]
+          },
+          "on_request_artifacts": [
+            "window_spectra"
+          ],
+          "qc_passed_windows": 1401,
+          "sdof_windows_matched": 1389,
+          "selected_windows": {
+            "sdof": [
+              107
+            ],
+            "standard": [
+              142
+            ]
+          },
+          "template_comparisons": 12501,
+          "templates_in_bank": 9,
+          "window_length_s": 50.0
+        },
+        "B": {
+          "artifact_bytes": 3960704,
+          "artifact_bytes_by_category": {
+            "analysis_runs": 2822931,
+            "plots": 979806,
+            "spectra": 157967
+          },
+          "artifacts_stored": 22,
+          "bootstrap_replicates": 12000,
+          "bootstrapped_selections": 2,
+          "candidate_windows": 1426,
+          "ci_status": {
+            "sdof": [
+              "ci_estimated"
+            ],
+            "standard": [
+              "ci_estimated"
+            ]
+          },
+          "on_request_artifacts": [
+            "window_spectra"
+          ],
+          "qc_passed_windows": 1381,
+          "sdof_windows_matched": 1378,
+          "selected_windows": {
+            "sdof": [
+              71
+            ],
+            "standard": [
+              94
+            ]
+          },
+          "template_comparisons": 12402,
+          "templates_in_bank": 9,
+          "window_length_s": 75.0
+        }
+      },
+      "submission": {
+        "cpu_s": 2.621,
+        "decoded_bytes": 61975273,
+        "logical_bytes": 61975273,
+        "peak_rss_bytes": 305008640,
+        "stored_bytes": 28267779,
+        "upload_bytes": 28265224,
+        "wall_s": 2.643
+      },
+      "warm_report_only": {
+        "handler_cpu_s": 3.293,
+        "handler_wall_s": 3.313,
+        "job_wall_s": 4.364,
+        "peak_rss_bytes": 352288768,
+        "process_cpu_s": 4.171,
+        "science_cached": true
+      }
+    },
+    {
+      "budget_estimate": {
+        "basis": "upper bounds from the stored recording summary (gaps only reduce them); template comparisons are counted per plausible peak family",
+        "bootstrap_replicates": 2000,
+        "max_candidate_windows": 1431,
+        "parameter_runs": 2,
+        "plot_pixels": 1215000,
+        "runs": [
+          {
+            "bootstrap_replicates": 2000,
+            "candidate_windows": 1431,
+            "run": "A",
+            "step_s": 5.0,
+            "template_comparisons_per_family": 12879,
+            "templates": 9,
+            "window_length_s": 50.0
+          },
+          {
+            "bootstrap_replicates": 2000,
+            "candidate_windows": 1426,
+            "run": "B",
+            "step_s": 5.0,
+            "template_comparisons_per_family": 12834,
+            "templates": 9,
+            "window_length_s": 75.0
+          }
+        ],
+        "template_comparisons_per_family": 25713
+      },
+      "case": "large_wide",
+      "cold": {
+        "handler_cpu_s": 10.171,
+        "handler_wall_s": 10.25,
+        "job_wall_s": 11.355,
+        "peak_rss_bytes": 578187264,
+        "process_cpu_s": 11.115,
+        "science_cached": false
+      },
+      "database_growth_bytes": 118784,
+      "recording": {
+        "decimals": 12,
+        "duration_s": 7200,
+        "fs": 200.0,
+        "kind": "synthetic SDOF response, fn 2.0 Hz",
+        "samples_per_channel": 1440000,
+        "seed": 103
+      },
+      "runs": {
+        "A": {
+          "artifact_bytes": 3975056,
+          "artifact_bytes_by_category": {
+            "analysis_runs": 2849843,
+            "plots": 960056,
+            "quality_evaluation": 5308,
+            "spectra": 159849
+          },
+          "artifacts_stored": 24,
+          "bootstrap_replicates": 12000,
+          "bootstrapped_selections": 2,
+          "candidate_windows": 1431,
+          "ci_status": {
+            "sdof": [
+              "ci_estimated"
+            ],
+            "standard": [
+              "ci_estimated"
+            ]
+          },
+          "on_request_artifacts": [
+            "window_spectra"
+          ],
+          "qc_passed_windows": 1401,
+          "sdof_windows_matched": 1389,
+          "selected_windows": {
+            "sdof": [
+              107
+            ],
+            "standard": [
+              142
+            ]
+          },
+          "template_comparisons": 12501,
+          "templates_in_bank": 9,
+          "window_length_s": 50.0
+        },
+        "B": {
+          "artifact_bytes": 3960824,
+          "artifact_bytes_by_category": {
+            "analysis_runs": 2822942,
+            "plots": 979918,
+            "spectra": 157964
+          },
+          "artifacts_stored": 22,
+          "bootstrap_replicates": 12000,
+          "bootstrapped_selections": 2,
+          "candidate_windows": 1426,
+          "ci_status": {
+            "sdof": [
+              "ci_estimated"
+            ],
+            "standard": [
+              "ci_estimated"
+            ]
+          },
+          "on_request_artifacts": [
+            "window_spectra"
+          ],
+          "qc_passed_windows": 1381,
+          "sdof_windows_matched": 1378,
+          "selected_windows": {
+            "sdof": [
+              71
+            ],
+            "standard": [
+              94
+            ]
+          },
+          "template_comparisons": 12402,
+          "templates_in_bank": 9,
+          "window_length_s": 75.0
+        }
+      },
+      "submission": {
+        "cpu_s": 5.495,
+        "decoded_bytes": 87895273,
+        "logical_bytes": 87895273,
+        "peak_rss_bytes": 370053120,
+        "stored_bytes": 41636272,
+        "upload_bytes": 41633717,
+        "wall_s": 5.521
+      },
+      "warm_report_only": {
+        "handler_cpu_s": 5.87,
+        "handler_wall_s": 5.898,
+        "job_wall_s": 6.996,
+        "peak_rss_bytes": 456634368,
+        "process_cpu_s": 6.791,
+        "science_cached": true
+      }
+    },
+    {
+      "budget_estimate": {
+        "basis": "upper bounds from the stored recording summary (gaps only reduce them); template comparisons are counted per plausible peak family",
+        "bootstrap_replicates": 2000,
+        "max_candidate_windows": 5751,
+        "parameter_runs": 2,
+        "plot_pixels": 1215000,
+        "runs": [
+          {
+            "bootstrap_replicates": 2000,
+            "candidate_windows": 5751,
+            "run": "A",
+            "step_s": 5.0,
+            "template_comparisons_per_family": 51759,
+            "templates": 9,
+            "window_length_s": 50.0
+          },
+          {
+            "bootstrap_replicates": 2000,
+            "candidate_windows": 5746,
+            "run": "B",
+            "step_s": 5.0,
+            "template_comparisons_per_family": 51714,
+            "templates": 9,
+            "window_length_s": 75.0
+          }
+        ],
+        "template_comparisons_per_family": 103473
+      },
+      "case": "eight_hours",
+      "cold": {
+        "handler_cpu_s": 9.851,
+        "handler_wall_s": 9.929,
+        "job_wall_s": 10.977,
+        "peak_rss_bytes": 696487936,
+        "process_cpu_s": 10.718,
+        "science_cached": false
+      },
+      "database_growth_bytes": 118784,
+      "recording": {
+        "duration_s": 28800,
+        "fs": 50.0,
+        "kind": "synthetic SDOF response, fn 2.0 Hz",
+        "samples_per_channel": 1440000,
+        "seed": 106
+      },
+      "runs": {
+        "A": {
+          "artifact_bytes": 11385867,
+          "artifact_bytes_by_category": {
+            "analysis_runs": 10353454,
+            "plots": 892900,
+            "quality_evaluation": 5324,
+            "spectra": 134189
+          },
+          "artifacts_stored": 24,
+          "bootstrap_replicates": 12000,
+          "bootstrapped_selections": 2,
+          "candidate_windows": 5751,
+          "ci_status": {
+            "sdof": [
+              "ci_estimated"
+            ],
+            "standard": [
+              "ci_estimated"
+            ]
+          },
+          "on_request_artifacts": [
+            "window_spectra"
+          ],
+          "qc_passed_windows": 5369,
+          "sdof_windows_matched": 5335,
+          "selected_windows": {
+            "sdof": [
+              435
+            ],
+            "standard": [
+              554
+            ]
+          },
+          "template_comparisons": 48015,
+          "templates_in_bank": 9,
+          "window_length_s": 50.0
+        },
+        "B": {
+          "artifact_bytes": 11290475,
+          "artifact_bytes_by_category": {
+            "analysis_runs": 10240021,
+            "plots": 916980,
+            "spectra": 133474
+          },
+          "artifacts_stored": 22,
+          "bootstrap_replicates": 12000,
+          "bootstrapped_selections": 2,
+          "candidate_windows": 5746,
+          "ci_status": {
+            "sdof": [
+              "ci_estimated"
+            ],
+            "standard": [
+              "ci_estimated"
+            ]
+          },
+          "on_request_artifacts": [
+            "window_spectra"
+          ],
+          "qc_passed_windows": 5179,
+          "sdof_windows_matched": 5169,
+          "selected_windows": {
+            "sdof": [
+              277
+            ],
+            "standard": [
+              363
+            ]
+          },
+          "template_comparisons": 46521,
+          "templates_in_bank": 9,
+          "window_length_s": 75.0
+        }
+      },
+      "submission": {
+        "cpu_s": 2.64,
+        "decoded_bytes": 63812328,
+        "logical_bytes": 63812328,
+        "peak_rss_bytes": 311185408,
+        "stored_bytes": 29089374,
+        "upload_bytes": 29086819,
+        "wall_s": 2.663
+      },
+      "warm_report_only": {
+        "handler_cpu_s": 3.546,
+        "handler_wall_s": 3.594,
+        "job_wall_s": 4.632,
+        "peak_rss_bytes": 358461440,
+        "process_cpu_s": 4.421,
+        "science_cached": true
+      }
+    },
+    {
+      "budget_estimate": {
+        "basis": "upper bounds from the stored recording summary (gaps only reduce them); template comparisons are counted per plausible peak family",
+        "bootstrap_replicates": 2000,
+        "max_candidate_windows": 17271,
+        "parameter_runs": 2,
+        "plot_pixels": 1215000,
+        "runs": [
+          {
+            "bootstrap_replicates": 2000,
+            "candidate_windows": 17271,
+            "run": "A",
+            "step_s": 5.0,
+            "template_comparisons_per_family": 155439,
+            "templates": 9,
+            "window_length_s": 50.0
+          },
+          {
+            "bootstrap_replicates": 2000,
+            "candidate_windows": 17266,
+            "run": "B",
+            "step_s": 5.0,
+            "template_comparisons_per_family": 155394,
+            "templates": 9,
+            "window_length_s": 75.0
+          }
+        ],
+        "template_comparisons_per_family": 310833
+      },
+      "case": "long",
+      "cold": {
+        "handler_cpu_s": 31.683,
+        "handler_wall_s": 31.818,
+        "job_wall_s": 32.859,
+        "peak_rss_bytes": 1694883840,
+        "process_cpu_s": 32.551,
+        "science_cached": false
+      },
+      "database_growth_bytes": 118784,
+      "recording": {
+        "duration_s": 86400,
+        "fs": 50.0,
+        "kind": "synthetic SDOF response, fn 2.0 Hz",
+        "samples_per_channel": 4320000,
+        "seed": 104
+      },
+      "runs": {
+        "A": {
+          "artifact_bytes": 31632550,
+          "artifact_bytes_by_category": {
+            "analysis_runs": 30598439,
+            "plots": 893818,
+            "quality_evaluation": 5336,
+            "spectra": 134957
+          },
+          "artifacts_stored": 24,
+          "bootstrap_replicates": 12000,
+          "bootstrapped_selections": 2,
+          "candidate_windows": 17271,
+          "ci_status": {
+            "sdof": [
+              "ci_estimated"
+            ],
+            "standard": [
+              "ci_estimated"
+            ]
+          },
+          "on_request_artifacts": [
+            "window_spectra"
+          ],
+          "qc_passed_windows": 16441,
+          "sdof_windows_matched": 16310,
+          "selected_windows": {
+            "sdof": [
+              1312
+            ],
+            "standard": [
+              1681
+            ]
+          },
+          "template_comparisons": 146790,
+          "templates_in_bank": 9,
+          "window_length_s": 50.0
+        },
+        "B": {
+          "artifact_bytes": 31345138,
+          "artifact_bytes_by_category": {
+            "analysis_runs": 30294179,
+            "plots": 917034,
+            "spectra": 133925
+          },
+          "artifacts_stored": 22,
+          "bootstrap_replicates": 12000,
+          "bootstrapped_selections": 2,
+          "candidate_windows": 17266,
+          "ci_status": {
+            "sdof": [
+              "ci_estimated"
+            ],
+            "standard": [
+              "ci_estimated"
+            ]
+          },
+          "on_request_artifacts": [
+            "window_spectra"
+          ],
+          "qc_passed_windows": 16026,
+          "sdof_windows_matched": 15973,
+          "selected_windows": {
+            "sdof": [
+              872
+            ],
+            "standard": [
+              1111
+            ]
+          },
+          "template_comparisons": 143757,
+          "templates_in_bank": 9,
+          "window_length_s": 75.0
+        }
+      },
+      "submission": {
+        "cpu_s": 12.354,
+        "decoded_bytes": 192535602,
+        "logical_bytes": 192535602,
+        "peak_rss_bytes": 665014272,
+        "stored_bytes": 87429923,
+        "upload_bytes": 87427367,
+        "wall_s": 12.397
+      },
+      "warm_report_only": {
+        "handler_cpu_s": 11.022,
+        "handler_wall_s": 11.061,
+        "job_wall_s": 12.15,
+        "peak_rss_bytes": 711966720,
+        "process_cpu_s": 11.936,
+        "science_cached": true
+      }
+    }
+  ],
+  "generated_utc": "2026-10-21T04:17:44Z",
+  "git_commit": "7109358f15b9a8ee21c26f0cc71919a8d4be0201",
+  "git_dirty": true,
+  "hardware": {
+    "blas": [
+      "openblas 0.3.31.dev",
+      "openblas 0.3.34.106.0"
+    ],
+    "cpu_model": "Intel(R) Core(TM) Ultra 7 258V",
+    "logical_cpus": 8,
+    "memory_bytes": 33195155456,
+    "numeric_threads_per_process": 1,
+    "numpy": "2.5.4",
+    "os": "Linux-6.17.0-1033-oem-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "storage": "local filesystem object store and SQLite in a temporary directory"
+  },
+  "import_baseline_rss_bytes": 177819648,
+  "limits": {
+    "bank_licenses": "CC0-1.0,CC-BY-4.0,BSD-3-Clause,MIT,Apache-2.0",
+    "embedded_worker": false,
+    "guest_pool_monthly_bytes": 268435456,
+    "guest_uploads_enabled": false,
+    "job_cpu_time_s": 900,
+    "job_isolation": "process",
+    "job_lease_s": 900,
+    "job_max_attempts": 3,
+    "job_memory_bytes": 2147483648,
+    "job_wall_time_s": 900,
+    "max_bank_bytes": 67108864,
+    "max_bootstrap_replicates": 2000,
+    "max_candidate_windows": 20000,
+    "max_channels": 12,
+    "max_concurrent_jobs": 1,
+    "max_concurrent_uploads": 1,
+    "max_decoded_bytes": 805306368,
+    "max_decompression_ratio": 200.0,
+    "max_duration_s": 172800.0,
+    "max_files": 6,
+    "max_parameter_runs": 2,
+    "max_plot_pixels": 16000000,
+    "max_plot_variants_per_run": 50,
+    "max_request_bytes": 134217728,
+    "max_samples_per_channel": 8640000,
+    "max_template_comparisons": 200000000,
+    "max_window_spectra_cells": 2000000,
+    "moderation_contact": null,
+    "monthly_quota_bytes": 1073741824,
+    "numeric_threads": 1,
+    "object_store": "local",
+    "public_base_url": null,
+    "s3_region": null,
+    "signed_url_ttl_s": 300,
+    "staging_ttl_s": 86400,
+    "upload_wait_s": 30.0,
+    "worker_poll_s": 2.0
+  },
+  "report": "hvsr-analyzer performance profile",
+  "software_version": "0.1.0"
+}

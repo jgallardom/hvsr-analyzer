@@ -353,3 +353,77 @@ is used because it can be regenerated and redistributed. The files are tested to
 - equal a fresh analysis of the same recording (CSV bytes and the JSON `grid` and `selections`).
 
 The per-window spectra (about 1.8 MB compressed) and the normalized waveform are left out for size.
+
+## Stage 9 - efficiency, security, and deployment (no scientific change)
+
+None of these decisions changes a computed number. The Stage 5 fingerprinted files are unchanged,
+and the replay and regression tests pass.
+
+**D-090 (job isolation).** Each job runs in a fresh spawned child process (`isolation.py`):
+- The CPU and address-space limits are set after imports, relative to the child's own baseline, so
+  the limit measures the job, not the interpreter.
+- Exhausting CPU, memory, or wall time is a permanent failure that names the limit: the same input
+  would exhaust it again, so retrying only wastes the budget.
+- Any other abnormal exit is retried up to `HVSR_JOB_MAX_ATTEMPTS`, because it may be transient.
+- Spawn, not fork: the child inherits no database connections, locks, or thread pools from the web
+  process.
+
+**D-091 (upload parsing off the event loop).** Upload handlers were `async`, but they parsed files
+synchronously, so a large upload stalled every other request, including health checks. Uploads
+(previews, submissions, banks) are now read and parsed in the thread pool, at most
+`HVSR_MAX_CONCURRENT_UPLOADS` at a time per process. A further upload waits up to
+`HVSR_UPLOAD_WAIT_S` and then gets 503 `busy` with `Retry-After`. It is not queued without bound,
+because each parse holds memory proportional to the upload (`docs/performance.md`).
+
+**D-092 (PostgreSQL serialization).** Three count-then-write steps race under PostgreSQL's READ
+COMMITTED isolation, which SQLite's single writer had hidden:
+- startup migrations;
+- the job concurrency ceiling;
+- concurrent retries of one submission key.
+
+Each now takes a transaction-scoped advisory lock: one global lock for migrations, another for job
+claims, and one per contributor for quota reservations. Throughput is unaffected at the planned scale (one
+worker).
+
+**D-093 (idempotency keys).** A submission key belongs to its contributor and binds to the first
+accepted submission. A later request with the same key returns that measurement ("idempotent
+replay: already accepted") and is not charged, whatever files it carries. File contents are not
+compared, so clients must use a new key for each distinct submission. When concurrent retries race,
+exactly one request is accepted and charges the quota. Its response reports the charged bytes;
+every other request with that key gets `existing: true` and `charged_logical_bytes: 0`.
+
+**D-094 (memory-bounded parsing).** CSV lines are streamed (`iter_lines`) with exactly the line
+boundaries of `str.splitlines` (property-tested), and samples are stored in packed arrays. Readers
+and errors are unchanged. StationXML is checked for a DOCTYPE by a parser with entities, DTD
+loading, and network access disabled, so the check covers every encoding. Any DOCTYPE is rejected.
+
+**D-095 (methods without a selection).** When a method selects no windows (for example, no SDOF
+match), there is no curve to draw:
+- the run is still published, with the analysis JSON stating the method status and reason;
+- no figure is produced for that method, rather than an empty or substitute plot;
+- the results page shows the status and reason in place of the figure and peak sections.
+
+**D-096 (uploaded template banks).** Banks are uploaded as data only, through the same validator as
+shipped banks. Uploaded bank versions are immutable and never deleted, so every run stays
+replayable. Only shipped banks and active uploaded banks can be selected for new analyses. The
+object store and database are the durable copy. The local bank directory is a verified cache,
+rebuilt as needed, because hosted container disks are ephemeral.
+
+**D-097 (deployment topology and hosted limits).** The deployment is one Render web service with
+the worker embedded, as the specification prefers. A separate worker is not added: one job at a
+time on one CPU handles the projected volumes (`docs/costs.md`, capacity check). The hosted limits
+are derived from measured memory, not guessed:
+- a web process peaks at about baseline + gzip bytes + 2 × decoded text + 32 bytes per sample;
+- a job peaks at its measured cold peak;
+- together they must fit 95% of the plan's RAM.
+
+Recordings beyond the hosted limits are refused with the reason and can be analyzed offline.
+
+**D-098 (empty environment variables).** An empty `HVSR_*` variable counts as unset. A copied
+`.env` with blank secrets or URLs therefore uses the defaults (for example, a random per-process
+signing key and no public base URL). It never yields an empty key or URL.
+
+**D-099 (gate state of BLOCKED requirements).** A requirement recorded as BLOCKED (an external
+dependency missing) is reported as PASS for a gate run in which its tagged tests actually ran and
+all passed. Skipped tests keep it BLOCKED. UNVALIDATED keeps its state whatever the tests do,
+because passing mechanics do not validate the science.

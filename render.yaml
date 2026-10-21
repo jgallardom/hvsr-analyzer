@@ -1,0 +1,74 @@
+# Render Blueprint (https://render.com/docs/blueprint-spec): one web service that also runs the job
+# worker, and one PostgreSQL database. Measurements and artifacts live in an external S3-compatible
+# bucket (Cloudflare R2 by default), never on the service's ephemeral disk.
+#
+# Sizing follows docs/performance.md and docs/deployment.md: on 1c-2g (2 GB), one upload parse at the
+# limits below plus one job at its memory limit stay under the instance memory. Raise the upload
+# limits only together with the plan. Secrets are prompted for (sync: false) or generated; none is
+# written here. Validate with `render blueprints validate render.yaml`.
+services:
+  - type: web
+    name: hvsr-analyzer
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: 1c-2g
+    region: frankfurt
+    healthCheckPath: /readyz
+    preDeployCommand: python -m hvsr_web.admin migrate
+    maxShutdownDelaySeconds: 120
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: HVSR_DATABASE_URL
+        fromDatabase:
+          name: hvsr-analyzer-db
+          property: connectionString
+      - key: HVSR_OBJECT_STORE
+        value: s3
+      - key: HVSR_S3_BUCKET
+        sync: false
+      - key: HVSR_S3_ENDPOINT_URL
+        sync: false
+      - key: HVSR_S3_REGION
+        value: auto
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: HVSR_URL_SIGNING_KEY
+        generateValue: true
+      - key: HVSR_PUBLIC_BASE_URL
+        sync: false
+      - key: HVSR_MODERATION_CONTACT
+        sync: false
+      - key: HVSR_EMBEDDED_WORKER
+        value: "true"
+      - key: HVSR_JOB_ISOLATION
+        value: process
+      - key: HVSR_NUMERIC_THREADS
+        value: "1"
+      - key: HVSR_MAX_CONCURRENT_JOBS
+        value: "1"
+      - key: HVSR_MAX_CONCURRENT_UPLOADS
+        value: "1"
+      - key: HVSR_JOB_MEMORY_BYTES
+        value: "1073741824"
+      - key: HVSR_JOB_LEASE_S
+        value: "120"
+      - key: HVSR_MAX_REQUEST_BYTES
+        value: "50331648"
+      - key: HVSR_MAX_DECODED_BYTES
+        value: "134217728"
+      - key: HVSR_MAX_SAMPLES_PER_CHANNEL
+        value: "1440000"
+      - key: HVSR_MAX_CANDIDATE_WINDOWS
+        value: "6000"
+
+databases:
+  - name: hvsr-analyzer-db
+    plan: 0.1c-256mb
+    region: frankfurt
+    postgresMajorVersion: "16"
+    databaseName: hvsr
+    diskSizeGB: 1
+    storageAutoscalingEnabled: true
+    ipAllowList: []

@@ -9,11 +9,13 @@ codes (`error`).
 from __future__ import annotations
 
 import json
+import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Annotated, Literal
 
 from fastapi import FastAPI, File, Form, HTTPException, Query, Request, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
@@ -29,7 +31,7 @@ from hvsr_core.model import InputError
 from hvsr_core.schema_validation import SCHEMA_FILES, load_schema
 from hvsr_core.versions import PACKAGE_VERSION
 
-from . import analysis_jobs, catalog, moderation, ondemand, pages, runs, worker
+from . import analysis_jobs, banks, catalog, isolation, moderation, ondemand, pages, runs, worker
 from .auth import GUEST_POLICY, AuthError, admin_for_token, contributor_for_token, guest_pool
 from .context import AppContext
 from .db import AnalysisRun, Artifact, Job, Measurement
@@ -99,6 +101,7 @@ class PlotRequest(BaseModel):
 
 def create_app(ctx: AppContext | None = None) -> FastAPI:
     ctx = ctx or AppContext.from_settings(Settings.from_env())
+    isolation.pin_threads(ctx.settings.numeric_threads)
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI):
@@ -129,6 +132,12 @@ def create_app(ctx: AppContext | None = None) -> FastAPI:
     @app.exception_handler(AuthError)
     async def _auth(_req, exc: AuthError):
         return JSONResponse({"error": "unauthorized", "detail": str(exc)}, status_code=401)
+
+    @app.exception_handler(UnicodeDecodeError)
+    async def _encoding(_req, _exc: UnicodeDecodeError):
+        return JSONResponse(
+            {"error": "invalid_encoding", "detail": "request body is not UTF-8 JSON"}, status_code=422
+        )
 
     @app.get("/healthz")
     def healthz():
@@ -323,7 +332,31 @@ def create_app(ctx: AppContext | None = None) -> FastAPI:
         if length > s.max_request_bytes + 1024 * 1024:
             raise HTTPException(413, f"request exceeds {s.max_request_bytes} bytes")
 
-    async def _uploads(files: list[UploadFile], roles: list[str] | None) -> list[SubmittedFile]:
+    upload_slots = threading.BoundedSemaphore(ctx.settings.max_concurrent_uploads)
+
+    async def _in_upload_slot(work):
+        """Run `work` (read uploaded files into memory and parse them) off the event loop, at most
+        `max_concurrent_uploads` at a time; waiting requests keep their bodies in the on-disk spool."""
+
+        def slot():
+            if not upload_slots.acquire(timeout=ctx.settings.upload_wait_s):
+                raise HTTPException(
+                    503,
+                    {
+                        "error": "busy",
+                        "detail": f"{ctx.settings.max_concurrent_uploads} upload(s) are being processed; "
+                        "retry shortly",
+                    },
+                    headers={"Retry-After": "10"},
+                )
+            try:
+                return work()
+            finally:
+                upload_slots.release()
+
+        return await run_in_threadpool(slot)
+
+    def _uploads(files: list[UploadFile], roles: list[str] | None) -> list[SubmittedFile]:
         if len(files) > ctx.settings.max_files:
             raise HTTPException(
                 413, {"error": "file_limit", "detail": f"{len(files)} files exceed {ctx.settings.max_files}"}
@@ -332,8 +365,7 @@ def create_app(ctx: AppContext | None = None) -> FastAPI:
         if len(roles) != len(files):
             raise HTTPException(422, "one role per file is required")
         return [
-            SubmittedFile(f.filename or "upload", await f.read(), r)
-            for f, r in zip(files, roles, strict=True)
+            SubmittedFile(f.filename or "upload", f.file.read(), r) for f, r in zip(files, roles, strict=True)
         ]
 
     @app.post("/api/v1/previews")
@@ -350,12 +382,17 @@ def create_app(ctx: AppContext | None = None) -> FastAPI:
             opts = WaveformOptions.model_validate(json.loads(waveform))
         except (ValueError, ValidationError) as exc:
             raise HTTPException(422, {"error": "invalid_options", "detail": str(exc)}) from None
-        uploads = await _uploads(files, roles)
-        try:
+
+        def work():
+            uploads = _uploads(files, roles)
             rec, csv_info, _, fmts = parse_waveforms(uploads, opts, ctx.settings.input_limits())
             sx = [f for f in uploads if f.role == "stationxml"]
             if sx:
                 rec, _ = apply_stationxml(rec, parse_stationxml(sx[0].data), sha256_bytes(sx[0].data))
+            return rec, csv_info, fmts
+
+        try:
+            rec, csv_info, fmts = await _in_upload_slot(work)
         except LimitExceeded as exc:
             raise HTTPException(413, {"error": exc.code, "detail": exc.message}) from None
         except InputError as exc:
@@ -381,9 +418,8 @@ def create_app(ctx: AppContext | None = None) -> FastAPI:
             req = SubmissionRequest.model_validate(json.loads(submission))
         except (ValueError, ValidationError) as exc:
             raise HTTPException(422, f"invalid submission: {exc}") from None
-        uploads = await _uploads(files, roles)
         try:
-            res = submit(ctx, contributor, req, uploads)
+            res = await _in_upload_slot(lambda: submit(ctx, contributor, req, _uploads(files, roles)))
         except ConsentRequired as exc:
             raise HTTPException(422, {"error": "consent_required", "problems": exc.problems}) from None
         except LimitExceeded as exc:
@@ -423,6 +459,8 @@ def create_app(ctx: AppContext | None = None) -> FastAPI:
             ) from None
         except analysis_jobs.MeasurementUnavailable as exc:
             raise HTTPException(410, str(exc)) from None
+        except banks.BankUnavailable as exc:
+            raise HTTPException(422, {"error": "bank_unavailable", "detail": str(exc)}) from None
         return {**out, "job_url": job_url(out["job_id"])}
 
     @app.post("/api/v1/runs/{run_id}/plots")
@@ -490,6 +528,44 @@ def create_app(ctx: AppContext | None = None) -> FastAPI:
             except moderation.ModerationError as exc:
                 raise HTTPException(409, str(exc)) from None
         return {"status": action + "d"}
+
+    @app.get("/api/v1/banks")
+    def bank_list():
+        return {"banks": banks.listing(ctx), "accepted_licenses": banks.allowed_licenses(ctx)}
+
+    @app.post("/api/v1/admin/banks", status_code=201)
+    async def bank_upload(
+        request: Request,
+        manifest: Annotated[UploadFile, File(description="Bank manifest (JSON)")],
+        data: Annotated[UploadFile, File(description="Bank arrays (NPZ, no pickled objects)")],
+    ):
+        """Validate and store a template bank, inactive until activated. Administrators only."""
+        _check_size(request)
+        with ctx.sessions() as session:
+            admin = admin_for_token(session, _bearer(request))
+        limit = ctx.settings.max_bank_bytes
+
+        def work():
+            manifest_bytes = manifest.file.read(banks.MAX_MANIFEST_BYTES + 1)
+            data_bytes = data.file.read(limit + 1)
+            return banks.upload(ctx, admin.id, manifest_bytes, data_bytes)
+
+        try:
+            bank, created = await _in_upload_slot(work)
+        except banks.BankRejected as exc:
+            raise HTTPException(422, {"error": "bank_rejected", "detail": str(exc)}) from None
+        return JSONResponse({**bank, "created": created}, status_code=201 if created else 200)
+
+    @app.post("/api/v1/admin/banks/{bank_id}/{action}")
+    def bank_activation(bank_id: str, action: str, request: Request):
+        if action not in ("activate", "deactivate"):
+            raise HTTPException(404, "unknown action")
+        with ctx.sessions() as session:
+            admin = admin_for_token(session, _bearer(request))
+        try:
+            return banks.set_active(ctx, admin.id, bank_id, action == "activate")
+        except KeyError:
+            raise HTTPException(404, "no such uploaded bank") from None
 
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
     app.include_router(pages.router(ctx))

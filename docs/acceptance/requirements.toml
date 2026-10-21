@@ -871,8 +871,8 @@ stage = 9
 section = "Stage 9"
 text = "Fresh Docker build and container startup smoke test."
 status = "BLOCKED"
-reason = "Docker/Podman are not installed on the development machine; the Dockerfile is provided but unbuilt here."
-needs = "Run `docker build -t hvsr-analyzer . && docker run -p 8000:8000 hvsr-analyzer` then `scripts/smoke.sh`, or let the CI docker job run it."
+reason = "Docker/Podman are not installed on the development machine; the Dockerfile has never been built. tests/stage_09/test_deploy.py::test_docker_image_builds_and_passes_the_smoke_test skips here."
+needs = "On a machine with Docker, or in GitHub Actions (ubuntu-24.04 has Docker), run `uv run python scripts/gate.py --all`: the test builds the image and runs `scripts/smoke.py docker --image hvsr-analyzer:gate`, and the gate reports PASS for that run. Remove this status once a run has passed."
 
 [[req]]
 id = "AC-S9-10"
@@ -891,3 +891,15 @@ id = "AC-S9-12"
 stage = 9
 section = "14"
 text = "Numerical thread oversubscription and runaway concurrency are prevented."
+
+[[req]]
+id = "AC-S9-13"
+stage = 9
+section = "1; 14; 16"
+text = "Offline CLI: analyze a recording, replay a published analysis exactly, build and validate template banks (rejecting malformed ones), and run a Monte Carlo experiment, all without HTTP, credentials, or a database."
+
+[[req]]
+id = "AC-S9-14"
+stage = 9
+section = "Stage 9"
+text = "The deployment database (PostgreSQL) is exercised: hosted URLs, migrations matching the models, concurrent startup, job concurrency ceiling and idempotent submissions under races, and backup/restore between PostgreSQL and SQLite."

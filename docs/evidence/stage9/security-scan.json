@@ -1,0 +1,42 @@
+{
+ "bandit": {
+  "tool": "bandit 1.9.4",
+  "targets": [
+   "src",
+   "packages/hvsr_core/src",
+   "scripts"
+  ],
+  "lines_scanned": 15591,
+  "nosec": 0,
+  "by_severity": {
+   "HIGH": 0,
+   "MEDIUM": 0,
+   "LOW": 23
+  },
+  "errors": [],
+  "generated_utc": "2026-10-21T04:24:05Z"
+ },
+ "pip_audit": {
+  "tool": "pip-audit 2.10.1",
+  "scope": "every package pinned in uv.lock, all dependency groups, hashes required",
+  "requirements_pinned": 130,
+  "not_audited": [
+   "colorama (environment marker: sys_platform == 'win32')",
+   "tzdata (environment marker: sys_platform == 'emscripten' or sys_platform == 'win32')"
+  ],
+  "uv_lock_sha256": "d9e837d20857cd6ad9f8418d60d93edd18ffd97baa33499ac36819b41f2ef412",
+  "generated_utc": "2026-10-21T04:24:05Z",
+  "services": {
+   "pypi": {
+    "dependencies_audited": 128,
+    "skipped": [],
+    "vulnerabilities": []
+   },
+   "osv": {
+    "dependencies_audited": 128,
+    "skipped": [],
+    "vulnerabilities": []
+   }
+  }
+ }
+}
