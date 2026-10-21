@@ -26,15 +26,19 @@ def _script():
     return mod
 
 
-def _deterministic(case: dict) -> dict:
-    """Everything in a case that does not depend on timing, the machine, or random identifiers."""
+def _deterministic(case: dict, *, analysis_bytes: bool = True) -> dict:
+    """Everything in a case that does not depend on timing, the machine, or random identifiers.
+
+    Analysis documents record in their provenance whether the checkout had uncommitted changes
+    (`git_dirty`), so `analysis_bytes=False` drops their byte count for runs in different states."""
+    # figure footers print the random run identifier, so raster sizes vary by a few bytes
+    skipped = {"plots"} if analysis_bytes else {"plots", "analysis_runs"}
     runs = {}
     for rid, r in case["runs"].items():
         runs[rid] = {
             **{k: v for k, v in r.items() if k not in ("artifact_bytes", "artifact_bytes_by_category")},
-            # figure footers print the random run identifier, so raster sizes vary by a few bytes
             "bytes_excluding_figures": {
-                k: v for k, v in r["artifact_bytes_by_category"].items() if k != "plots"
+                k: v for k, v in r["artifact_bytes_by_category"].items() if k not in skipped
             },
         }
     sub = case["submission"]
@@ -89,6 +93,10 @@ def test_profiling_small_case_again_reproduces_the_deterministic_counts(tmp_path
         timeout=600,
         cwd=ROOT,
     )
-    fresh = json.loads(out.read_text())["cases"][0]
-    stored = next(c for c in json.loads(REPORT.read_text())["cases"] if c["case"] == "small")
-    assert _deterministic(fresh) == _deterministic(stored)
+    fresh_doc, stored_doc = json.loads(out.read_text()), json.loads(REPORT.read_text())
+    fresh = fresh_doc["cases"][0]
+    stored = next(c for c in stored_doc["cases"] if c["case"] == "small")
+    same_state = fresh_doc["git_dirty"] == stored_doc["git_dirty"]
+    assert _deterministic(fresh, analysis_bytes=same_state) == _deterministic(
+        stored, analysis_bytes=same_state
+    )

@@ -101,7 +101,7 @@ its SHA-256 with your file. This is the first end-to-end use of the real bucket.
   checks the new budget.
 - More throughput: a separate worker service (`python -m hvsr_web.worker`, same environment) with
   `HVSR_EMBEDDED_WORKER=false` on the web service. Add it only when queues are measured to be too
-  long. The largest admitted recording took about 13 s of CPU to upload and analyze on the
+  long. The largest admitted recording took about 14 s of CPU to upload and analyze on the
   development machine (`docs/performance.md`); Render's CPUs were not measured.
 - Database: `0.5c-1g` once the measurement count reaches the thousands (`docs/costs.md`).
 

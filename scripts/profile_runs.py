@@ -464,12 +464,12 @@ def main() -> int:
     from hvsr_core.jsonutil import pretty_dumps
     from hvsr_core.versions import PACKAGE_VERSION
 
+    git = _git()  # the checkout state the analyses record in their provenance
     cases = []
     for name in args.cases:
         t0 = time.perf_counter()
         cases.append(profile_case(name, CASES[name]))
         print(f"{name}: {time.perf_counter() - t0:.1f} s", file=sys.stderr)
-    git = _git()
     doc = {
         "report": "hvsr-analyzer performance profile",
         "generated_utc": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),

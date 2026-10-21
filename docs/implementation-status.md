@@ -468,8 +468,8 @@ Measured (development machine, one numerical thread; `docs/performance.md`):
   | Case | Wall time | Peak memory |
   |---|---|---|
   | 1 h at 100 Hz | 4.3 s | 283 MB |
-  | 2 h at 200 Hz | 8.8 s | 551 MB |
-  | 24 h at 50 Hz | 32.9 s | 1,616 MB |
+  | 2 h at 200 Hz | 8.7 s | 551 MB |
+  | 24 h at 50 Hz | 31.5 s | 1,583 MB |
 
 - Warm requests reuse the stored science and run no analysis (AC-S9-05).
 - At the blueprint limits, the worst admitted case (8 h at 50 Hz, 5,751 candidate windows) peaks
@@ -504,6 +504,11 @@ Defects found and fixed during this stage:
 - **`hvsr schema` with an unknown name printed a traceback**; it now gives a usage error with
   exit code 2.
 - **bandit B314** in `scripts/gate.py`: the JUnit XML is now parsed with defusedxml.
+- **Flaky AC-S9-01 reproducibility test.** It compared analysis-document byte counts as if they
+  were deterministic, but each document records the checkout's `git_dirty` flag. The test failed
+  (4 bytes per run) when the gate ran on a modified tree against a report made from a clean one.
+  It now drops that byte count only when the two checkout states differ. The profiler also
+  records the checkout state before profiling, the same state the analyses see.
 
 Changes to earlier-stage code and tests (no assertion weakened, no fingerprinted file touched):
 - `tests/stage_07/test_backup.py` compared the backup's schema revision with the literal `"0001"`.

@@ -31,11 +31,11 @@
       },
       "case": "large",
       "cold": {
-        "handler_cpu_s": 8.004,
-        "handler_wall_s": 8.088,
-        "job_wall_s": 9.115,
-        "peak_rss_bytes": 578355200,
-        "process_cpu_s": 8.864,
+        "handler_cpu_s": 7.423,
+        "handler_wall_s": 7.485,
+        "job_wall_s": 8.467,
+        "peak_rss_bytes": 578371584,
+        "process_cpu_s": 8.23,
         "science_cached": false
       },
       "database_growth_bytes": 118784,
@@ -48,10 +48,10 @@
       },
       "runs": {
         "A": {
-          "artifact_bytes": 3974821,
+          "artifact_bytes": 3975497,
           "artifact_bytes_by_category": {
-            "analysis_runs": 2850030,
-            "plots": 959700,
+            "analysis_runs": 2850034,
+            "plots": 960372,
             "quality_evaluation": 5316,
             "spectra": 159775
           },
@@ -85,10 +85,10 @@
           "window_length_s": 50.0
         },
         "B": {
-          "artifact_bytes": 3966298,
+          "artifact_bytes": 3961336,
           "artifact_bytes_by_category": {
-            "analysis_runs": 2822931,
-            "plots": 985400,
+            "analysis_runs": 2822935,
+            "plots": 980434,
             "spectra": 157967
           },
           "artifacts_stored": 22,
@@ -122,20 +122,20 @@
         }
       },
       "submission": {
-        "cpu_s": 2.744,
+        "cpu_s": 2.484,
         "decoded_bytes": 61975273,
         "logical_bytes": 61975273,
-        "peak_rss_bytes": 305139712,
+        "peak_rss_bytes": 304918528,
         "stored_bytes": 28267779,
         "upload_bytes": 28265224,
-        "wall_s": 2.767
+        "wall_s": 2.506
       },
       "warm_report_only": {
-        "handler_cpu_s": 3.507,
-        "handler_wall_s": 3.541,
-        "job_wall_s": 4.594,
-        "peak_rss_bytes": 352354304,
-        "process_cpu_s": 4.379,
+        "handler_cpu_s": 3.235,
+        "handler_wall_s": 3.269,
+        "job_wall_s": 4.268,
+        "peak_rss_bytes": 352292864,
+        "process_cpu_s": 4.068,
         "science_cached": true
       }
     },
@@ -170,11 +170,11 @@
       },
       "case": "eight_hours",
       "cold": {
-        "handler_cpu_s": 10.278,
-        "handler_wall_s": 10.357,
-        "job_wall_s": 11.404,
-        "peak_rss_bytes": 695779328,
-        "process_cpu_s": 11.155,
+        "handler_cpu_s": 9.431,
+        "handler_wall_s": 9.513,
+        "job_wall_s": 10.519,
+        "peak_rss_bytes": 695902208,
+        "process_cpu_s": 10.273,
         "science_cached": false
       },
       "database_growth_bytes": 118784,
@@ -187,10 +187,10 @@
       },
       "runs": {
         "A": {
-          "artifact_bytes": 11385843,
+          "artifact_bytes": 11386253,
           "artifact_bytes_by_category": {
-            "analysis_runs": 10353454,
-            "plots": 892876,
+            "analysis_runs": 10353458,
+            "plots": 893282,
             "quality_evaluation": 5324,
             "spectra": 134189
           },
@@ -224,10 +224,10 @@
           "window_length_s": 50.0
         },
         "B": {
-          "artifact_bytes": 11291239,
+          "artifact_bytes": 11284889,
           "artifact_bytes_by_category": {
-            "analysis_runs": 10240021,
-            "plots": 917744,
+            "analysis_runs": 10240025,
+            "plots": 911390,
             "spectra": 133474
           },
           "artifacts_stored": 22,
@@ -261,27 +261,27 @@
         }
       },
       "submission": {
-        "cpu_s": 2.851,
+        "cpu_s": 2.689,
         "decoded_bytes": 63812328,
         "logical_bytes": 63812328,
-        "peak_rss_bytes": 310747136,
+        "peak_rss_bytes": 311046144,
         "stored_bytes": 29089374,
         "upload_bytes": 29086819,
-        "wall_s": 2.874
+        "wall_s": 2.713
       },
       "warm_report_only": {
-        "handler_cpu_s": 3.519,
-        "handler_wall_s": 3.56,
-        "job_wall_s": 4.66,
-        "peak_rss_bytes": 358535168,
-        "process_cpu_s": 4.444,
+        "handler_cpu_s": 3.368,
+        "handler_wall_s": 3.403,
+        "job_wall_s": 4.414,
+        "peak_rss_bytes": 358219776,
+        "process_cpu_s": 4.221,
         "science_cached": true
       }
     }
   ],
-  "generated_utc": "2026-10-21T04:13:41Z",
-  "git_commit": "7109358f15b9a8ee21c26f0cc71919a8d4be0201",
-  "git_dirty": true,
+  "generated_utc": "2026-10-21T14:05:47Z",
+  "git_commit": "4d905bce497b7602a19eec5ddf3ca30ccebc45a1",
+  "git_dirty": false,
   "hardware": {
     "blas": [
       "openblas 0.3.31.dev",
@@ -296,7 +296,7 @@
     "python": "3.12.3",
     "storage": "local filesystem object store and SQLite in a temporary directory"
   },
-  "import_baseline_rss_bytes": 177864704,
+  "import_baseline_rss_bytes": 178188288,
   "limits": {
     "bank_licenses": "CC0-1.0,CC-BY-4.0,BSD-3-Clause,MIT,Apache-2.0",
     "embedded_worker": true,
