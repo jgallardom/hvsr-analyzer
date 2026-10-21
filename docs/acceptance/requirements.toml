@@ -536,6 +536,9 @@ stage = 5
 section = "Stage 5"
 kind = "scientific-validation"
 text = "Nominal 95% coverage and false-peak targets met within Monte Carlo error on the locked test set."
+status = "UNVALIDATED"
+reason = "Locked test set (protocol hvsr-mc-validation-v1, sha256 8768c5c5...) did not meet the decision rule: T-COV-STD-regime_switching FAIL (174/232 = 75.0%), T-COV-SDOF-regime_switching FAIL (188/256 = 73.4%), T-COV-STD-flat_colored_episodes, T-COV-STD-colored_sdof and T-COV-SDOF-colored_sdof NOT_EVALUABLE (default STA/LTA rejects nearly every window for alpha = 1.5 coloured noise, so no CI is produced). The other 23 of 28 targets passed. See docs/validation/report-v1.md."
+needs = "A dependence-detection method with adequate power for minute-scale regime changes (or a dependence model), and a QC anti-trigger that works for low-frequency-dominated records; then a NEW protocol version with fresh locked seeds. Do not re-run v1 seeds after changing the method."
 
 [[req]]
 id = "AC-S5-07"

@@ -706,6 +706,10 @@
    [
     "tests.stage_04.test_uncertainty::test_no_zero_width_on_pipeline_cases[weak_low]",
     "passed"
+   ],
+   [
+    "tests.stage_04.test_uncertainty::test_expanded_percentile_levels_widen_for_few_blocks",
+    "passed"
    ]
   ],
   "AC-S4-07": [
@@ -751,7 +755,55 @@
     "tests.stage_04.test_uncertainty::test_bootstrap_uses_cached_spectra_without_fft",
     "passed"
    ]
+  ],
+  "AC-S5-01": [
+   [
+    "tests.stage_05.test_validation_harness::test_seed_sets_are_disjoint",
+    "passed"
+   ],
+   [
+    "tests.stage_05.test_validation_harness::test_harness_is_reproducible_from_seeds",
+    "passed"
+   ]
+  ],
+  "AC-S5-02": [
+   [
+    "tests.stage_05.test_validation_harness::test_protocol_is_hash_locked_and_committed_before_the_test_set",
+    "passed"
+   ],
+   [
+    "tests.stage_05.test_validation_harness::test_check_lock_refuses_modified_protocol",
+    "passed"
+   ],
+   [
+    "tests.stage_05.test_validation_harness::test_protocol_predeclares_counts_seeds_metrics_and_targets",
+    "passed"
+   ]
+  ],
+  "AC-S5-03": [
+   [
+    "tests.stage_05.test_validation_harness::test_scenarios_cover_required_conditions",
+    "passed"
+   ]
+  ],
+  "AC-S5-04": [
+   [
+    "tests.stage_05.test_validation_harness::test_report_has_all_metrics_for_both_methods",
+    "passed"
+   ]
+  ],
+  "AC-S5-05": [
+   [
+    "tests.stage_05.test_validation_harness::test_r2_vs_fundamental_cases_are_reported",
+    "passed"
+   ]
+  ],
+  "AC-S5-06": [
+   [
+    "tests.stage_05.test_validation_harness::test_validation_status_is_consistent_with_published_verdict",
+    "passed"
+   ]
   ]
  },
- "updated_utc": "2026-10-20T23:55:46Z"
+ "updated_utc": "2026-10-21T00:25:23Z"
 }

@@ -131,3 +131,42 @@ Not yet done (later stages): assembling these objects into `analysis.json` (Stag
 
 Command: `uv run python scripts/gate.py --stage 4` -> exit 0, 160 tests (stages 0-4 + regression),
 80 PASS, 1 BLOCKED (AC-S2-05).
+
+## Stage 5 - Offline selection-bias and coverage validation
+
+Goal: reproducible Monte Carlo harness with disjoint development / locked test / truth seed sets,
+predeclared hash-locked protocol, Standard and SDOF evaluated separately, honest report.
+
+IDs: AC-S5-01 ... AC-S5-05 PASS; AC-S5-06 **UNVALIDATED** (scientific target not met);
+AC-S5-07 BLOCKED (no licensed published layered benchmark).
+
+Delivered: `hvsr_core.research.validation` (14 scenarios, per-replicate metrics, truth pooling),
+`hvsr_core.research.validation_protocol` (protocol, lock check, parallel runner, binomial targets),
+`scripts/validate_mc.py`, `docs/validation/protocol-v1.json` (commit 829d33e),
+`docs/validation/protocol-v1.lock.json` (commit a3adb02, sha256 8768c5c5...),
+`docs/validation/report-v1.md`, `artifacts/validation/{dev,test}-v1-*`.
+
+Locked test set (400 replicates x 14 scenarios, 200 truth records per scenario, run once after the
+lock): 23 of 28 predeclared targets passed. Failed or not evaluable:
+- regime_switching: Standard 174/232 = 75.0 % and SDOF 188/256 = 73.4 % coverage of the policy mean,
+  plus 42 % / 36 % no-result rate. Minute-scale H/V regime changes are not detected by the
+  adjacent-block test with ~18 blocks, so the band is too narrow.
+- flat_colored_episodes and colored_sdof (alpha = 1.5): default STA/LTA rejects nearly every window,
+  so no CI is produced (NOT EVALUABLE). Milder colouring (alpha = 0.75) and episodes alone pass.
+Other findings (reported, not targets):
+- Fundamental chosen as the family with the best SDOF R2 would be wrong in 400/400 weak-fundamental
+  replicates and 128/400 two-peak replicates; the predeclared lowest-plausible-family rule is correct
+  in 399/400 and 400/400.
+- SDOF selection raises R2 but adds a +3 to +4 % peak-frequency bias on non-SDOF shapes (machine tone,
+  episodes, transients, regime switching), where Standard is within +/-1 %.
+- Asymmetric broad peak: both methods are biased by about -6 % in fp, so the conditional peak interval
+  covers the true resonance only 62 % (Standard) and 35 % (SDOF) of the time.
+- CI coverage of the physical transfer-function amplitude is 31-91 %, as expected: the CI targets the
+  smoothed policy mean, not |T(f)|.
+- Null false-peak rate: 0/400 (white), 42/400 (alpha = 1.5 with episodes; within the 10 % target).
+
+Consequence: the CI stays labelled nominal and uncalibrated (`coverage_calibrated = false`). The
+uncertainty and QC methods are experimental; no validated 95 % claim is made.
+
+Command: `uv run python scripts/gate.py --stage 5` -> exit 0, 85 PASS, 2 BLOCKED (AC-S2-05,
+AC-S5-07), 1 UNVALIDATED (AC-S5-06).

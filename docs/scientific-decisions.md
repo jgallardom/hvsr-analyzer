@@ -221,3 +221,14 @@ interval of replicate peak frequencies is explicitly conditional on a peak exist
 With at least 20 such replicates, a Gaussian KDE in ln f (Silverman bandwidth, at least one grid step)
 is computed; two or more modes each holding >= 10 % of the mass mark the peak `ambiguous_multimodal`
 and all major modes are reported.
+
+**D-053 (Stage 5 outcome).** The locked validation (protocol hvsr-mc-validation-v1) did not meet its
+decision rule (docs/validation/report-v1.md). Therefore:
+- every CI is labelled "Estimated 95% pointwise CI for the selected-window mean" with
+  `coverage_calibrated = false` and a pointer to the validation report;
+- analysis outputs state that coverage failed under minute-scale regime changes and that default
+  anti-trigger QC fails for strongly low-frequency-dominated records;
+- the peak-frequency interval is described as conditional and never as a 95 % interval for the
+  site resonance;
+- fixing either failure requires a method change and a NEW protocol version with fresh locked seeds;
+  v1 seeds must not be reused for tuning.
