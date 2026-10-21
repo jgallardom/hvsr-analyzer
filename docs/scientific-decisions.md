@@ -427,3 +427,35 @@ signing key and no public base URL). It never yields an empty key or URL.
 dependency missing) is reported as PASS for a gate run in which its tagged tests actually ran and
 all passed. Skipped tests keep it BLOCKED. UNVALIDATED keeps its state whatever the tests do,
 because passing mechanics do not validate the science.
+
+**D-100 (byte-exact references are tied to one numerical code path).** NumPy and OpenBLAS pick
+CPU-specific code when they load. On CPUs with AVX-512, NumPy uses its own vectorized `exp`,
+`log`, and `power`, and OpenBLAS uses its SkylakeX kernels. Both round differently in the last bits
+from the AVX2 path that produced the shipped banks, `docs/examples/`, and the performance counts.
+GitHub assigns runners of both kinds, so the same commit passed on one CI run and failed on the next
+(AC-S3-12, AC-S8-10, AC-S9-01).
+
+Evidence, from 24 GitHub Actions jobs on 2026-10-21 (`docs/evidence/stage9/numeric-path-probe.json`):
+- Runners without AVX-512 reproduce every reference byte for byte, as this development machine does.
+  These were AMD EPYC 7763 machines and one EPYC 9V74 that did not expose AVX-512.
+- AVX-512 runners do not. These were Intel Xeon 8370C and 6973P-C, and AMD EPYC 9V45 and 9V74. With
+  NumPy capped at the AVX2 target and OpenBLAS forced to its Haswell kernels, they reproduce every
+  reference byte for byte. Capping NumPy alone is not enough.
+- On their native AVX-512 path, every value in the example analysis documents and CSV files stays
+  within `TOLERANCE_POLICY`. The largest relative difference is 3.4e-13, in a window table. Window
+  selections, counts, statuses, and every other non-numeric field are identical.
+- Regenerating the banks on that path moves the raw SDOF bank by at most 7 ULP. The Konno-Ohmachi
+  and MDOF banks move by up to 5.2e-8 in log amplitude. Their anchors are maxima located by a
+  bounded optimizer, and a maximum can only be located to about the square root of machine
+  precision. Shipped banks are loaded from their files and never regenerated during an analysis.
+
+Decision:
+- The byte-exact reproduction tests are defined on the reference path: x86-64 with
+  `NPY_ENABLE_CPU_FEATURES=X86_V3` and `OPENBLAS_CORETYPE=Haswell`. `tests/conftest.py` sets
+  both, before NumPy loads, on any CPU that supports them. No assertion or expected value changes.
+- Scripts that write byte-exact references must run on the same path. On an AVX-512 machine, set
+  the same two variables before running them.
+- Hosted and CLI analyses run on the machine's native path. Replay compares them within
+  `TOLERANCE_POLICY`, whose scope already excludes cross-platform bitwise identity (spec 12.1).
+- CI prints each runner's CPU model and native code path before the gate.
+- `scripts/numeric_path_probe.py` repeats the comparison on any machine.

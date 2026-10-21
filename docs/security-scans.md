@@ -31,8 +31,9 @@ medium or high finding, or if a low finding is not justified in the table below.
 - A clean result means no *published* advisory matched these versions on that date. It is not a
   guarantee; rerun the scan whenever `uv.lock` changes (the test enforces this) and periodically.
 - Network note: the development sandbox has no DNS. The recorded scan was run with network access
-  outside that sandbox. The CI workflow (`.github/workflows/ci.yml`) is configured to rerun it on
-  every push; that workflow has not yet run on GitHub (see `docs/implementation-status.md`).
+  outside that sandbox. The CI workflow (`.github/workflows/ci.yml`) reruns both scans on every
+  push and weekly. Its security job passed on the first GitHub runs (2026-10-21; see
+  `docs/implementation-status.md`).
 
 ## Static security scan (bandit)
 

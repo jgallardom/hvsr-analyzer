@@ -533,7 +533,8 @@ because it needs subprocess resource limits, local servers, PostgreSQL, and `uv 
 Known limits and what was not verified:
 - **Docker image never built** (AC-S9-09 BLOCKED). The Docker smoke test runs in CI, but CI has not
   run: the repository has not been pushed to GitHub. No credentials were used, and nothing was
-  pushed or deployed.
+  pushed or deployed. *Superseded: the repository was pushed and the image built and passed in CI;
+  see "After Stage 9 - first GitHub Actions runs".*
 - **Render blueprint** validated against Render's published JSON Schema (vendored), not by Render.
 - **S3 adapter** tested against moto only. R2, B2, and Hetzner behaviour (conditional writes,
   SHA-256 checksums) is untested.
@@ -550,14 +551,60 @@ Known limits and what was not verified:
 
 ---
 
+## After Stage 9 - first GitHub Actions runs
+
+Goal: push to [jgallardom/hvsr-analyzer](https://github.com/jgallardom/hvsr-analyzer) (public)
+and make the CI gate pass there. IDs involved: AC-S5-02, AC-S3-12, AC-S8-10, AC-S9-01, AC-S9-06,
+AC-S9-09.
+
+First run, [39622608537](https://github.com/jgallardom/hvsr-analyzer/actions/runs/39622608537),
+commit `745c84c`:
+- The security job passed: pip-audit (PyPI and OSV) and bandit.
+- The gate failed one test out of 330: AC-S5-02's check that the validation protocol was committed
+  before the locked test set ran. It runs `git merge-base --is-ancestor`, and `actions/checkout`
+  clones at depth 1, so the commit that ran the test set was missing (git exit 128). A local shallow
+  clone reproduced it.
+- The Docker smoke test ran for the first time and passed (AC-S9-09).
+- Fix (`a67a0b5`): the gate job checks out the full history (`fetch-depth: 0`), and the CI structure
+  test requires it.
+
+Second run, [39626471556](https://github.com/jgallardom/hvsr-analyzer/actions/runs/39626471556),
+commit `a67a0b5`:
+- AC-S5-02 passed, and the Docker smoke test passed again.
+- Three byte-exact tests failed on last-bit differences: AC-S3-12 (bank regeneration), AC-S8-10
+  (example CSV), and AC-S9-01 (analysis document sizes). Every count, selection, and status matched.
+  The same code had passed them on the first run.
+- A temporary probe workflow (24 jobs, two runs, branch deleted afterwards) traced this to the
+  runner's CPU. AVX-512 runners use different NumPy and OpenBLAS code, and AVX2 runners reproduce
+  the references exactly (D-100, `docs/evidence/stage9/numeric-path-probe.json`).
+- Fix:
+  - `tests/conftest.py` pins NumPy to the AVX2 target and OpenBLAS to its Haswell kernels where the
+    CPU supports them. All 16 probe jobs passed the three tests with it, including 7 on AVX-512.
+  - CI prints each runner's CPU and native code path.
+  - `scripts/numeric_path_probe.py` repeats the measurement.
+  - No assertion, expected value, or tolerance changed, and no fingerprinted file was touched.
+
+AC-S9-09 keeps its BLOCKED status, now with the CI evidence in its reason. Removing it, as its old
+note said, would turn local gate runs without Docker into failures, because a skipped test does not
+count as a pass.
+
+Command: `uv run python scripts/gate.py --all`, on the working tree with these changes before
+committing. It exited 0 in 149 s:
+- 329 tests passed, 1 skipped (Docker);
+- 142 PASS, 3 BLOCKED (AC-S2-05, AC-S5-07, AC-S9-09), 1 UNVALIDATED (AC-S5-06).
+
+`ruff check .` and `ruff format --check .` are clean.
+
+---
+
 ## Next action
 
 All nine stages are implemented and the gate passes. What remains needs credentials, external
 software, or new science:
 
-1. **Push and run CI** (needs the owner's GitHub credentials). Create the repository, push, and let
-   `.github/workflows/ci.yml` run. If the Docker smoke test passes there, the gate reports AC-S9-09
-   as PASS for that run; then remove its BLOCKED status in `docs/acceptance/requirements.toml`.
+1. **Keep CI green.** If a byte-exact test fails on one runner and passes on another, compare the
+   CPU and code path printed by the "Record the runner's CPU" step with D-100 before changing
+   anything.
 2. **Deploy** (needs Render and bucket accounts). Follow `docs/deployment.md`, then:
    - run `scripts/smoke.py url <site> --blueprint-limits`;
    - check one real submission end to end;

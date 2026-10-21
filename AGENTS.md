@@ -67,6 +67,11 @@ stage folder has a `conftest.py`, and the import silently resolves to whichever 
 - `hvsrpy` (GPL-3.0) is in the `reference` dependency group and is used only as a numerical
   oracle in tests. Shipped code must never import it. The Docker image installs without it.
 - Tests set `NUMBA_CACHE_DIR` and `MPLCONFIGDIR` to temporary directories (hvsrpy uses numba).
+- Tests also pin the numerical code path (`NPY_ENABLE_CPU_FEATURES=X86_V3`, `OPENBLAS_CORETYPE=Haswell`)
+  on x86-64 CPUs that support it, because the byte-exact references were made on that path. AVX-512
+  paths differ in the last bits (D-100). On an AVX-512 machine, set both variables before running a
+  script that writes references (banks, `docs/examples/`, performance reports).
+  `scripts/numeric_path_probe.py` shows whether a machine reproduces them.
 - Numerical threads are pinned (`OMP_NUM_THREADS=1` etc.) by the web worker to avoid
   oversubscription; the CLI respects whatever the user sets.
 - The gate does more than run Python in-process. Sandboxed agents must allow all of these:

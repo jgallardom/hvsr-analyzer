@@ -13,9 +13,9 @@ Nothing permanent is kept on the container's disk. The repository provides:
 | `.github/workflows/ci.yml` | Runs the full gate, linting, and security scans on every push and pull request |
 | `scripts/smoke.py` | Startup smoke test for a local server, a Docker image, or a deployed URL |
 
-Status: no deployment has been made from this repository, and the CI workflow has not yet run on
-GitHub. The Docker image has never been built (no Docker on the development machine; AC-S9-09 is
-BLOCKED). What has been tested is listed at the end.
+Status: no deployment has been made from this repository. The CI workflow runs on GitHub, where
+the Docker image has been built and has passed its smoke test. The development machine has no
+Docker, so local gate runs report AC-S9-09 as BLOCKED. What has been tested is listed at the end.
 
 ## Render (the planned topology)
 
@@ -151,7 +151,7 @@ uv run uvicorn hvsr_web.api:create_app --factory --port 8000
 | Memory budget | measured peaks at the blueprint limits (`docs/evidence/stage9/performance-render-limits.json`) | worst admitted case 664 MiB per job; web plus job budget within 95% of 2 GB |
 | Fresh runtime install and startup | `scripts/smoke.py local --clean-install`: runtime-only environment from `uv.lock`, migrate, start, submit, analyze, publish, SIGTERM | passes (AC-S9-11) |
 | PostgreSQL | PostgreSQL 16 (pgserver): migrations, concurrent startup, job ceiling and submission races, backup and restore across engines | passes (AC-S9-14) |
-| Docker image | `scripts/smoke.py docker` | not run: Docker is not installed here (AC-S9-09 BLOCKED) |
-| CI on GitHub | `.github/workflows/ci.yml` | not run: the repository has not been pushed |
+| Docker image | `scripts/smoke.py docker`, run by the gate where Docker exists | built and passed in GitHub Actions (runs 39622608537 and 39626471556); skipped on the development machine, which has no Docker |
+| CI on GitHub | `.github/workflows/ci.yml` | runs on every push; see `docs/implementation-status.md` for the runs and their results |
 | Real bucket (R2, B2, Hetzner) | none | not tested; S3 behavior tested against moto |
 | Render deployment | none | not done |

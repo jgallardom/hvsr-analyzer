@@ -53,6 +53,10 @@ jobs:
           enable-cache: true
       - name: Install the locked environment
         run: uv sync --frozen
+      - name: Record the runner's CPU and native numerical code path
+        run: |
+          lscpu | grep "Model name"
+          uv run python -c "import numpy; numpy.show_runtime()"
       - name: Lint
         run: uv run ruff check .
       - name: Formatting

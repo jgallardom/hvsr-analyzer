@@ -1,0 +1,390 @@
+{
+ "date": "2026-10-21",
+ "purpose": "Why AC-S3-12, AC-S8-10 and AC-S9-01 failed on one GitHub Actions run (39626471556) and passed on another (39622608537) with the same code (D-100).",
+ "how": "Temporary workflow on branch ci-probe-simd (deleted afterwards). Each job regenerated the shipped template banks and the docs/examples exports and compared them with the committed files: bytes, maximum ULP and relative difference, the analysis JSON through hvsr_core.analysis._walk_compare with TOLERANCE_POLICY (identity fields such as IDs, URLs, record codes and provenance removed), and non-numeric content. It then ran the three tests.",
+ "script": "scripts/numeric_path_probe.py (the probe as run, except that it now calls scripts/export_examples.py in-process)",
+ "numpy": "2.5.4",
+ "openblas": "0.3.34.106.0",
+ "reference_path": {
+  "NPY_ENABLE_CPU_FEATURES": "X86_V3",
+  "OPENBLAS_CORETYPE": "Haswell",
+  "note": "the native path of the development machine (Intel Core Ultra 7 258V) and of AMD EPYC 7763 runners"
+ },
+ "runs": [
+  {
+   "run_id": 39627942246,
+   "url": "https://github.com/jgallardom/hvsr-analyzer/actions/runs/39627942246",
+   "jobs": 8,
+   "by_runner_type": [
+    {
+     "cpu": "AMD EPYC 7763 64-Core Processor",
+     "numpy_simd_native": [
+      "X86_V3"
+     ],
+     "openblas_native_kernels": "Haswell",
+     "jobs": 7,
+     "results": {
+      "unpinned": {
+       "numpy_simd_used": [
+        "X86_V3"
+       ],
+       "openblas_kernels_used": "Haswell",
+       "banks_identical": 10,
+       "banks_total": 10,
+       "bank_max_ulp": 0,
+       "csv_identical": 4,
+       "csv_total": 4,
+       "examples_max_rel": 0.0,
+       "examples_max_ulp": 0,
+       "analysis_values_beyond_tolerance_policy": 0,
+       "analysis_non_numeric_differences": 0,
+       "csv_non_numeric_cells_differing": 0
+      },
+      "numpy_pinned": {
+       "numpy_simd_used": [
+        "X86_V3"
+       ],
+       "openblas_kernels_used": "Haswell",
+       "banks_identical": 10,
+       "banks_total": 10,
+       "bank_max_ulp": 0,
+       "csv_identical": 4,
+       "csv_total": 4,
+       "examples_max_rel": 0.0,
+       "examples_max_ulp": 0,
+       "analysis_values_beyond_tolerance_policy": 0,
+       "analysis_non_numeric_differences": 0,
+       "csv_non_numeric_cells_differing": 0
+      },
+      "both_pinned": {
+       "numpy_simd_used": [
+        "X86_V3"
+       ],
+       "openblas_kernels_used": "Haswell",
+       "banks_identical": 10,
+       "banks_total": 10,
+       "bank_max_ulp": 0,
+       "csv_identical": 4,
+       "csv_total": 4,
+       "examples_max_rel": 0.0,
+       "examples_max_ulp": 0,
+       "analysis_values_beyond_tolerance_policy": 0,
+       "analysis_non_numeric_differences": 0,
+       "csv_non_numeric_cells_differing": 0
+      }
+     },
+     "tests_exit_status": {
+      "unpinned": [
+       0
+      ],
+      "numpy_pinned": [
+       0
+      ]
+     }
+    },
+    {
+     "cpu": "Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz",
+     "numpy_simd_native": [
+      "X86_V3",
+      "X86_V4",
+      "AVX512_ICL"
+     ],
+     "openblas_native_kernels": "SkylakeX",
+     "jobs": 1,
+     "results": {
+      "unpinned": {
+       "numpy_simd_used": [
+        "X86_V3",
+        "X86_V4",
+        "AVX512_ICL"
+       ],
+       "openblas_kernels_used": "SkylakeX",
+       "banks_identical": 0,
+       "banks_total": 10,
+       "bank_max_ulp": 7151569951,
+       "csv_identical": 0,
+       "csv_total": 4,
+       "examples_max_rel": 3.4007233719183516e-13,
+       "examples_max_ulp": 1664,
+       "analysis_values_beyond_tolerance_policy": 0,
+       "analysis_non_numeric_differences": 0,
+       "csv_non_numeric_cells_differing": 0
+      },
+      "numpy_pinned": {
+       "numpy_simd_used": [
+        "X86_V3"
+       ],
+       "openblas_kernels_used": "SkylakeX",
+       "banks_identical": 1,
+       "banks_total": 10,
+       "bank_max_ulp": 7082897908,
+       "csv_identical": 0,
+       "csv_total": 4,
+       "examples_max_rel": 2.6159410553226302e-14,
+       "examples_max_ulp": 128,
+       "analysis_values_beyond_tolerance_policy": 0,
+       "analysis_non_numeric_differences": 0,
+       "csv_non_numeric_cells_differing": 0
+      },
+      "both_pinned": {
+       "numpy_simd_used": [
+        "X86_V3"
+       ],
+       "openblas_kernels_used": "Haswell",
+       "banks_identical": 10,
+       "banks_total": 10,
+       "bank_max_ulp": 0,
+       "csv_identical": 4,
+       "csv_total": 4,
+       "examples_max_rel": 0.0,
+       "examples_max_ulp": 0,
+       "analysis_values_beyond_tolerance_policy": 0,
+       "analysis_non_numeric_differences": 0,
+       "csv_non_numeric_cells_differing": 0
+      }
+     },
+     "tests_exit_status": {
+      "unpinned": [
+       1
+      ],
+      "numpy_pinned": [
+       1
+      ]
+     }
+    }
+   ],
+   "labels": {
+    "unpinned": "native paths",
+    "numpy_pinned": "NPY_DISABLE_CPU_FEATURES='X86_V4 AVX512_ICL AVX512_SPR' only",
+    "both_pinned": "that plus OPENBLAS_CORETYPE=Haswell"
+   }
+  },
+  {
+   "run_id": 39629033004,
+   "url": "https://github.com/jgallardom/hvsr-analyzer/actions/runs/39629033004",
+   "jobs": 16,
+   "what": "native-path comparison as above, then the three tests with plain pytest (tests/conftest.py selects the reference path)",
+   "by_runner_type": [
+    {
+     "cpu": "AMD EPYC 9V74 80-Core Processor",
+     "numpy_simd_native": [
+      "X86_V3"
+     ],
+     "openblas_native_kernels": "Haswell",
+     "jobs": 1,
+     "native_path_results": {
+      "banks_identical": 10,
+      "banks_total": 10,
+      "bank_max_ulp": 0,
+      "csv_identical": 4,
+      "csv_total": 4,
+      "examples_max_rel": 0.0,
+      "examples_max_ulp": 0,
+      "analysis_values_beyond_tolerance_policy": 0,
+      "analysis_non_numeric_differences": 0,
+      "csv_non_numeric_cells_differing": 0,
+      "bank_max_abs_ln_amplitude": {
+       "sdof-raw-v1": 0.0,
+       "sdof-ko20-v1": 0.0,
+       "sdof-ko30-v1": 0.0,
+       "sdof-ko40-v1": 0.0,
+       "sdof-ko50-v1": 0.0,
+       "sdof-ko60-v1": 0.0,
+       "sdof-ko80-v1": 0.0,
+       "sdof-ko100-v1": 0.0,
+       "mdof2-raw-v1": 0.0,
+       "mdof3-raw-v1": 0.0
+      }
+     },
+     "tests_exit_status_with_conftest": [
+      0
+     ]
+    },
+    {
+     "cpu": "AMD EPYC 9V45 96-Core Processor",
+     "numpy_simd_native": [
+      "X86_V3",
+      "X86_V4",
+      "AVX512_ICL"
+     ],
+     "openblas_native_kernels": "SkylakeX",
+     "jobs": 3,
+     "native_path_results": {
+      "banks_identical": 0,
+      "banks_total": 10,
+      "bank_max_ulp": 7151569951,
+      "csv_identical": 0,
+      "csv_total": 4,
+      "examples_max_rel": 3.4007233719183516e-13,
+      "examples_max_ulp": 1664,
+      "analysis_values_beyond_tolerance_policy": 0,
+      "analysis_non_numeric_differences": 0,
+      "csv_non_numeric_cells_differing": 0,
+      "bank_max_abs_ln_amplitude": {
+       "sdof-raw-v1": 8.881784197001252e-16,
+       "sdof-ko20-v1": 5.2283235518757465e-08,
+       "sdof-ko30-v1": 2.2312914738087386e-08,
+       "sdof-ko40-v1": 1.2571308882769472e-08,
+       "sdof-ko50-v1": 1.8951847535753075e-08,
+       "sdof-ko60-v1": 1.609039457228789e-08,
+       "sdof-ko80-v1": 7.720183381465517e-09,
+       "sdof-ko100-v1": 7.1277392321711375e-09,
+       "mdof2-raw-v1": 1.84168891248504e-08,
+       "mdof3-raw-v1": 1.4368964074140678e-08
+      }
+     },
+     "tests_exit_status_with_conftest": [
+      0
+     ]
+    },
+    {
+     "cpu": "Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz",
+     "numpy_simd_native": [
+      "X86_V3",
+      "X86_V4",
+      "AVX512_ICL"
+     ],
+     "openblas_native_kernels": "SkylakeX",
+     "jobs": 2,
+     "native_path_results": {
+      "banks_identical": 0,
+      "banks_total": 10,
+      "bank_max_ulp": 7151569951,
+      "csv_identical": 0,
+      "csv_total": 4,
+      "examples_max_rel": 3.4007233719183516e-13,
+      "examples_max_ulp": 1664,
+      "analysis_values_beyond_tolerance_policy": 0,
+      "analysis_non_numeric_differences": 0,
+      "csv_non_numeric_cells_differing": 0,
+      "bank_max_abs_ln_amplitude": {
+       "sdof-raw-v1": 8.881784197001252e-16,
+       "sdof-ko20-v1": 5.2283235518757465e-08,
+       "sdof-ko30-v1": 2.2312914738087386e-08,
+       "sdof-ko40-v1": 1.2571308882769472e-08,
+       "sdof-ko50-v1": 1.8951847535753075e-08,
+       "sdof-ko60-v1": 1.609039457228789e-08,
+       "sdof-ko80-v1": 7.720183381465517e-09,
+       "sdof-ko100-v1": 7.1277392321711375e-09,
+       "mdof2-raw-v1": 1.84168891248504e-08,
+       "mdof3-raw-v1": 1.4368964074140678e-08
+      }
+     },
+     "tests_exit_status_with_conftest": [
+      0
+     ]
+    },
+    {
+     "cpu": "AMD EPYC 7763 64-Core Processor",
+     "numpy_simd_native": [
+      "X86_V3"
+     ],
+     "openblas_native_kernels": "Haswell",
+     "jobs": 8,
+     "native_path_results": {
+      "banks_identical": 10,
+      "banks_total": 10,
+      "bank_max_ulp": 0,
+      "csv_identical": 4,
+      "csv_total": 4,
+      "examples_max_rel": 0.0,
+      "examples_max_ulp": 0,
+      "analysis_values_beyond_tolerance_policy": 0,
+      "analysis_non_numeric_differences": 0,
+      "csv_non_numeric_cells_differing": 0,
+      "bank_max_abs_ln_amplitude": {
+       "sdof-raw-v1": 0.0,
+       "sdof-ko20-v1": 0.0,
+       "sdof-ko30-v1": 0.0,
+       "sdof-ko40-v1": 0.0,
+       "sdof-ko50-v1": 0.0,
+       "sdof-ko60-v1": 0.0,
+       "sdof-ko80-v1": 0.0,
+       "sdof-ko100-v1": 0.0,
+       "mdof2-raw-v1": 0.0,
+       "mdof3-raw-v1": 0.0
+      }
+     },
+     "tests_exit_status_with_conftest": [
+      0
+     ]
+    },
+    {
+     "cpu": "Intel(R) Xeon(R) 6973P-C",
+     "numpy_simd_native": [
+      "X86_V3",
+      "X86_V4",
+      "AVX512_ICL",
+      "AVX512_SPR"
+     ],
+     "openblas_native_kernels": "SkylakeX",
+     "jobs": 1,
+     "native_path_results": {
+      "banks_identical": 0,
+      "banks_total": 10,
+      "bank_max_ulp": 7151569951,
+      "csv_identical": 0,
+      "csv_total": 4,
+      "examples_max_rel": 3.4007233719183516e-13,
+      "examples_max_ulp": 1664,
+      "analysis_values_beyond_tolerance_policy": 0,
+      "analysis_non_numeric_differences": 0,
+      "csv_non_numeric_cells_differing": 0,
+      "bank_max_abs_ln_amplitude": {
+       "sdof-raw-v1": 8.881784197001252e-16,
+       "sdof-ko20-v1": 5.2283235518757465e-08,
+       "sdof-ko30-v1": 2.2312914738087386e-08,
+       "sdof-ko40-v1": 1.2571308882769472e-08,
+       "sdof-ko50-v1": 1.8951847535753075e-08,
+       "sdof-ko60-v1": 1.609039457228789e-08,
+       "sdof-ko80-v1": 7.720183381465517e-09,
+       "sdof-ko100-v1": 7.1277392321711375e-09,
+       "mdof2-raw-v1": 1.84168891248504e-08,
+       "mdof3-raw-v1": 1.4368964074140678e-08
+      }
+     },
+     "tests_exit_status_with_conftest": [
+      0
+     ]
+    },
+    {
+     "cpu": "AMD EPYC 9V74 80-Core Processor",
+     "numpy_simd_native": [
+      "X86_V3",
+      "X86_V4",
+      "AVX512_ICL"
+     ],
+     "openblas_native_kernels": "SkylakeX",
+     "jobs": 1,
+     "native_path_results": {
+      "banks_identical": 0,
+      "banks_total": 10,
+      "bank_max_ulp": 7151569951,
+      "csv_identical": 0,
+      "csv_total": 4,
+      "examples_max_rel": 3.4007233719183516e-13,
+      "examples_max_ulp": 1664,
+      "analysis_values_beyond_tolerance_policy": 0,
+      "analysis_non_numeric_differences": 0,
+      "csv_non_numeric_cells_differing": 0,
+      "bank_max_abs_ln_amplitude": {
+       "sdof-raw-v1": 8.881784197001252e-16,
+       "sdof-ko20-v1": 5.2283235518757465e-08,
+       "sdof-ko30-v1": 2.2312914738087386e-08,
+       "sdof-ko40-v1": 1.2571308882769472e-08,
+       "sdof-ko50-v1": 1.8951847535753075e-08,
+       "sdof-ko60-v1": 1.609039457228789e-08,
+       "sdof-ko80-v1": 7.720183381465517e-09,
+       "sdof-ko100-v1": 7.1277392321711375e-09,
+       "mdof2-raw-v1": 1.84168891248504e-08,
+       "mdof3-raw-v1": 1.4368964074140678e-08
+      }
+     },
+     "tests_exit_status_with_conftest": [
+      0
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -26,8 +26,13 @@ fixed by it are recorded in `docs/scientific-decisions.md`.
 - **BLOCKED**:
   - comparison against Geopsy (AC-S2-05): Geopsy not available;
   - a published layered-site benchmark (AC-S5-07): no redistributable dataset;
-  - the Docker image build (AC-S9-09): no Docker on the development machine.
-- Not done: the CI workflow has not run on GitHub, and nothing has been deployed.
+  - the Docker smoke test (AC-S9-09), on machines without Docker. It skips on the development
+    machine and has passed in GitHub Actions, where the gate reports it as PASS.
+- CI runs the full gate and the security scans on every push
+  ([GitHub Actions](https://github.com/jgallardom/hvsr-analyzer/actions)).
+- Byte-exact reproduction tests run on a fixed numerical code path, because AVX-512 CPUs round
+  differently in the last bits (D-100 in `docs/scientific-decisions.md`).
+- Not done: nothing has been deployed.
 
 ## Install
 

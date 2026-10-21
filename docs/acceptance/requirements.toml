@@ -871,8 +871,8 @@ stage = 9
 section = "Stage 9"
 text = "Fresh Docker build and container startup smoke test."
 status = "BLOCKED"
-reason = "Docker/Podman are not installed on the development machine; the Dockerfile has never been built. tests/stage_09/test_deploy.py::test_docker_image_builds_and_passes_the_smoke_test skips here."
-needs = "On a machine with Docker, or in GitHub Actions (ubuntu-24.04 has Docker), run `uv run python scripts/gate.py --all`: the test builds the image and runs `scripts/smoke.py docker --image hvsr-analyzer:gate`, and the gate reports PASS for that run. Remove this status once a run has passed."
+reason = "Docker/Podman are not installed on the development machine, so tests/stage_09/test_deploy.py::test_docker_image_builds_and_passes_the_smoke_test skips there and local gate runs report BLOCKED. The test ran and passed in GitHub Actions (runs 39622608537 and 39626471556, 2026-10-21): the image built and `scripts/smoke.py docker` passed. Where Docker exists, the gate reports PASS for that run (D-099)."
+needs = "Docker or Podman, to run the test locally. CI runs it on every push. The status stays so that gate runs without Docker report BLOCKED rather than FAIL; a skipped test cannot count as a pass."
 
 [[req]]
 id = "AC-S9-10"
