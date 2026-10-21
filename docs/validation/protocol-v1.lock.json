@@ -1,0 +1,8 @@
+{
+  "locked_utc": "2026-10-21T00:08:22Z",
+  "protocol_commit": "829d33e4252f1c9513cd7246f7a57b2853031143",
+  "protocol_file": "docs/validation/protocol-v1.json",
+  "protocol_id": "hvsr-mc-validation-v1",
+  "protocol_sha256": "8768c5c50ece353b476b51915ed4038d6541026f3481dbf93d30d614333dc985",
+  "statement": "Counts, seeds, metrics and acceptance rules were fixed before the locked test set was run."
+}
